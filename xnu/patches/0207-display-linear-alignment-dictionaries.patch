@@ -1,0 +1,49 @@
+Framebuffer: publish native linear display alignment dictionaries
+
+VideoToolbox indexes these properties as dictionaries containing numeric linear
+alignment requirements. The scalar plane property violates that native contract.
+Publish the existing 64-byte requirement in the two consumed one-key schemas.
+On allocation or publication failure, omit both properties so the native 64-byte
+fallback remains valid. Do not advertise tiled/compressed/vertical capabilities.
+This separate VideoToolbox contract correction does not establish a clock cause.
+
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -905,7 +905,35 @@
+ 
+ 	setProperty(kIOUserClientClassKey, "IOMobileFramebufferUserClient");
+ 	setProperty("external", false);
+-	setProperty("DisplayPipePlaneBaseAlignment", 64ULL, 32);
++	/* VideoToolbox indexes these properties as dictionaries, then reads the
++	 * linear requirement as a CFNumber. Missing properties use its native
++	 * 64-byte fallback; never publish a scalar or partial schema on failure. */
++	/* Retain checked keys before allocating values: the char-key registry
++	 * wrappers can dereference a failed symbol allocation, even on removal. */
++	const OSSymbol *planeAlignmentKey = OSSymbol::withCString("DisplayPipePlaneBaseAlignment");
++	const OSSymbol *strideAlignmentKey = OSSymbol::withCString("DisplayPipeStrideRequirements");
++	OSDictionary *planeAlignment = OSDictionary::withCapacity(1);
++	OSDictionary *strideAlignment = OSDictionary::withCapacity(1);
++	OSNumber *linearAlignment = OSNumber::withNumber(64ULL, 32);
++	if (planeAlignmentKey == NULL || strideAlignmentKey == NULL ||
++	    planeAlignment == NULL || strideAlignment == NULL || linearAlignment == NULL ||
++	    !planeAlignment->setObject("PlaneBaseAlignmentLinear", linearAlignment) ||
++	    !strideAlignment->setObject("StrideLinearHorizontal", linearAlignment) ||
++	    !setProperty(planeAlignmentKey, planeAlignment) ||
++	    !setProperty(strideAlignmentKey, strideAlignment)) {
++		if (planeAlignmentKey != NULL) {
++			removeProperty(planeAlignmentKey);
++		}
++		if (strideAlignmentKey != NULL) {
++			removeProperty(strideAlignmentKey);
++		}
++		IOLog("SWEET FB: alignment properties unavailable; using native consumer fallback\n");
++	}
++	OSSafeReleaseNULL(linearAlignment);
++	OSSafeReleaseNULL(strideAlignment);
++	OSSafeReleaseNULL(planeAlignment);
++	OSSafeReleaseNULL(strideAlignmentKey);
++	OSSafeReleaseNULL(planeAlignmentKey);
+ 	registerService();
+ 	IOLog("SWEET FB: AppleCLCD %ux%u stride %u at 0x%llx, default surface %u, presented as %ux%u\n",
+ 	    fWidth, fHeight, fRowBytes, fPhys, fSurface->id, fLogicalW, fLogicalH);

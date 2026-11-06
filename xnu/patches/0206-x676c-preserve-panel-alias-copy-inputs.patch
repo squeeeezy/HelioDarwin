@@ -1,0 +1,128 @@
+x676c: compose into private storage before publishing panel memory
+
+The default IOSurface is the physical panel allocation. Clearing that allocation
+before reading a default-surface layer destroys its input. Compose every x676c
+copy frame into one kernel-only buffer, then publish the completed frame before
+the existing cache clean and DSI push. This also preserves other panel aliases
+and partial/multiple layer inputs without relying on IOSurface object identity.
+Keep normal clearing, clipping, strides, layer ordering and bounded source checks.
+
+Allocate exactly one panel frame before surface publication and timer setup;
+reject invalid rounded length or allocation failure. Release the new storage on
+setup failure and final free. Qualcomm composition remains unchanged.
+This corrects deterministic source destruction, not an established whole-UI cause.
+Hardware pixel output and physical scanout remain to be validated.
+
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -279,6 +279,7 @@
+ 	uintptr_t     fPixels;          /* kernel mapping of the panel memory */
+ 	IOMemoryMap  *fMap;
+ 	SweetSurface *fSurface;         /* the panel memory as an IOSurface */
++	IOBufferMemoryDescriptor *fCompose; /* x676c private copy destination; never a source */
+ 	IOLock       *fLock;            /* swaps and client list */
+ 	OSArray      *fClients;
+ 	uint32_t      fSwapID;
+@@ -553,6 +554,7 @@
+ AppleCLCD::free(void)
+ {
+ 	stopWatchdog();
++	OSSafeReleaseNULL(fCompose);
+ 	IOService::free();
+ }
+ 
+@@ -592,6 +594,24 @@
+ 	/* x rounded down to 4 pixels: the panel window must start 16-byte aligned (MDP fetch) */
+ 	fOffX = ((int32_t)(fLogicalW - fWidth) / 2) & ~3;
+ 	fOffY = (int32_t)(fLogicalH - fHeight) / 2;
++	if (sweet_board_x676c()) {
++		/* Allocate before publishing a surface or attaching a timer. The
++		 * physical surface's 32-bit rounded allocation must cover this frame. */
++		uint64_t bytes = (uint64_t)fRowBytes * fHeight;
++		if (bytes > UINT_MAX - (uint64_t)PAGE_MASK) {
++			IOLog("SWEET FB: invalid copy destination length %llu\n", bytes);
++			stopWatchdog();
++			return false;
++		}
++		fCompose = IOBufferMemoryDescriptor::inTaskWithOptions(kernel_task,
++		    kIODirectionInOut, (vm_size_t)bytes, page_size);
++		if (fCompose == NULL || fCompose->getBytesNoCopy() == NULL) {
++			IOLog("SWEET FB: cannot allocate private copy destination (%llu bytes)\n", bytes);
++			OSSafeReleaseNULL(fCompose);
++			stopWatchdog();
++			return false;
++		}
++	}
+ 	fLock = IOLockAlloc();
+ 	fClients = OSArray::withCapacity(4);
+ 	fSurface = sweet_surface_create_physical(fPhys, fWidth, fHeight, fRowBytes, SWEET_FB_FORMAT_BGRA);
+@@ -601,12 +621,14 @@
+ 		IOLog("SWEET FB: setup failed\n");
+ 		OSSafeReleaseNULL(fSurface);    /* stays published: also held by the table */
+ 		OSSafeReleaseNULL(fWorkLoop);
++		OSSafeReleaseNULL(fCompose);
+ 		stopWatchdog();
+ 		return false;
+ 	}
+ 	fVsync = IOTimerEventSource::timerEventSource(this, &AppleCLCD::vsyncFired);
+ 	if (fVsync == NULL || fWorkLoop->addEventSource(fVsync) != kIOReturnSuccess) {
+ 		IOLog("SWEET FB: no vsync timer\n");
++		OSSafeReleaseNULL(fCompose);
+ 		stopWatchdog();
+ 		return false;
+ 	}
+@@ -1484,6 +1506,11 @@
+ 	 * framebuffer showed every multi-layer frame (dims, apps) drawn top-down.
+ 	 */
+ 	uint8_t *dst = fFlip[0] != NULL ? backBuffer() : (uint8_t *)fPixels;
++	if (fCompose != NULL) {
++		/* No IOSurface exposes this storage: panel aliases and views remain
++		 * readable throughout the normal clear and every layer copy. */
++		dst = (uint8_t *)fCompose->getBytesNoCopy();
++	}
+ 	if (fFlip[0] == NULL && fVig0 != NULL && fScanPhys != fBootSrc) {
+ 		scanFrom(fBootSrc, fBootStride);
+ 	}
+@@ -1496,7 +1523,7 @@
+ 		if (!force_console) {
+ 			sweet_console_muted = 1;
+ 			IOLog("SWEET FB: GUI takeover, text console muted\n");
+-			if (sweet_board_x676c() && fPixels != 0) {
++			if (sweet_board_x676c() && fPixels != 0 && fCompose == NULL) {
+ 				bzero((void *)fPixels, (size_t)fRowBytes * fHeight);
+ 			}
+ 		}
+@@ -1525,7 +1552,7 @@
+ 			    s ? s->pixelFormat : 0, s ? s->bytesPerRow : 0, sx, sy, get32(a, 8),
+ 			    get32(a, 12), dx, dy, w, h);
+ 		}
+-		if (s == NULL || s == fSurface) {
++		if (s == NULL || (s == fSurface && fCompose == NULL)) {
+ 			OSSafeReleaseNULL(s);
+ 			continue;
+ 		}
+@@ -1591,16 +1618,17 @@
+ 		}
+ 		s->release();
+ 	}
++	if (fCompose != NULL) {
++		/* All source reads are finished. Publish complete rows, including the
++		 * cleared padding, before the existing cache clean and DSI trigger. */
++		memcpy((void *)fPixels, dst, (size_t)fRowBytes * fHeight);
++	}
+ 	if (fFlip[0] != NULL) {
+ 		flipBack();
+ 	} else if (sweet_board_x676c()) {
+ 		/*
+-		 * The layers were composed straight into the cached mapping of the panel
+-		 * memory. The MTK DSI/OVL fetches the frame from DRAM, so clean the cache
+-		 * out to DRAM before triggering the push -- otherwise the new frame sits
+-		 * in the CPU cache and the panel keeps showing the stale boot-splash
+-		 * (this is why nothing appeared past the Apple logo even though SpringBoard
+-		 * was compositing and swapping).
++		 * The completed frame was copied to panel memory. The MTK DSI/OVL
++		 * fetches from DRAM, so clean that mapping before triggering the push.
+ 		 */
+ 		if (fPixels != 0) {
+ 			sweet_dcache_clean((vm_offset_t)fPixels, (unsigned)((size_t)fRowBytes * fHeight));
