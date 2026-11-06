@@ -1618,10 +1618,22 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
          instanceCount:(NSUInteger)instances
           baseInstance:(NSUInteger)baseInstance {
     [self requireActive];
-    if (!_pipeline || type != MTLPrimitiveTypeTriangle || start > UINT32_MAX ||
-        count > UINT32_MAX || instances > UINT32_MAX || baseInstance > UINT32_MAX) {
-        [_buffer
-            recordUnsupported:"Draw requires an executable triangle pipeline and valid counts"];
+    if (!_pipeline) {
+        [_buffer recordUnsupported:"Draw has no bound render pipeline"];
+        return;
+    }
+    /* The canonical compiler and native variant cache carry the draw topology.
+     * Nonindexed strips need no index-restart handling. Native shader feature
+     * validation still applies when the actual Vulkan pipeline is created. */
+    if (type != MTLPrimitiveTypeTriangle && type != MTLPrimitiveTypeTriangleStrip) {
+        char message[128];
+        snprintf(message, sizeof(message), "Nonindexed draw has unsupported primitive type %lu", type);
+        [_buffer recordUnsupported:message];
+        return;
+    }
+    if (start > UINT32_MAX || count > UINT32_MAX || instances > UINT32_MAX ||
+        baseInstance > UINT32_MAX) {
+        [_buffer recordUnsupported:"Nonindexed draw arguments exceed native 32-bit limits"];
         return;
     }
     if (!count || !instances)

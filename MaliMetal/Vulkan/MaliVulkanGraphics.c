@@ -229,8 +229,13 @@ static MMVKResult validate_point_size(MMVKDevice *d,const MMVKShader *shader,con
            (opcode==72&&count==5&&shader->words[n+3]==11&&shader->words[n+4]==1))point_size=1;
         n+=count;
     }
-    if(point_size&&(state->topology!=VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST||state->polygon_mode!=VK_POLYGON_MODE_FILL))
-        return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"PointSize output requires qualified triangle-list fill rasterization");
+    /* PointSize does not control filled triangle rasterization, whether the
+     * triangles are assembled as a list or a strip. Keep the existing enabled
+     * feature requirement and reject point/line rasterization here. */
+    if(point_size&&((state->topology!=VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST&&
+                    state->topology!=VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP)||
+                   state->polygon_mode!=VK_POLYGON_MODE_FILL))
+        return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"PointSize output requires triangle-list or triangle-strip fill rasterization");
     if(point_size&&!d->enabled_features.largePoints)
         return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"PointSize output requires the actual enabled largePoints feature");
     return MMVK_OK;

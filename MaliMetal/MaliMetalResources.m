@@ -21,12 +21,47 @@ extern size_t IOSurfaceGetBytesPerRow(void *) __attribute__((weak_import));
 extern size_t IOSurfaceGetPlaneCount(void *) __attribute__((weak_import));
 extern size_t IOSurfaceGetAllocSize(void *) __attribute__((weak_import));
 extern uint32_t IOSurfaceGetPixelFormat(void *) __attribute__((weak_import));
+extern size_t IOSurfaceGetBytesPerElement(void *) __attribute__((weak_import));
+extern size_t IOSurfaceGetElementWidth(void *) __attribute__((weak_import));
+extern size_t IOSurfaceGetElementHeight(void *) __attribute__((weak_import));
+extern size_t IOSurfaceGetOffsetOfPlane(void *,size_t) __attribute__((weak_import));
+extern NSUInteger IOSurfaceGetProtectionOptions(void *) __attribute__((weak_import));
 extern void *IOSurfaceGetBaseAddressOfPlane(void *,size_t) __attribute__((weak_import));
 extern size_t IOSurfaceGetWidthOfPlane(void *,size_t) __attribute__((weak_import));
 extern size_t IOSurfaceGetHeightOfPlane(void *,size_t) __attribute__((weak_import));
 extern size_t IOSurfaceGetBytesPerRowOfPlane(void *,size_t) __attribute__((weak_import));
 extern kern_return_t IOSurfaceLock(void *,uint32_t,uint32_t *) __attribute__((weak_import));
 extern kern_return_t IOSurfaceUnlock(void *,uint32_t,uint32_t *) __attribute__((weak_import));
+/* LA08 stores luminance and alpha in the two RG8 channels. CoreAnimation's
+ * shader applies that interpretation; the import must preserve both bytes. */
+static BOOL surfaceLA08Layout(void *surface, const MMVKImageDescriptorEx *image,
+                             void **pixels, size_t *bytesPerRow) {
+    if (!surface || !image || !image->width || !image->height ||
+        !IOSurfaceGetBaseAddress || !IOSurfaceGetWidth || !IOSurfaceGetHeight ||
+        !IOSurfaceGetBytesPerRow || !IOSurfaceGetPlaneCount || !IOSurfaceGetAllocSize ||
+        !IOSurfaceGetPixelFormat || !IOSurfaceGetBytesPerElement ||
+        !IOSurfaceGetElementWidth || !IOSurfaceGetElementHeight ||
+        !IOSurfaceGetOffsetOfPlane || !IOSurfaceGetProtectionOptions ||
+        IOSurfaceGetPlaneCount(surface) || IOSurfaceGetProtectionOptions(surface) ||
+        IOSurfaceGetPixelFormat(surface) != 0x4c413038u ||
+        IOSurfaceGetBytesPerElement(surface) != 2 ||
+        IOSurfaceGetElementWidth(surface) != 1 || IOSurfaceGetElementHeight(surface) != 1 ||
+        IOSurfaceGetWidth(surface) != image->width ||
+        IOSurfaceGetHeight(surface) != image->height)
+        return NO;
+    size_t line = (size_t)image->width * 2, row = IOSurfaceGetBytesPerRow(surface);
+    size_t allocation = IOSurfaceGetAllocSize(surface);
+    size_t offset = IOSurfaceGetOffsetOfPlane(surface, 0);
+    uintptr_t base = (uintptr_t)IOSurfaceGetBaseAddress(surface);
+    if (!base || offset > allocation || row < line || row > SIZE_MAX / image->height)
+        return NO;
+    size_t span = (image->height - 1) * row + line;
+    if (span > allocation - offset || span > UINTPTR_MAX - base)
+        return NO;
+    *pixels = (void *)base;
+    *bytesPerRow = row;
+    return YES;
+}
 static BOOL surfaceXRPlanes(void *surface,NSUInteger width,NSUInteger height,MMVKHostPlane planes[2]){
     if(!surface||!width||!height||!IOSurfaceGetBaseAddress||!IOSurfaceGetAllocSize||!IOSurfaceGetPlaneCount||!IOSurfaceGetPixelFormat||!IOSurfaceGetBaseAddressOfPlane||!IOSurfaceGetWidthOfPlane||!IOSurfaceGetHeightOfPlane||!IOSurfaceGetBytesPerRowOfPlane||IOSurfaceGetPlaneCount(surface)!=2||IOSurfaceGetPixelFormat(surface)!=0x62336138u)return NO;
     uintptr_t base=(uintptr_t)IOSurfaceGetBaseAddress(surface);size_t allocation=IOSurfaceGetAllocSize(surface);
@@ -443,6 +478,19 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
 }
 - (instancetype)initWithDescriptor:(MTLTextureDescriptor *)d iosurface:(void *)surface plane:(NSUInteger)plane device:(id<MTLDevice>)device {
     self=[self initWithDescriptor:d device:device];if(!self)return nil;
+    if (_pixelFormat == MTLPixelFormatRG8Unorm) {
+        const MMVKImageDescriptorEx *image = mmvk_image_descriptor(_image);
+        if (plane || _storageMode != MTLStorageModeShared ||
+            _usage != MTLTextureUsageShaderRead || image->type != 2 ||
+            image->mip_levels != 1 || image->array_layers != 1 || image->samples != 1 ||
+            !IOSurfaceLock || !IOSurfaceUnlock ||
+            !surfaceLA08Layout(surface, image, &_pixels, &_bytesPerRow)) {
+            [self release];
+            return nil;
+        }
+        _iosurface = (void *)CFRetain(surface);
+        return self;
+    }
     if(mmvk_format_is_two_plane(mmvk_image_format(_image))){
         const MMVKImageDescriptorEx *x=mmvk_image_descriptor(_image);MMVKHostPlane planes[2];
         if(plane||_storageMode!=MTLStorageModeShared||x->type!=2||x->mip_levels!=1||x->array_layers!=1||x->samples!=1||!IOSurfaceLock||!IOSurfaceUnlock||!surfaceXRPlanes(surface,x->width,x->height,planes)){[self release];return nil;}
@@ -513,6 +561,10 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
     MMVKResult r;
     if(_surfaceTwoPlanes){MMVKHostPlane planes[2];const MMVKImageDescriptorEx *x=mmvk_image_descriptor(_image);MMVKImageRegion region={.width=x->width,.height=x->height,.depth=1};
         r=surfaceXRPlanes(_iosurface,x->width,x->height,planes)?mmvk_image_upload_planes(_image,&region,planes,e):MMVK_ERROR_IO;
+    } else if (_pixelFormat == MTLPixelFormatRG8Unorm) {
+        void *pixels; size_t row;
+        r = surfaceLA08Layout(_iosurface, mmvk_image_descriptor(_image), &pixels, &row)
+                ? mmvk_image_upload(_image, pixels, row, e) : MMVK_ERROR_IO;
     }else{const void *p=IOSurfaceGetBaseAddress(_iosurface);r=p?mmvk_image_upload(_image,p,_bytesPerRow,e):MMVK_ERROR_IO;}
     if(IOSurfaceUnlock(_iosurface,1,NULL)!=KERN_SUCCESS)r=MMVK_ERROR_IO;
     if(r&&e&&!e->code){e->code=r;strcpy(e->message,"IOSurface staging upload failed");}return r==MMVK_OK;
@@ -523,6 +575,10 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
     MMVKResult r;
     if(_surfaceTwoPlanes){MMVKHostPlane planes[2];const MMVKImageDescriptorEx *x=mmvk_image_descriptor(_image);MMVKImageRegion region={.width=x->width,.height=x->height,.depth=1};
         r=surfaceXRPlanes(_iosurface,x->width,x->height,planes)?mmvk_image_readback_planes(_image,&region,planes,5000000000ull,e):MMVK_ERROR_IO;
+    } else if (_pixelFormat == MTLPixelFormatRG8Unorm) {
+        void *pixels; size_t row;
+        r = surfaceLA08Layout(_iosurface, mmvk_image_descriptor(_image), &pixels, &row)
+                ? mmvk_image_readback(_image, pixels, row, 5000000000ull, e) : MMVK_ERROR_IO;
     }else{void *p=IOSurfaceGetBaseAddress(_iosurface);r=p?mmvk_image_readback(_image,p,_bytesPerRow,5000000000ull,e):MMVK_ERROR_IO;}
     if(IOSurfaceUnlock(_iosurface,0,NULL)!=KERN_SUCCESS)r=MMVK_ERROR_IO;
     if(r&&e&&!e->code){e->code=r;strcpy(e->message,"IOSurface staging readback failed");}return r==MMVK_OK;

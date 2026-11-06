@@ -148,6 +148,7 @@ enum {
 typedef NSUInteger MTLPixelFormat;
 enum {
     MTLPixelFormatInvalid = 0,
+    MTLPixelFormatRG8Unorm = 30,
     MTLPixelFormatRGBA8Unorm = 70,
     MTLPixelFormatRGBA8Unorm_sRGB = 71,
     MTLPixelFormatBGRA8Unorm = 80,
