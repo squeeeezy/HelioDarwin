@@ -33,6 +33,37 @@ proof that providers are missing. No entitlement is added. Its managed job is
 diagnostic-only: helper-only arguments, RunAtLoad=false and KeepAlive=false.
 Native PosterBoard discovery, readiness and SpringBoard prewarm remain intact.
 
+### Scoped metadata recovery candidate
+
+The optional `SweetRepairPosterMetadata` dependency repairs the two retained
+provider records through the matching mobile `lsd` process and its existing
+MobileInstallation permissions. It fetches complete native metadata for the
+PaperBoard and WallpaperKit hosts, checks the two original plugin identities
+and authoritative provider entitlements, and compares fresh LaunchServices
+entitlement dictionaries before and after registration. Healthy records are
+left alone. It uses the native identifier-keyed registration dictionary and
+arms the native save timer; it does not erase the database or unregister first.
+
+Build and install into an offline matching root:
+
+```sh
+python3 tools/posterboard/build_recovery.py --sysroot IOS_SYSROOT --out RECOVERY_BUILD
+sudo python3 tools/sweet_daemons.py MOUNTED_ROOT --repair-poster-metadata RECOVERY_BUILD
+```
+
+The builder also accepts `--wsl --linker /usr/bin/ld64.lld-18` on Windows.
+Installation pins the existing ad-hoc-signed `lsd` preimage and preserves its
+entitlement blobs and rollback metadata. Runtime guards check the OS build,
+loaded images and inspected native methods. One worker pass starts after the
+main runloop is ready; it does not block the main queue. Its owned diagnostic
+file is `/private/var/mobile/Library/Logs/SweetRepairPosterMetadata.log`.
+
+The candidate builds locally. Native registration acceptance, persistence,
+renewed provider discovery and wallpaper pixels still require a device run.
+To remove the dependency, use
+`sudo python3 tools/sweet_daemons.py MOUNTED_ROOT --remove-poster-metadata-repair`.
+This restores a recorded executable preimage; it retains provider data and logs.
+
 The captured legacy registration path first unregisters a provider, then passes
 a flat installation dictionary where a plugin-identifier map is expected. The
 replacement can report success while losing genuine signing/capability metadata.
@@ -189,8 +220,9 @@ Buffer swaps and a visible spinner alone do not identify the frame producer.
 
 Separate failures remain outside this texture candidate: the inspected
 VideoToolbox alignment reader expects a dictionary for
-`DisplayPipePlaneBaseAlignment`, while the framebuffer currently publishes
-a number. Other captured extension/daemon aborts still need their own
+`DisplayPipePlaneBaseAlignment`. Patch 0207 replaces the scalar property with
+the inspected linear-alignment dictionary and supplies the native stride schema;
+device service recovery remains unverified. Other captured extension/daemon aborts still need their own
 contract analysis. These services are not considered repaired by AMFI
 membership or the texture-layout implementation.
 
@@ -201,12 +233,12 @@ and cache handling. Their captured JS/MMU/GPU status fields are zero. This is
 phone evidence of GPU job execution; it does not establish correct pixels,
 numerical FP16, frame rate or complete Metal/Vulkan support.
 
-The next renderer failure is now precise: backboardd reaches the adapter's
+That capture identified a renderer failure: backboardd reached the adapter's
 128-live-BO limit before native allocation, refusing requests of 64, 69,632 and
 135,168 bytes with ENOSPC. This is not an observed device-memory allocation
 failure. Released surface owners now show falling wired-byte snapshots; no
 surface NoMemory failure is retained in this console. A bounded suballocation
-remedy is under development, with kernel memory limits preserved.
+remedy is now implemented, with kernel memory limits preserved.
 
 PosterBoard still traps while initializing/publishing a configuration with nil
 paths. Both helper registrations are accepted, but its provider query is denied
@@ -214,11 +246,19 @@ by the real host-entitlement policy: zero results are not evidence of absence.
 Native PosterBoard initially discovers nine providers. The helper's standalone
 legacy registration replaces two valid records without their capability
 metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job is being corrected; original providers and user data must be preserved.
+job has been disabled; original providers and user data must be preserved.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
 a complete rendered UI and wallpaper remain unconfirmed.
+
+The subsequent [01:29:49 capture](https://github.com/squeeeezy/HelioDarwin/blob/x676c/logs/boot-0205-run-40224078640-ui-bo-poster.log)
+used the same kernel with native BO suballocation and the retired registration
+job. It records 128 logical BOs on 20 native backings, ten successful hardware
+JM terminal results and no retained BO-allocation failure. PosterBoard still
+traps: disabling the helper did not repair the two existing malformed provider
+records. The user saw the bootloader image and black screens, without clocks or
+wallpaper. Android returned automatically around 01:42; visible UI remains unverified.
 
 ## Remaining contracts
 

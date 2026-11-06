@@ -1,0 +1,2197 @@
+x676c shim: xnu loader
+CurrentEL=0x0000000000000001
+load=0x0000000040000000
+dtb=0x0000000047c80000
+cntfrq=0x0000000000c65d40
+mpidr=0x0000000081000000
+midr=0x00000000412fd050
+sctlr_el1=0x0000000030d01800
+id_aa64mmfr0=0x0000000000101122
+-- ufshci std
+11270000: 3587071f 00000000 00000200 00000000
+11270010: 00000000 00000426 00000000 00000000
+11270020: 00000000 00030e75 00000000 00000000
+11270030: 0000010f 00000001 80000010 00000000
+11270040: 00000000 00000000 00000000 00000000
+11270050: 51252c00 00000000 00000000 00000000
+11270060: 00000001 00400000 00000000 00000000
+11270070: 00000000 00000000 00000000 00000000
+11270080: 00000001 00000000 00000000 00000000
+11270090: 00000002 15710000 00000000 00000000
+112700a0: 00000000 00000000 00000000 00000000
+112700b0: 00000000 00000000 00000000 00000000
+112700c0: 000a0a00 00000000 00000000 00000000
+112700d0: 20000000 00000000 00000000 00000000
+112700e0: 00000000 00000000 00000000 00000000
+112700f0: 00000800 00000000 00000000 0000010a
+-- ufshci mtk 0x140
+11270140: 00000100 00000003 00000000 00000000
+11270150: 00000000 00000000 00000000 00000000
+-- ufshci mtk 0x2100
+11272100: 00000000 00000000 00000000 00000000
+-- ufshci mtk 0x2200
+11272200: 00000007 000000cc 00800040 008000c0
+11272210: 00000000 00000000 00000000 00000000
+11272220: 00000000 00000000 00000000 00000000
+11272230: 00000000 00000000 00000000 00000000
+11272240: 20160706 00000000 00000001 00000000
+11272250: 00000000 00000000 00000000 00000000
+11272260: 00000000 00000000 00000000 00000000
+11272270: 00000000 00000000 00000000 00000000
+11272280: 00009ae1 001642f4 d0169ba1 d0169ff5
+11272290: 02169ade 02169b7c 00000000 00000000
+112722a0: 02169ade 00168ad0 00168fd6 00000000
+112722b0: 00000000 00000000 00000000 00000000
+112722c0: 00000000 00000000 00000000 00000000
+splash drawn
+initrd lo=0x0000000066f00000
+initrd hi=0x000000006994b7b2
+payload=0x00000000688b1a08
+phys base=0x0000000140000000
+mem size=0x00000000ffff0000
+virt base=0xfffffe0006000000
+entry va=0xfffffe00074c0488
+segments=0x000000000000000a
+boot_args=0x0000000142f9c000
+top=0x0000000142fa0000
+jump=0x00000001414c0488
+SWEET EARLY 1: arm_init entered (MMU on)
+SWEET EARLY 2: PE_init_platform done
+SWEET EARLY 3: ml_parse_cpu_topology done
+SWEET EARLY 4: cpu_bootstrap done
+SWEET EARLY 5: kernel_startup_bootstrap done
+SWEET EARLY 6: cpu_init done
+SWEET EARLY 7: entering arm_vm_init
+SWEET EARLY 8: leaving bootstrap TTBR0
+SWEET EARLY 9: kernel framebuffer VA live
+SWEET EARLY 10: TTBR0 off; TLB flushed
+SWEET EARLY 11: physmap table pointers rebound
+SWEET EARLY 12: calling pmap_bootstrap
+SWEET EARLY 13: pmap_bootstrap done
+SWEET EARLY 14: early I/O page tables ready
+SWEET EARLY 15: arm_vm_init returned
+SWEET EARLY 16: calling serial_init
+SWEET EARLY 17: fbcon config read; mapping
+SWEET EARLY 18: fbcon mapping returned
+SWEET EARLY 19: serial_init returned
+SWEET EARLY 20: kprintf startup complete
+Darwin Kernel Version 22.6.0: Mon Aug 14 05:06:07 UTC 2023; runner:xnu-8796.141.3
+pmap_startup() init/release time: 22071 microsec
+pmap_startup() delayed init/release of 0 pages
+vm_page_bootstrap: 258060 free pages, 4080 wired pages, (up to 0 of which are delayed free)
+VM boostrap: 97 maps, 204 entries and 512 holes available
+Maximum number of VM swap files: 100
+bufferhdr               : 0xfffffe1000298000 - 0xfffffe1000560000 (2848K)
+gIOKitPageableFixed2    : 0xfffffe1000560000 - 0xfffffe1006560000 (96M)
+ipc_kernel_map          : 0xfffffe1006560000 - 0xfffffe100a560000 (64M)
+gIOKitPageableFixed3    : 0xfffffe100a560000 - 0xfffffe1010560000 (96M)
+mb                      : 0xfffffe1010560000 - 0xfffffe1014560000 (64M)
+zones                   : 0xfffffe1014560000 - 0xfffffe3014560000 (128G)
+kmem_ptr_range          : 0xfffffe3014560000 - 0xfffffe44082e0000 (79G)
+bsd_pageable            : 0xfffffe44082e0000 - 0xfffffe440c5e8000 (67M)
+gIOKitPageableFixed0    : 0xfffffe440c5e8000 - 0xfffffe44125e8000 (96M)
+io_submap               : 0xfffffe44125e8000 - 0xfffffe4412de8000 (8M)
+kmem_sprayqtn_range     : 0xfffffe4412de8000 - 0xfffffe44915fc000 (2024M)
+kmem_ptr_range_meta     : 0xfffffe44915fc000 - 0xfffffe4491d78000 (7M)
+gIOKitPageableFixed1    : 0xfffffe4491d78000 - 0xfffffe4497d78000 (96M)
+ipc_kernel_copy_map     : 0xfffffe4497d78000 - 0xfffffe4498578000 (8M)
+zone_meta               : 0xfffffe4498578000 - 0xfffffe44a1178000 (140M)
+kmem_data_range         : 0xfffffe44a1178000 - 0xfffffe7fff884000 (237G)
+compressor              : 0xfffffe7fff884000 - 0xfffffe8fffdfc000 (64G)
+kmem_large_ranges[1]    : 0 - 0 (0B)
+kmem_large_ranges[2]    : 0 - 0 (0B)
+kmem_large_ranges[3]    : 0 - 0 (0B)
+kmem_large_ranges[4]    : 0xfffffe4422aea800 - 0xfffffe44915fc000 (1771M)
+kmem_large_ranges[5]    : 0xfffffe4c0ce59800 - 0xfffffe7fff884000 (207G)
+"vm_compressor_mode" is 4
+zone_init: pgzalloc  0xfffffe1014560000:0xfffffe1016504000 (31M) [1012 slots]
+zone_init: map VM    0xfffffe1016504000:0xfffffe14e2d10000 (19G)
+zone_init: map RO    0xfffffe14e2d10000:0xfffffe167c514000 (6G)
+zone_init: map GEN0  0xfffffe167c514000:0xfffffe1b48d20000 (19G)
+zone_init: map GEN1  0xfffffe1b48d20000:0xfffffe201552c000 (19G)
+zone_init: map GEN2  0xfffffe201552c000:0xfffffe24e1d38000 (19G)
+zone_init: map GEN3  0xfffffe24e1d38000:0xfffffe29ae548000 (19G)
+zone_init: map DATA  0xfffffe29ae548000:0xfffffe3014560000 (25G)
+zone_init: metadata  0xfffffe4498588000:0xfffffe44a0588000 (128M)
+zone_init: metabits  0xfffffe44a0588000:0xfffffe44a1168000 (11M)
+zone_init: extra     0:0 (0B)
+VM bootstrap done: 85 maps, 165 entries and 501 holes left
+Long logs support configured: size: 16384
+Log queues configured: slot count: 48, per-slot size: 32768, total size: 1572864
+Firehose configured: 16 chunks, 8 io pages
+OSLog stream configured: stream: 8192 bytes, cache: 2112 bytes
+OSLog stream verification: 0
+standard timeslicing quantum is 10000 us
+standard background quantum is 2500 us
+mig_table_max_displ = 54 mach_kobj_count = 374
+debug_log_init: Error!! gPanicBase is still not initialized
+debug_log_init: Error!! gPanicBase is still not initialized
+kdp_core zlib memory 0x8000
+Serial requested, consistent debug disabled or debug boot arg not present, configuring debugging over serial
+iBoot version: x676c-shim
+"name" not a kext
+"AAPL,phandle" not a kext
+SWEET AMFI: built-in interface registered (XML entitlements)
+calling mpo_policy_init for vnguard
+Security policy loaded: Guarded vnode policy (vnguard)
+SWEET: trust caches unavailable (Image4/AMFI not installed)
+keepsyms boot arg specified; keeping linkedit segment for symbols.
+No POST boot-arg set.
+SWEET: starting device-tree platform expert
+SWEET: platform expert registered
+SWEET AKS: AppleKeyStore registered (no passcode, unlocked)
+SWEET WDT: IOWatchdog registered (accepts check-ins, never fires)
+SWEET SURF: IOCoreSurfaceRoot registered
+SWEET SCALER: AppleM2ScalerCSCDriver registered
+SWEET HID: buttons registered
+SWEET HID: touch registered
+SWEET BATTERY: static fallback, 100% 4200mV external=1 charging=0
+SWEET TOPRGU: inherited mode 0x7d length 0xf000 status 0; enabled 1 timeout_us 30000000 heartbeat_us 1000000
+SWEET CPU: requested=6 selected=6 (limit=8)
+SWEET CPU: cpu=0 mpidr=0x0 came alive; SGI1 OK
+SWEET CPU: cpu=1 CPU_ON target=0x100 entry_pa=0x1414c2000 context=1
+SWEET CPU: cpu=1 PSCI CPU_ON rc=0
+SWEET FB: MT6789 DSI0 (0x14013000) and MUTEX0 (0x14001000) mapped for HW scanout
+SWEET GPU: powering on MT6789 Mali-G57 subsystem...
+SWEET CPU: cpu=1 mpidr=0x100 came alive; SGI1 OK
+SWEET CPU: cpu=2 CPU_ON target=0x200 entry_pa=0x1414c2000 context=2
+SWEET CPU: cpu=2 PSCI CPU_ON rc=0
+SWEET GPU: PMIC enables verified; inherited VGPU selector 0x38 VSRAM_GPU 0x38
+SWEET GPU: SPM PWR_STATUS pre=0xf83a1bc1/0xf83a1bc1 MFG0_CON=0x00001112
+SWEET GPU: SPM PWR_STATUS post=0xf83a1bfd/0xf83a1bfd MFG_CON[0..3]=0x0000000d 0x0000000d 0x0000000d 0x0000000d
+SWEET CPU: cpu=2 mpidr=0x200 came alive; SGI1 OK
+SWEET CPU: cpu=3 CPU_ON target=0x300 entry_pa=0x1414c2000 context=3
+SWEET CPU: cpu=3 PSCI CPU_ON rc=0
+SWEET CPU: cpu=3 mpidr=0x300 came alive; SGI1 OK
+SWEET CPU: cpu=4 CPU_ON target=0x400 entry_pa=0x1414c2000 context=4
+SWEET CPU: cpu=4 PSCI CPU_ON rc=0
+SWEET CPU: cpu=4 mpidr=0x400 came alive; SGI1 OK
+SWEET CPU: cpu=5 CPU_ON target=0x500 entry_pa=0x1414c2000 context=5
+SWEET CPU: cpu=5 PSCI CPU_ON rc=0
+SWEET CPU: cpu=5 mpidr=0x500 came alive; SGI1 OK
+SWEET CPU: 6/6 CPUs initialized, SGI1 verified
+Copyright (c) 1982, 1986, 1989, 1991, 1993
+	The Regents of the University of California. All rights reserved.
+
+MAC Framework successfully initialized
+using 5181 buffer headers and 4638 cluster IO buffer headers
+SWEET GPU: topckgen CLK_CFG_3=0x01020000 (mfg stable=0)
+SWEET GPU: Mali-G57 ID=0x90930010 (Arch 147 Rev 0) L2=0x08120206 Tiler=0x00000809 Mem=0x00000001 MMU=0x00002830 AS=0xff JS=0x7
+SWEET GPU: Mali-G57 registered as MaliMetal / MaliMetalDevice (vendor 0x13b5, device 0x9093)
+SWEET FB: AppleCLCD 1080x2400 stride 4320 at 0xfeabe000, default surface 1, presented as 1080x2400
+SWEET TOPRGU: heartbeat 2 gap_us 1001069 inherited_timeout_us 30000000
+SWEET TOPRGU: heartbeat 3 gap_us 1031353 inherited_timeout_us 30000000
+SWEET TOPRGU: heartbeat 4 gap_us 1008637 inherited_timeout_us 30000000
+ktriage_register_subsystem_strings: set subsystem 8 strings
+calling mpo_policy_init for SWEET AMFI
+Security policy loaded: SWEET built-in Mobile File Integrity (SWEET AMFI)
+SWEET AMFI: platform binary policy registered (0)
+calling mpo_policy_init for Sandbox
+Security policy loaded: SWEET permissive sandbox stand-in (Sandbox)
+SWEET Sandbox: permissive policy registered (0)
+SWEET HFS: hfs-627.100.6 registered
+mcache: 6 CPU(s), 64 bytes CPU cache line size
+mbinit: done [64 MB total pool size, (42/21) split]
+dlil_init: Waiting for all the create dlil kernel threads to get scheduled at least once.
+dlil_init: All the created dlil kernel threads have been scheduled at least once. Proceeding.
+SWEET AMFI: AppleMobileFileIntegrity registered; pinned trust set ready (2760 records)
+ifnet_attach: All kernel threads created for interface lo0 have been scheduled at least once. Proceeding.
+ifnet_attach: All kernel threads created for interface gif0 have been scheduled at least once. Proceeding.
+skip attaching fsw to lo0 using legacy TX modelifnet_attach: All kernel threads created for interface stf0 have been scheduled at least once. Proceeding.
+ufshci: MediaTek host, UFSHCI 2.0, 32 slots, CAP 0x3587071f, DMA at 0x145140000
+ufshci: as found: HCE 0x1 HCS 0x10f IS 0x0 DBR 0x0 RSR 0x1
+ufshci: UIC errors PA 0x0 DL 0x0 N 0x0 T 0x0 DME 0x0
+ufs_mtk: link up (probe 0x21100081), REFCLK_CTRL 0x3
+ufshci: UPIU 0x00 OCS 0x5 (try 0)
+ufshci: slot_wait spin 100000 slot 0 door=0x1 IS=0x815 now=786360076 end=827437411
+ufshci: slot 0 (UPIU 0x00 op 0x00) timed out (try 1)
+ufshci: slot_wait spin 100000 slot 0 door=0x1 IS=0x815 now=923021075 end=964019395
+ufshci: slot 0 (UPIU 0x00 op 0x00) timed out (try 2)
+ufshci: slot_wait spin 100000 slot 0 door=0x1 IS=0x815 now=1059602348 end=1100601207
+ufshci: slot 0 (UPIU 0x00 op 0x00) timed out (try 3)
+ufshci: adopted link does not carry a NOP: HCE 0x1 HCS 0x501 IS 0x815 DBR 0x1 RSR 0x0
+ufshci: UIC errors PA 0x80000010 DL 0x80002002 N 0x0 T 0x0 DME 0x0
+ufs_mtk: link up (probe 0x25100001), REFCLK_CTRL 0x3
+ufshci: HS gear tx 3 rx 3, lanes tx 2 rx 2, rate B
+ufshci: ready (full init)
+ufs_disk: LU 0: 4 MiB, 4096-byte blocks, boot LU A
+ufs_disk: LU 1: 4 MiB, 4096-byte blocks, boot LU B
+ufs_disk: LU 2: 122032 MiB, 4096-byte blocks
+ufshci: 1 data commands, last op 0x9e lba 0
+ufshci: 2 data commands, last op 0x88 lba 1
+ufshci: 3 data commands, last op 0x88 lba 2
+ufs_disk: disk0s1 boot_para               1 MiB
+ufs_disk: disk0s2 proinfo                 3 MiB
+ufs_disk: disk0s3 misc                    0 MiB
+ufs_disk: disk0s4 para                    0 MiB
+ufs_disk: disk0s5 expdb                 128 MiB
+ufs_disk: disk0s6 frp                     1 MiB
+ufs_disk: disk0s7 nvcfg                  32 MiB
+ufs_disk: disk0s8 nvdata                 64 MiB
+ufs_disk: disk0s9 tkv_a                   1 MiB
+ufs_disk: disk0s10 vbmeta_a                8 MiB
+ufs_disk: disk0s11 vbmeta_system_a         8 MiB
+ufs_disk: disk0s12 vbmeta_vendor_a         8 MiB
+ufs_disk: disk0s13 tkv_b                   1 MiB
+ufs_disk: disk0s14 vbmeta_b                8 MiB
+ufs_disk: disk0s15 vbmeta_system_b         8 MiB
+ufs_disk: disk0s16 vbmeta_vendor_b         8 MiB
+ufs_disk: disk0s17 metadata               32 MiB
+ufs_disk: disk0s18 persist                55 MiB
+ufs_disk: disk0s19 protect1                8 MiB
+ufs_disk: disk0s20 protect2                8 MiB
+ufs_disk: disk0s21 seccfg                  8 MiB
+ufs_disk: disk0s22 otp                    48 MiB
+ufs_disk: disk0s23 md1img_a              200 MiB
+ufs_disk: disk0s24 spmfw_a                 1 MiB
+ufs_disk: disk0s25 pi_img_a                1 MiB
+ufs_disk: disk0s26 dpm_a                   4 MiB
+ufs_disk: disk0s27 scp_a                   6 MiB
+ufs_disk: disk0s28 sspm_a                  1 MiB
+ufs_disk: disk0s29 mcupm_a                 1 MiB
+ufs_disk: disk0s30 gz_a                   32 MiB
+ufs_disk: disk0s31 lk_a                    4 MiB
+ufs_disk: disk0s32 logo_a                 24 MiB
+ufs_disk: disk0s33 boot_a                 64 MiB
+ufs_disk: disk0s34 vendor_boot_a          64 MiB
+ufs_disk: disk0s35 dtbo_a                  8 MiB
+ufs_disk: disk0s36 tee_a                   5 MiB
+ufs_disk: disk0s37 sec1                    2 MiB
+ufs_disk: disk0s38 efuse                   0 MiB
+ufs_disk: disk0s39 nvram                  64 MiB
+ufs_disk: disk0s40 dram_para              25 MiB
+ufs_disk: disk0s41 connsys_bt_a            8 MiB
+ufs_disk: disk0s42 connsys_wifi_a          8 MiB
+ufs_disk: disk0s43 connsys_gnss_a         13 MiB
+ufs_disk: disk0s44 md1img_b              200 MiB
+ufs_disk: disk0s45 spmfw_b                 1 MiB
+ufs_disk: disk0s46 pi_img_b                1 MiB
+ufs_disk: disk0s47 dpm_b                   4 MiB
+ufs_disk: disk0s48 scp_b                   6 MiB
+ufs_disk: disk0s49 sspm_b                  1 MiB
+ufs_disk: disk0s50 mcupm_b                 1 MiB
+ufs_disk: disk0s51 gz_b                   32 MiB
+ufs_disk: disk0s52 lk_b                    4 MiB
+ufs_disk: disk0s53 logo_b                 24 MiB
+ufs_disk: disk0s54 boot_b                 64 MiB
+ufs_disk: disk0s55 vendor_boot_b          64 MiB
+ufs_disk: disk0s56 connsys_bt_b            8 MiB
+ufs_disk: disk0s57 connsys_wifi_b          8 MiB
+ufs_disk: disk0s58 connsys_gnss_b          8 MiB
+ufs_disk: disk0s59 dtbo_b                  8 MiB
+ufs_disk: disk0s60 tee_b                   6 MiB
+ufs_disk: disk0s61 super               10546 MiB
+ufs_disk: disk0s62 tranfs                301 MiB
+ufs_disk: disk0s63 userdata            89271 MiB
+ufs_disk: disk0s64 flashinfo              16 MiB
+ufs_disk: disk0s65 iosroot             20480 MiB (read-write)
+ufs_disk: LUN 2, 122032 MiB, 65 partitions
+SWEET BOOT: diagnostic reset armed for 600 seconds
+SWEET SAMPLE: thread started
+SWEET TOUCH: starting in 5 s
+SWEET KEYS: X676C KPD volume bits 0/1; MT6366 TOPSTATUS bit1 power
+BSD root: disk0s65, major 1, minor 64
+ufshci: 4 data commands, last op 0x88 lba 25992960
+ufshci: 5 data commands, last op 0x88 lba 25992960
+ufshci: 6 data commands, last op 0x88 lba 25995138
+ufshci: 7 data commands, last op 0x88 lba 26176642
+ufshci: 8 data commands, last op 0x88 lba 26176642
+ufshci: 9 data commands, last op 0x88 lba 25996418
+ufshci: 10 data commands, last op 0x88 lba 25996418
+ufshci: 11 data commands, last op 0x88 lba 27756389
+ufshci: 12 data commands, last op 0x88 lba 26177208
+ufshci: 13 data commands, last op 0x88 lba 26176648
+ufshci: 14 data commands, last op 0x88 lba 26176644
+ufshci: 15 data commands, last op 0x88 lba 25993089
+ufshci: 16 data commands, last op 0x88 lba 25992961
+ufshci: 17 data commands, last op 0x88 lba 25993090
+jnl: b(1, 64): journal start/end pointers reset! (s 0x50a000 e 0x7a3000)
+ufshci: 18 data commands, last op 0x88 lba 25992961
+ufshci: 19 data commands, last op 0x88 lba 25992962
+ufshci: 20 data commands, last op 0x88 lba 25992963
+ufshci: 21 data commands, last op 0x88 lba 25992964
+ufshci: 22 data commands, last op 0x88 lba 25992965
+ufshci: 23 data commands, last op 0x88 lba 25992966
+ufshci: 24 data commands, last op 0x88 lba 25992967
+ufshci: 25 data commands, last op 0x88 lba 25992968
+ufshci: 26 data commands, last op 0x88 lba 25992969
+hfs: mounted iOSRoot on device b(1, 64)
+SWEET: root volume is not authenticated (error 25); continuing unsealed
+No POST boot-arg set.
+load_init_program: attempting to load /usr/appleinternal/sbin/launchd.development
+ufshci: 27 data commands, last op 0x88 lba 27755847
+VM Swap Subsystem is ON
+load_init_program: attempting to load /sbin/launchd
+ufshci: 28 data commands, last op 0x88 lba 27755809
+ufshci: 29 data commands, last op 0x88 lba 28087503
+ufshci: 30 data commands, last op 0x88 lba 28087627
+ufshci: 31 data commands, last op 0x88 lba 27756387
+ufshci: 32 data commands, last op 0x88 lba 27755927
+ufshci: 33 data commands, last op 0x88 lba 27755853
+ufshci: 34 data commands, last op 0x88 lba 28088706
+ufshci: 35 data commands, last op 0x88 lba 28088922
+ufshci: 36 data commands, last op 0x88 lba 28088722
+ufshci: 37 data commands, last op 0x88 lba 28088846
+ufshci: 38 data commands, last op 0x88 lba 28088810
+ufshci: 39 data commands, last op 0x88 lba 28088710
+ufshci: 40 data commands, last op 0x88 lba 28088782
+ufshci: 41 data commands, last op 0x88 lba 28088818
+ufshci: 42 data commands, last op 0x88 lba 28088714
+ufshci: 43 data commands, last op 0x88 lba 28088718
+ufshci: 44 data commands, last op 0x88 lba 28088822
+ufshci: 45 data commands, last op 0x88 lba 28088850
+ufshci: 46 data commands, last op 0x88 lba 28088790
+ufshci: 47 data commands, last op 0x88 lba 28088834
+ufshci: 48 data commands, last op 0x88 lba 28088838
+ufshci: 49 data commands, last op 0x88 lba 28088842
+ufshci: 50 data commands, last op 0x88 lba 28088802
+ufshci: 51 data commands, last op 0x88 lba 28088770
+ufshci: 52 data commands, last op 0x88 lba 28088794
+ufshci: 53 data commands, last op 0x88 lba 28088826
+ufshci: 54 data commands, last op 0x88 lba 28088746
+shared_region: 0x704eaffe62c6e569 [1(launchd)] check_np(0x16b007bc0) vm_shared_region_start_address() failed
+ufshci: 55 data commands, last op 0x88 lba 28088754
+ufshci: 56 data commands, last op 0x88 lba 28088758
+ufshci: 57 data commands, last op 0x88 lba 28088762
+SWEET Sandbox: launchd op 2
+Darwin Ignition Sequence Version 1.0.0: Tue Jul  2 20:41:23 PDT 2024; root:libignition-51~1974/libignition_core/RELEASE_ARM64
+libignition: 1: arguments           :
+libignition: 1:   ignition level    : 0x1
+libignition: 1:   force dylib root  : 0x0
+libignition: 1:   halt after stage  : n/a
+libignition: 1: ignition blob not available
+libignition: 1: configuration         :
+libignition: 1:   program             : launchd
+libignition: 1:   os environment      : n/a
+libignition: 1:   rd                  : ufs
+libignition: 1:   arp0                : n/a
+libignition: 1:   rp                  : n/a
+libignition: 1:   pivot src           : n/a
+libignition: 1:   root ramdisk        : 0x0
+libignition: 1:   restore             : 0x0
+libignition: 1:   root device info    : 0x0
+libignition: 1:   can haz debugger    : 0x1
+libignition: 1:   rootfs mount flags  : 0x480d001
+libignition: 1:   ecid                : 0x0
+libignition: 1:   hardware target     : d22ap
+libignition: 1:   initproc            : 0x1
+libignition: 1:   single user         : 0x0
+libignition: 1:   userspace reboot    : 0x0
+libignition: 1:   secure boot level   : 0x0
+libignition: 1:   os version          : n/a
+libignition: 1: parameters          :
+libignition: 1:   version           : 0x1
+libignition: 1:   argc              : 0x1
+libignition: 1:   log fd            : 0xffffffffffffffff
+libignition: 1:   platform          : 0x2
+libignition: 1: boot spec           :
+libignition: 1:   name              : local
+libignition: 1:   stage count       : 0x7
+libignition: 1:        hello: commence primary ignition
+libignition: 1:        hello: hello from launchd.1
+libignition: 1:      preboot: ignition level insufficient: actual = 1, required >= 2
+libignition: 1: cryptex1 sniff: ignition level insufficient: actual = 1, required >= 2
+libignition: 1:        graft: ignition level insufficient: actual = 1, required >= 3
+libignition: 1: select os cryptex path: ignition level insufficient: actual = 1, required >= 3
+libignition: 1:  dylib_cache: discovering shared library cache
+libignition: 1:  dylib_cache: finding shared cache on system volume: ignition level = 1, search root fd = 4, subpath = System/Library/Caches/com.apple.dyld/
+ufshci: 58 data commands, last op 0x88 lba 26176652
+ufshci: 59 data commands, last op 0x88 lba 26178310
+ufshci: 60 data commands, last op 0x88 lba 26178150
+ufshci: 61 data commands, last op 0x88 lba 26217703
+ufshci: 62 data commands, last op 0x88 lba 26214631
+libignition: 1:  dylib_cache: opened shared cache directory: /System/Library/Caches/com.apple.dyld
+libignition: 1:      goodbye: ignition sequence complete
+ufshci: 63 data commands, last op 0x88 lba 28088730
+shared_region: 0x704eaffe62c6e569 [1(launchd)] check_np(0x16b007150) vm_shared_region_start_address() failed
+ufshci: 64 data commands, last op 0x88 lba 27756707
+ufshci: 65 data commands, last op 0x88 lba 27756499
+ufshci: 66 data commands, last op 0x88 lba 27756485
+ufshci: 67 data commands, last op 0x88 lba 27757541
+ufshci: 68 data commands, last op 0x88 lba 28229427
+ufshci: 69 data commands, last op 0x88 lba 28229519
+ufshci: 70 data commands, last op 0x88 lba 28229467
+ufshci: 71 data commands, last op 0x88 lba 28088778
+ufshci: 72 data commands, last op 0x88 lba 27756489
+ufshci: 73 data commands, last op 0x88 lba 28229523
+ufshci: 74 data commands, last op 0x88 lba 28257455
+ufshci: 75 data commands, last op 0x88 lba 28229563
+ufshci: 76 data commands, last op 0x88 lba 28257523
+ufshci: 77 data commands, last op 0x88 lba 28257543
+ufshci: 78 data commands, last op 0x88 lba 27756487
+ufshci: 79 data commands, last op 0x88 lba 28257555
+ufshci: 80 data commands, last op 0x88 lba 28285763
+ufshci: 81 data commands, last op 0x88 lba 28257595
+ufshci: 82 data commands, last op 0x88 lba 28285827
+ufshci: 83 data commands, last op 0x88 lba 28285867
+ufshci: 84 data commands, last op 0x88 lba 28285875
+ufshci: 85 data commands, last op 0x88 lba 28313783
+ufshci: 86 data commands, last op 0x88 lba 28285915
+ufshci: 87 data commands, last op 0x88 lba 28313843
+ufshci: 88 data commands, last op 0x88 lba 28313931
+ufshci: 89 data commands, last op 0x88 lba 28313939
+ufshci: 90 data commands, last op 0x88 lba 28342059
+ufshci: 91 data commands, last op 0x88 lba 28313979
+ufshci: 92 data commands, last op 0x88 lba 28342115
+ufshci: 93 data commands, last op 0x88 lba 28342179
+ufshci: 94 data commands, last op 0x88 lba 28342195
+ufshci: 95 data commands, last op 0x88 lba 28370399
+ufshci: 96 data commands, last op 0x88 lba 28342235
+ufshci: 97 data commands, last op 0x88 lba 27757481
+ufshci: 98 data commands, last op 0x88 lba 28370467
+ufshci: 99 data commands, last op 0x88 lba 28370563
+ufshci: 100 data commands, last op 0x88 lba 28370579
+ufshci: 101 data commands, last op 0x88 lba 28398799
+ufshci: 102 data commands, last op 0x88 lba 28370619
+ufshci: 103 data commands, last op 0x88 lba 28398867
+ufshci: 104 data commands, last op 0x88 lba 28398959
+ufshci: 105 data commands, last op 0x88 lba 28398963
+ufshci: 106 data commands, last op 0x88 lba 28425271
+ufshci: 107 data commands, last op 0x88 lba 28399003
+ufshci: 108 data commands, last op 0x88 lba 28425331
+ufshci: 109 data commands, last op 0x88 lba 28425427
+ufshci: 110 data commands, last op 0x88 lba 28425443
+ufshci: 111 data commands, last op 0x88 lba 28453487
+ufshci: 112 data commands, last op 0x88 lba 28425483
+ufshci: 113 data commands, last op 0x88 lba 27756491
+ufshci: 114 data commands, last op 0x88 lba 28453555
+ufshci: 115 data commands, last op 0x88 lba 28453663
+ufshci: 116 data commands, last op 0x88 lba 28453667
+ufshci: 117 data commands, last op 0x88 lba 28477403
+ufshci: 118 data commands, last op 0x88 lba 28453707
+ufshci: 119 data commands, last op 0x88 lba 28477459
+ufshci: 120 data commands, last op 0x88 lba 28477547
+ufshci: 121 data commands, last op 0x88 lba 28477555
+ufshci: 122 data commands, last op 0x88 lba 28503775
+ufshci: 123 data commands, last op 0x88 lba 28477595
+ufshci: 124 data commands, last op 0x88 lba 28503827
+ufshci: 125 data commands, last op 0x88 lba 28503887
+ufshci: 126 data commands, last op 0x88 lba 28503891
+ufshci: 127 data commands, last op 0x88 lba 28531943
+ufshci: 128 data commands, last op 0x88 lba 28503931
+shared_region: [1(launchd)] map_and_slide: 44 files, 52 mappings
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208a99:'dyld_shared_cache_arm64'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208989:'dyld_shared_cache_arm64.01'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208879:'dyld_shared_cache_arm64.02'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208769:'dyld_shared_cache_arm64.03'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208659:'dyld_shared_cache_arm64.04'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208549:'dyld_shared_cache_arm64.05'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209869:'dyld_shared_cache_arm64.06'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209759:'dyld_shared_cache_arm64.07'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209649:'dyld_shared_cache_arm64.08'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209539:'dyld_shared_cache_arm64.09'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209209:'dyld_shared_cache_arm64.10'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc82090f9:'dyld_shared_cache_arm64.11'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208ed9:'dyld_shared_cache_arm64.12'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8208dc9:'dyld_shared_cache_arm64.13'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a0e9:'dyld_shared_cache_arm64.14'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209fd9:'dyld_shared_cache_arm64.15'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209ec9:'dyld_shared_cache_arm64.16'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209db9:'dyld_shared_cache_arm64.17'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209ca9:'dyld_shared_cache_arm64.18'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209b99:'dyld_shared_cache_arm64.19'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209a89:'dyld_shared_cache_arm64.20'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8209979:'dyld_shared_cache_arm64.21'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820aa79:'dyld_shared_cache_arm64.22'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a969:'dyld_shared_cache_arm64.23'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a859:'dyld_shared_cache_arm64.24'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a749:'dyld_shared_cache_arm64.25'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a639:'dyld_shared_cache_arm64.26'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a529:'dyld_shared_cache_arm64.27.dylddata'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a309:'dyld_shared_cache_arm64.28.dyldlinkedit'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820a1f9:'dyld_shared_cache_arm64.29'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820afc9:'dyld_shared_cache_arm64.30'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820ada9:'dyld_shared_cache_arm64.31'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc820ab89:'dyld_shared_cache_arm64.32'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc82070d9:'dyld_shared_cache_arm64.33'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8203999:'dyld_shared_cache_arm64.34'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8207849:'dyld_shared_cache_arm64.35'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8207739:'dyld_shared_cache_arm64.36'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8207629:'dyld_shared_cache_arm64.37'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8207519:'dyld_shared_cache_arm64.38'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8207409:'dyld_shared_cache_arm64.39'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc82072f9:'dyld_shared_cache_arm64.40'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc82071e9:'dyld_shared_cache_arm64.41.dylddata'): not in trust cache
+shared_region: 0x704eaffe62c6e569 [1(launchd)] map(0x704eb00cc8204219:'dyld_shared_cache_arm64.42.dyldlinkedit'): not in trust cache
+shared_region: [1(launchd)] map_and_slide done kr=0x0
+SWEET Sandbox: launchd op 4
+com.apple.xpc.launchd|1969-12-31 16:01:27.145867 <Notice>: hello
+com.apple.xpc.launchd|1969-12-31 16:01:27.153070 <Error>: Could not opt into 50 MB Jetsam high watermark: 22: Invalid argument
+skip attaching fsw to lo0 using legacy TX modelcom.apple.xpc.launchd|1969-12-31 16:01:27.153749 <Notice>: Darwin Bootstrapper Version 7.0.0: Thu Feb  1 20:33:09 PST 2024; root:libxpc_executables-2462.140.4.702.1~1/launchd/RELEASE_ARM64
+com.apple.xpc.launchd|1969-12-31 16:01:27.154065 <Notice>: boot-args = debug=0xc serial=3 cpus=6 keepsyms=1 -v wdt=-1 wdt_test=no_user_checkin rd=ufs ufsroot=iosroot ufsrw=iosroot unentitled_ios_sim_launch=1 ignition_level=1 launchd_unsecure_cache=1 sweetsample=SweetRegisterPos,lsd,PosterBoard,SpringBoard,backboardd sweetiolog=- sweetakslog=0 ufsbeat=0 sweetscan=- sweetnull=launchd,dyld,init,backboardd,SpringBoard,lsd,containermanagerd,PosterBoard sweetfb_noconsole=1 sweetfb_native=1 sweetfb_stayon=0 sweetfb_trace=0 sweetreboot=600 sweetsample_delay=60 sweetsample_count=1
+com.apple.xpc.launchd|1969-12-31 16:01:27.161271 (system) <Notice>: entering ondemand mode
+com.apple.xpc.launchd|1969-12-31 16:01:27.162112 (system) <Notice>: created
+com.apple.xpc.launchd|1969-12-31 16:01:27.163406 (fsck) <Notice>: Doing boot task
+failed to get filesystem info
+fsck: not booting main or diagnostic OS. Skipping fsck on OS container
+com.apple.xpc.launchd|1969-12-31 16:01:27.318350 (mount-phase-1) <Notice>: Doing boot task
+failed to get filesystem info
+failed to get filesystem info
+mount: data volume missing, but not required in env: 0
+vnode_create_internal: alias vnode 0xfffffe29ae443ef0 is in state of change (start)
+vnode_create_internal: alias vnode 0xfffffe29ae443ef0 is in state of change (end)
+hfs: Removed 22 orphaned / unlinked files and 300 directories 
+/dev/disk0s65 on / (hfs, local, journaled, noatime)
+ERROR: BindFS bindfs_mount: lookup of /private/preboot/B4F8B7CFB20F15B3E82212D839F8A47544B9341FF57FE1F5A9D24944281A4B5BCB9AC9C83364E1FA9F08EF47D09AED6A/usr/standalone/firmware failed error: 2
+com.apple.xpc.launchd|1969-12-31 16:01:27.517275 (data-protection) <Notice>: Doing boot task
+init_data_protection: No SEP present on this device
+com.apple.xpc.launchd|1969-12-31 16:01:27.667407 (finish-obliteration) <Notice>: Doing boot task
+Obliterator: In INIT check
+Wed Dec 31 16:01:27 1969: checkOblitNVRAMkey: IORegistryEntryFromPath failed [gF: 0x0000000000000000]
+Obliterator: No obliteration needed, continue booting, returning 0
+com.apple.xpc.launchd|1969-12-31 16:01:27.765191 (detect-installed-roots) <Notice>: Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:27.766042 <Notice>: No cookie from system volume
+com.apple.xpc.launchd|1969-12-31 16:01:27.766262 <Notice>: No cookie: /private/preboot/B4F8B7CFB20F15B3E82212D839F8A47544B9341FF57FE1F5A9D24944281A4B5BCB9AC9C83364E1FA9F08EF47D09AED6A/.roots-installed
+com.apple.xpc.launchd|1969-12-31 16:01:27.766318 (commit-boot-mode) <Notice>: Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:27.766347 <Notice>: boot-mode committed: (null)
+com.apple.xpc.launchd|1969-12-31 16:01:27.766374 (restore-datapartition) <Notice>: Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:27.781585 (restore-datapartition) <Notice>: optional boot task not present
+failed to get filesystem info
+com.apple.xpc.launchd|1969-12-31 16:01:27.781691 (mount-phase-2) <Notice>: Doing boot task
+failed to get filesystem info
+mount: data volume missing, but not required in env: 0
+ERROR: BindFS bindfs_mount: lookup of /private/var/hardware/Pearl/System/Library/Pearl/ReferenceFrames failed error: 2
+ERROR: BindFS bindfs_mount: lookup of /private/var/hardware/FactoryData/System/Library/Caches/com.apple.factorydata failed error: 2
+com.apple.xpc.launchd|1969-12-31 16:01:27.891384 (init-with-data-volume) <Notice>: Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:27.909759 (MSUEarlyBootTask) <Notice>: Doing boot task
+MSUEarlyBootTask: MSUEarlyBootTask running
+main: Content from the ramdisk will be present at /private/var/MobileSoftwareUpdate//b4f8b7cfb20f15b3e82212d839f8a47544b9341ff57fe1f5a9d24944281a4b5bcb9ac9c83364e1fa9f08ef47d09aed6a-MSUData if it exists
+MSUEarlyBootTask: I have nothing to do. Goodbye!!
+com.apple.xpc.launchd|1969-12-31 16:01:28.065698 (fips) <Notice>: Doing boot task
+About to call the FIPS_POST function in the corecrypto.dylib
+Tracing: disabled
+FIPSPOST_USER [1145347696] fipspost_post:152: [FIPSPOST][Module-ID] Apple corecrypto Module v13.0 [Apple ARM, User, Software, SL1]
+FIPSPOST_USER [1145540440] fipspost_post:160: PASSED: (2 ms) - fipspost_post_hmac
+FIPSPOST_USER [1145763640] fipspost_post:164: PASSED: (4 ms) - fipspost_post_integrity
+FIPSPOST_USER [1145929811] fipspost_post:168: PASSED: (0 ms) - fipspost_post_indicator
+FIPSPOST_USER [1146091896] fipspost_post:169: PASSED: (0 ms) - fipspost_post_aes_ecb
+FIPSPOST_USER [1146253947] fipspost_post:170: PASSED: (0 ms) - fipspost_post_aes_cbc
+FIPSPOST_USER [1146729756] fipspost_post:171: PASSED: (24 ms) - fipspost_post_rsa_sig
+FIPSPOST_USER [1147451175] fipspost_post:172: PASSED: (43 ms) - fipspost_post_ecdsa
+FIPSPOST_USER [1147633895] fipspost_post:173: PASSED: (1 ms) - fipspost_post_ecdh
+FIPSPOST_USER [1147795787] fipspost_post:174: PASSED: (0 ms) - fipspost_post_aes_ccm
+FIPSPOST_USER [1147958428] fipspost_post:175: PASSED: (0 ms) - fipspost_post_aes_cmac
+FIPSPOST_USER [1148122975] fipspost_post:176: PASSED: (0 ms) - fipspost_post_hkdf
+FIPSPOST_USER [1149053528] fipspost_post:177: PASSED: (59 ms) - fipspost_post_pbkdf
+FIPSPOST_USER [1149216791] fipspost_post:178: PASSED: (0 ms) - fipspost_post_drbg_hmac
+FIPSPOST_USER [1149380160] fipspost_post:180: PASSED: (0 ms) - fipspost_post_kdf_ctr
+FIPSPOST_USER [1149542051] fipspost_post:181: PASSED: (0 ms) - fipspost_post_aes_gcm
+FIPSPOST_USER [1149704324] fipspost_post:182: PASSED: (0 ms) - fipspost_post_aes_xts
+FIPSPOST_USER [1149867283] fipspost_post:183: PASSED: (0 ms) - fipspost_post_tdes_ecb
+FIPSPOST_USER [1150029788] fipspost_post:184: PASSED: (0 ms) - fipspost_post_drbg_ctr
+FIPSPOST_USER [1151325276] fipspost_post:186: PASSED: (87 ms) - fipspost_post_ffdh
+FIPSPOST_USER [1152122879] fipspost_post:187: PASSED: (48 ms) - fipspost_post_rsa_enc_dec
+FIPSPOST_USER [1152284863] fipspost_post:206: all tests PASSED (533 ms)
+Returned from calling the FIPS_POST function in the corecrypto.dylib: result = true
+com.apple.xpc.launchd|1969-12-31 16:01:28.663281 (keybag) <Notice>: Doing boot task
+****** IN MKB_INIT ****
+MKB_INIT: mount is with NO CPROTECT:0x1480d000 on  (/private/var/)
+MKB_INIT: mount point (/private/var/) does not support Data Protection
+MKB_INIT: System Keybag loaded
+MKB_INIT: Could not get options entry from the device tree
+Unable to set /private/var//tmp to class D!****** DONE MKB_INIT ****
+com.apple.xpc.launchd|1969-12-31 16:01:28.793589 (usermanagerd) <Notice>: Doing boot task
+****** IN UMD_INIT ****
+****** STARTING EARLYBOOT SETUP ****
+UMD_INIT: STARTING EARLYBOOT SETUP
+UMD_INIT: LOADING USER SESSIONS
+UMD_INIT: Device Configuration Type:0
+UMD_INIT: BOOTEDUSER is:501
+UMD_INIT: diskLoadUserSessions, APNSID:, set to 18446744073709551615
+UMD_INIT: Reloaded _gUserSessionTable (
+        {
+        MKBUserSessionCreateTimeStamp = "1970-01-01 00:00:58 +0000";
+        MKBUserSessionDirty = 0;
+        MKBUserSessionDisplayName = mobile;
+        MKBUserSessionFirstName = mobile;
+        MKBUserSessionForeground = 1;
+        MKBUserSessionGroupID = 501;
+        MKBUserSessionID = 501;
+        MKBUserSessionLanguage = "en_US";
+        MKBUserSessionLastName = mobile;
+        MKBUserSessionLibinfoHomeDir = "/var/mobile";
+        MKBUserSessionLoginTimeStamp = "1970-01-01 00:00:58 +0000";
+        MKBUserSessionLoginUser = 0;
+        MKBUserSessionName = mobile;
+        MKBUserSessionNeedsMount = 1;
+        MKBUserSessionShortName = mobile;
+        MKBUserSessionType = UserSessionOther;
+        MKBUserSessionUUID = "8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B";
+        MKBUserSessionVolumeFSType = UserVolumeAPFSNative;
+        MKBUserSessionisAdminKey = 1;
+        MKBUserSessionisPrimary = 1;
+    }
+)
+UMD_INIT: FOUND NO SYNC BUBBLE UIDS:0
+UMD_INIT: FOUND NO LRU TABLE UIDS:0
+UMD_INIT: FOUND NO VOLUMETYPE, setting up volume type
+UMD_INIT: Set the new volume type to APFSNativeDevice
+UMD_INIT: SAVING SESSION TODISK
+UMD_INIT: SESSION TABLE TO BLOB
+UMD_INIT: NOTHING TO SAVE IN LRU UID LIST
+UMD_INIT: diskSaveUserSessions Success
+UMD_INIT: Read user sessions in _gUserSessionTable (
+        {
+        MKBUserSessionCreateTimeStamp = "1970-01-01 00:00:58 +0000";
+        MKBUserSessionDirty = 0;
+        MKBUserSessionDisplayName = mobile;
+        MKBUserSessionFirstName = mobile;
+        MKBUserSessionForeground = 1;
+        MKBUserSessionGroupID = 501;
+        MKBUserSessionID = 501;
+        MKBUserSessionLanguage = "en_US";
+        MKBUserSessionLastName = mobile;
+        MKBUserSessionLibinfoHomeDir = "/var/mobile";
+        MKBUserSessionLoginTimeStamp = "1970-01-01 00:00:58 +0000";
+        MKBUserSessionLoginUser = 0;
+        MKBUserSessionName = mobile;
+        MKBUserSessionNeedsMount = 1;
+        MKBUserSessionShortName = mobile;
+        MKBUserSessionType = UserSessionOther;
+        MKBUserSessionUUID = "8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B";
+        MKBUserSessionVolumeFSType = UserVolumeAPFSNative;
+        MKBUserSessionisAdminKey = 1;
+        MKBUserSessionisPrimary = 1;
+    }
+)
+UMD_INIT: LOADED USER SESSIONS
+UMD_INIT: failed to read nextsession dict
+UMD_INIT: Unable to Obtained foreground, curFG:502, nextID:-1
+UMD_INIT: Failed to get next session, booting with default id to be Loginwindow UID
+UMD_INIT: BootedUser is:501
+UMD_INIT: Regular mode Setup for user:501: Num Sessions:1, CurrentsessionID:-1
+UMD_INIT: FAILED to Set Foreground ID + multiuser in commpage successfully
+UMD_INIT: LOADING PERSONA..
+UMD_INIT: Manifest version: 1
+UMD_INIT: Loaded Persona Generation ID from manifest:1
+UMD_INIT: Adding 1000 entry to persona Table for user:8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B
+UMD_INIT: Adding 0 entry to persona Table for user:8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B
+UMD_INIT: Adding 200 entry to persona Table for user:8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B
+UMD_INIT: Adding 100 entry to persona Table for user:8E4F2655-68CE-41F0-ACC6-DC2F421A1B9B
+UMD_INIT: Adding 99 entry to persona Table for user:FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF
+UMD_INIT: Adding 199 entry to persona Table for user:FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF
+UMD_INIT: Loaded persona manifest
+UMD_INIT: Failed to retrieve info for kernel persona 99: No such process
+UMD_INIT: PersonaID:99 not loaded, loading..
+UMD_INIT: Allocated kernel persona with ID: 99, Type: 4, UID: 4294967295
+UMD_INIT: Failed to retrieve info for kernel persona 199: No such process
+UMD_INIT: PersonaID:199 not loaded, loading..
+UMD_INIT: Allocated kernel persona with ID: 199, Type: 6, UID: 4294967295
+UMD_INIT: Failed to retrieve info for kernel persona 1000: No such process
+UMD_INIT: PersonaID:1000 not loaded, loading..
+UMD_INIT: Allocated kernel persona with ID: 1000, Type: 5, UID: 501
+UMD_INIT: Failed to retrieve info for kernel persona 200: No such process
+UMD_INIT: PersonaID:200 not loaded, loading..
+UMD_INIT: Allocated kernel persona with ID: 200, Type: 6, UID: 501
+UMD_INIT: Failed to retrieve info for kernel persona 100: No such process
+UMD_INIT: PersonaID:100 not loaded, loading..
+UMD_INIT: Allocated kernel persona with ID: 100, Type: 4, UID: 501
+UMD_INIT: setup kernel personas
+UMD_INIT: Failed to notify_register_check com.apple.mobile.usermanagerd.personageneration_changed: 8
+UMD_INIT: Failed to notify generation changed: Failed to register for darwin notification token
+UMD_INIT: DONE EARLYBOOT SETUP
+****** DONE EARLYBOOT SETUP ****
+****** DONE UMD_INIT ****
+com.apple.xpc.launchd|1969-12-31 16:01:29.631339 (dirs_cleaner) <Notice>: Doing boot task
+dc_reset: /tmp: Invalid argument
+dc_reset: /var/run: Invalid argument
+[System Event] [1166125647] [INFO] [Subsystem: launchd] [Event: fsck] Doing boot task
+[System Event] [1166231731] [INFO] [Subsystem: launchd] [Event: mount-phase-1] Doing boot task
+[System Event] [1166340759] [INFO] [Subsystem: launchd] [Event: data-protection] Doing boot task
+[System Event] [1166447156] [INFO] [Subsystem: launchd] [Event: finish-obliteration] Doing boot task
+[System Event] [1166555536] [INFO] [Subsystem: launchd] [Event: detect-installed-roots] Doing boot task
+[System Event] [1166663164] [INFO] [Subsystem: launchd] [Event: commit-boot-mode] Doing boot task
+[System Event] [1166771596] [INFO] [Subsystem: launchd] [Event: restore-datapartition] Doing boot task
+[System Event] [1166878195] [INFO] [Subsystem: launchd] [Event: restore-datapartition] optional boot task not present
+[System Event] [1166986388] [INFO] [Subsystem: launchd] [Event: mount-phase-2] Doing boot task
+[System Event] [1167094735] [INFO] [Subsystem: launchd] [Event: init-with-data-volume] Doing boot task
+[System Event] [1167204120] [INFO] [Subsystem: launchd] [Event: MSUEarlyBootTask] Doing boot task
+[System Event] [1167311759] [INFO] [Subsystem: launchd] [Event: fips] Doing boot task
+[System Event] [1167422856] [INFO] [Subsystem: launchd] [Event: keybag] Doing boot task
+[System Event] [1167530563] [INFO] [Subsystem: launchd] [Event: usermanagerd] Doing boot task
+[System Event] [1167639780] [INFO] [Subsystem: launchd] [Event: dirs_cleaner] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:29.660030 <Notice>: launchd logging initialized. name: com.apple.xpc.launchd pid: 1
+com.apple.xpc.launchd|1969-12-31 16:01:29.660039 (xpcroleaccountd) <Notice>: Doing boot task
+[System Event] [1167966860] [INFO] [Subsystem: launchd] [Event: xpcroleaccountd] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:29.680849 (init_featureflags) <Notice>: Doing boot task
+[System Event] [1168185868] [INFO] [Subsystem: launchd] [Event: init_featureflags] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:30.073709 (auearlyboot) <Notice>: Doing boot task
+[System Event] [1171066016] [INFO] [Subsystem: launchd] [Event: auearlyboot] Doing boot task
+auearlyboot: -[FudEarlyBoot doFUDEarlyBoot:](): Starting Early Boot
+auearlyboot: -[AppleFirmwareUpdateController getEarlyBootListInternal:]: Pending critical earlyBoot entries (
+)
+auearlyboot: No Early Boot Accessories
+auearlyboot: -[FudEarlyBoot calculateTimeTakenForEarlyBootEntries] Time Taken to wait for critical earlyBoot entries: 0.000000 sec
+auearlyboot: -[FudEarlyBoot doFUDEarlyBoot:](): End Early Boot
+auearlyboot: Exitng Early Boot
+com.apple.xpc.launchd|1969-12-31 16:01:30.182790 (tzinit) <Notice>: Doing boot task
+[System Event] [1172542275] [INFO] [Subsystem: launchd] [Event: tzinit] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:30.208602 (finish-restore) <Notice>: Doing boot task
+[System Event] [1172878203] [INFO] [Subsystem: launchd] [Event: finish-restore] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:30.231492 (finish-demo-restore) <Notice>: Doing boot task
+[System Event] [1173216552] [INFO] [Subsystem: launchd] [Event: finish-demo-restore] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:30.251028 (sysstatuscheck) <Notice>: Doing boot task
+[System Event] [1173550700] [INFO] [Subsystem: launchd] [Event: sysstatuscheck] Doing boot task
+kern.prng.user_reseed_count: (-1) (2) No such file or directory
+failed to load virtual random: (-147) (-536870212)
+com.apple.xpc.launchd|1969-12-31 16:01:30.262745 (prng_seedctl) <Notice>: Doing boot task
+[System Event] [1174051580] [INFO] [Subsystem: launchd] [Event: prng_seedctl] Doing boot task
+com.apple.xpc.launchd|1969-12-31 16:01:30.286439 (launchd_cache_loader) <Notice>: Doing boot task
+[System Event] [1174382003] [INFO] [Subsystem: launchd] [Event: launchd_cache_loader] Doing boot task
+0 Found valid port: 7939 Valid: 1
+1 Found valid port: 0 Valid: 0
+2 Found valid port: 0 Valid: 0
+Using default cache paths
+Code: /System/Library/xpc/launchd.plist Sig: /System/Library/xpc/launchd.plist.sig
+Using unsecure cache: /System/Library/xpc/launchd.plist
+Trying to send bytes to launchd: 7939 16384
+Sending validated cache to launchd
+Cache sent to launchd successfully
+com.apple.xpc.launchd|1969-12-31 16:01:30.593790 <Notice>: launchd UUID: 5C15DB07-B3BC-3DF3-B62F-3E498B993B8E
+com.apple.xpc.launchd|1969-12-31 16:01:30.593844 (boot) <Notice>: Early boot complete. Continuing system boot.
+[System Event] [1178052936] [INFO] [Subsystem: launchd] [Event: boot] Early boot complete. Continuing system boot.
+SWEET TOUCH: X676C I2C0 FT5452J id=54:52 err=0/0 irq=1
+SWEET TOUCH: FT5452J, five contacts, 1080x2400, poll=10ms
+SWEET TOUCH: frame=1 status=0x1 dma=0x145164000 raw=ff ff ff ff ff ff ff ff ff ff ff ff
+SWEET TOUCH: X676C report error=5 status=0x1
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET TOUCH: frame=2 status=0x1 dma=0x145164000 raw=ff ff ff ff ff ff ff ff ff ff ff ff
+SWEET TOUCH: frame=3 status=0x1 dma=0x145164000 raw=ff ff ff ff ff ff ff ff ff ff ff ff
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: logd privilege 1002 denied
+SWEET WDT: watchdogd sel 0 in 0/0 out 1/0 -> ok
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+KextLog: kernelmanagerd is not active
+KextLog: Loading FileSet KC(s)
+deferred rematching count 0
+KextLog: kernelmanagerd is active
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: cfprefsd op 12
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: containermanager op 16
+SWEET Sandbox: containermanager op 15
+|backboardd| objc[56]: Class _GCHapticEvent is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee20) and /System/Library/HIDPlugins/ServicePlugins/DualShock4HIDServicePlugin.|backboardd| ck4HIDServicePlugin (0x103792bc0). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCHapticMotor is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee70) and /System/Library/HIDPlugins/ServicePlugins/DualShock4HIDServicePlugin.pufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| k4HIDServicePlugin (0x103792c10). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCGamepadHIDServicePlugin is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376eec0) and /System/Library/HIDPlugins/ServicePlugins/DualShock4HIDSer|backboardd| gin/DualShock4HIDServicePlugin (0x103792cb0). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCGamepadHIDServicePlugin is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376eec0) and /System/Library/HIDPlugins/ServicePlugins/GenericGamepadHI|backboardd| .plugin/GenericGamepadHIDServicePlugin (0x1037b6a88). One of the two will be used. Which one is undefined.
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| objc[56]: Class GCHapticMotor is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee70) and /System/Library/HIDPlugins/ServicePlugins/GenericGamepadHIDServicePlug|backboardd| ricGamepadHIDServicePlugin (0x1037b6ad8). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class _GCHapticEvent is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee20) and /System/Library/HIDPlugins/ServicePlugins/GenericGamepadHIDServicePlu|backboardd| ericGamepadHIDServicePlugin (0x1037b6b78). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCGamepadHIDServicePlugin is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376eec0) and /System/Library/HIDPlugins/ServicePlugins/JoyConHIDService|backboardd| JoyConHIDServicePlugin (0x106026ba0). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCHapticMotor is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee70) and /System/Library/HIDPlugins/ServicePlugins/JoyConHIDServicePlugin.plugiSWEET AMFI: lsd selector 6 pinned membership -> 0x0
+|backboardd| vicePlugin (0x106026bf0). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class _GCHapticEvent is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee20) and /System/Library/HIDPlugins/ServicePlugins/JoyConHIDServicePlugin.plug|backboardd| rvicePlugin (0x106026c40). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class _GCHapticEvent is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee20) and /System/Library/HIDPlugins/ServicePlugins/LunaHIDServicePlugin.plugin|backboardd| ePlugin (0x1037d2628). One of the two will be used. Which one is undefined.
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| objc[56]: Class GCHapticMotor is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee70) and /System/Library/HIDPlugins/ServicePlugins/LunaHIDServicePlugin.plugin/|backboardd| Plugin (0x1037d2678). One of the two will be used. Which one is undefined.
+SWEET Sandbox: distnoted op 28
+|backboardd| objc[56]: Class GCGamepadHIDServicePlugin is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376eec0) and /System/Library/HIDPlugins/ServicePlugins/LunaHIDServicePl|backboardd| naHIDServicePlugin (0x1037d2718). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class _GCHapticEvent is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee20) and /System/Library/HIDPlugins/ServicePlugins/XboxOneHIDServicePlugin.plu|backboardd| ServicePlugin (0x1037f2780). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCHapticMotor is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376ee70) and /System/Library/HIDPlugins/ServicePlugins/XboxOneHIDServicePlugin.plug|backboardd| ervicePlugin (0x1037f27d0). One of the two will be used. Which one is undefined.
+|backboardd| objc[56]: Class GCGamepadHIDServicePlugin is implemented in both /System/Library/HIDPlugins/ServicePlugins/DualSenseHIDServicePlugin.plugin/DualSenseHIDServicePlugin (0x10376eec0) and /System/Library/HIDPlugins/ServicePlugins/XboxOneHIDServic|backboardd| /XboxOneHIDServicePlugin (0x1037f2870). One of the two will be used. Which one is undefined.
+SWEET HID: SweetHIDTouch open by IOHIDEventServiceUserClient -> 1
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET HID: SweetHIDButtons open by IOHIDEventServiceUserClient -> 1
+SWEET FB: backboardd sel 57 in 0/0 out 1/0 -> 0x0
+SWEET FB: backboardd sel 15 in 2/0 out 1/0 -> 0x0
+SWEET FB: backboardd sel 22 in 1/0 out 0/0 -> 0x0
+SWEET FB: backboardd sel 8 in 0/0 out 2/0 -> 0x0
+SWEET FB: backboardd sel 28 in 0/0 out 1/0 -> 0x0
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET FB: backboardd sel 29 in 0/0 out 0/8 -> 0x0
+SWEET FB: backboardd sel 33 in 1/0 out 0/0 -> 0x0
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET FB: backboardd sel 79 in 2/0 out 0/1580 -> 0x0
+SWEET FB: backboardd sel 74 in 1/0 out 1/64 -> 0x0
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ifnet_attach: All kernel threads created for interface utun0 have been scheduled at least once. Proceeding.
+_dlil_attach_flowswitch_nexus: not attaching flowswitch to utun0
+SWEET Sandbox: rapportd privilege 12000 denied
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| MESA: info: panvk: gpu_id 0x90930010 variant 0 arch v9 model Mali-G57 texture_features 0xf7fe03fe 0xc3fff7ff 0xbfe1ff9f 0x10c6
+|backboardd| MESA: info: panvk: BC emulation on (native compressed mask 0xf7fe03fe)
+|backboardd| WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+|backboardd| MESA: info: SweetMali: BO storage direct request=67108864 slice=67108864 logical=1 logical_bytes=67108864 backings=1 backing_bytes=67108864
+|backboardd| MESA: info: SweetMali: BO storage slab request=16 slice=16384 logical=2 logical_bytes=67125248 backings=2 backing_bytes=68157440
+|backboardd| MESA: info: SweetMali: BO storage direct request=8388608 slice=8388608 logical=3 logical_bytes=75513856 backings=3 backing_bytes=76546048
+|backboardd| MESA: info: SweetMali: BO storage direct request=8388608 slice=8388608 logical=4 logical_bytes=83902464 backings=4 backing_bytes=84934656
+|backboardd| MESA: info: SweetMali: BO storage direct request=144000000 slice=144015360 logical=5 logical_bytes=227917824 backings=5 backing_bytes=228950016
+|backboardd| MESA: info: SweetMali: BO storage slab request=1536 slice=16384 logical=6 logical_bytes=227934208 backings=5 backing_bytes=228950016
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=7 logical_bytes=227950592 backings=5 backing_bytes=228950016
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=8 logical_bytes=227966976 backings=5 backing_bytes=228950016
+|backboardd| 1969-12-31 16:01:33.-114 backboardd[56:322] 
+|backboardd| [MaliMetal] Experimental native MPS Common device=0x1026134b0 class=MaliMetalDevice node=0x104014e00 readback=0x104014e00 shared=32768 layers=1; validation wrappers unqualified
+|backboardd| 
+SWEET SURF: backboardd sel 13
+|backboardd| MESA: info: SweetMali: BO storage slab request=159744 slice=163840 logical=9 logical_bytes=228130816 backings=5 backing_bytes=228950016
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=10 logical_bytes=228147200 backings=5 backing_bytes=228950016
+|backboardd| MESA: info: SweetMali: BO storage slab request=159744 slice=163840 logical=11 logical_bytes=228311040 backings=5 backing_bytes=228950016
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=10 logical_bytes=227999744 backings=6 backing_bytes=229998592
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=11 logical_bytes=228016128 backings=6 backing_bytes=229998592
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=12 logical_bytes=228032512 backings=6 backing_bytes=229998592
+SWEET Sandbox: tccd op 22
+SWEET Sandbox: tccd op 1
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=13 logical_bytes=228048896 backings=6 backing_bytes=229998592
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+|backboardd| MESA: info: SweetMali: BO storage slab request=16384 slice=16384 logical=13 logical_bytes=228048896 backings=6 backing_bytes=229998592
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET GPU: JM terminal result as 1 slot 1 sequence 1 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 95743618692
+SWEET GPU: JM terminal result as 1 slot 1 sequence 2 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 95757202692
+SWEET GPU: JM terminal result as 1 slot 1 sequence 3 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 95768065769
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: profiled sel 31 arg0 0 in 1/0 out 0/32768 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET Sandbox: tccd op 5
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+ifnet_attach: Waiting for all kernel threads created for interface utun1 to get scheduled at least once.
+ifnet_attach: All kernel threads created for interface utun1 have been scheduled at least once. Proceeding.
+SWEET Sandbox: identityservicesd privilege 12001 denied
+_dlil_attach_flowswitch_nexus: not attaching flowswitch to utun1
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: cloudd privilege 1002 denied
+SWEET Sandbox: identityservicesd privilege 12000 denied
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ifnet_attach: Waiting for all kernel threads created for interface utun2 to get scheduled at least once.
+ifnet_attach: All kernel threads created for interface utun2 have been scheduled at least once. Proceeding.
+_dlil_attach_flowswitch_nexus: not attaching flowswitch to utun2
+_dlil_attach_flowswitch_nexus: not attaching flowswitch to utun2
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+process duetexpertd[141] crossed thread count high watermark (32), EXC_RESOURCE supressed, internal diagnostics disabled.
+process healthd[35] crossed thread count high watermark (32), EXC_RESOURCE supressed, internal diagnostics disabled.
+SWEET FB: thermalmonitord sel 78 in 2/1788 out 0/0 -> 0x0
+SWEET FB: display on
+SWEET FB: backboardd sel 12 in 1/0 out 0/0 -> 0x0
+SWEET FB: backboardd sel 79 in 2/0 out 0/40 -> 0x0
+SWEET FB: backboardd sel 6 in 3/0 out 0/0 -> 0x0
+SWEET FB: backboardd sel 27 in 0/0 out 0/3084 -> 0x0
+SWEET FB: backboardd sel 17 in 0/3084 out 0/0 -> 0x0
+SWEET FB: backboardd sel 84 in 0/4 out 0/0 -> 0x0
+SWEET FB: backboardd sel 50 in 2/0 out 0/0 -> 0x0
+SWEET FB: backboardd sel 68 in 1/8 out 0/0 -> 0x0
+SWEET SURF: backboardd create id 2 1080x2400 fmt 0x42475241 bpe 4 bpr 4352 planes 0 size 10452992 keys 11 -> 0x0
+SWEET SURF: backboardd sel 9
+SWEET SURF: backboardd sel 27
+SWEET SURF: backboardd sel 5
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: SpringBoard privilege 1007 denied
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET TOUCH: X676C report error=5 status=0x1
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET Sandbox: rapportd privilege 1002 denied
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET GPU: JM terminal result as 1 slot 1 sequence 4 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 103801218153
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: sharingd sel 57 arg0 0 in 1/0 out 0/4096 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET Sandbox: cloudd privilege 10001 denied
+process contextstored[55] crossed thread count high watermark (32), EXC_RESOURCE supressed, internal diagnostics disabled.
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET FB: backboardd sel 4 in 0/0 out 1/0 -> 0x0
+SWEET SURF: backboardd trap 2
+SWEET FB: backboardd sel 68 in 1/8 out 0/0 -> 0x0
+SWEET FB: backboardd sel 5 in 0/1132 out 0/0 -> 0x0
+SWEET FB: backboardd sel 3 in 2/0 out 1/0 -> 0x0
+SWEET SURF: backboardd sel 34
+SWEET FB: backboardd sel 55 in 1/72 out 0/0 -> 0x0
+SWEET FB: GUI takeover, text console muted
+SWEET FB: swap 2 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET SURF: backboardd trap 3
+SWEET FB: swap 3 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET FB: display off
+SWEET GPU: JM terminal result as 3 slot 1 sequence 1 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 107218126153
+SWEET GPU: JM terminal result as 3 slot 1 sequence 2 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 107236909538
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET AKS: profiled sel 31 arg0 0 in 1/0 out 0/32768 -> 0xe00002c7
+SWEET GPU: JM terminal result as 3 slot 0 sequence 3 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 108420347615
+SWEET GPU: JM terminal result as 3 slot 0 sequence 4 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 108420613846
+SWEET Sandbox: symptomsd privilege 10003 denied
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+CRASH assetsd[216] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104b60000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b66ecd0 fp 0x16b66ecf0 far 0x1e7306e08
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+SWEET AKS: SpringBoard sel 32 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 32 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+CRASH PosterBoard[203] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104a4c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b80e5b0 fp 0x16b80e680 far 0x10a25c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: display on
+SWEET FB: backboardd sel 79 in 2/0 out 0/40 -> 0x0
+SWEET TOUCH: X676C report error=5 status=0x1
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET SURF: SpringBoard create id 3 272x184 fmt 0x42475241 bpe 4 bpr 1088 planes 0 size 212992 keys 6 -> 0x0
+SWEET SURF: SpringBoard trap 0
+SWEET SURF: SpringBoard create id 4 312x202 fmt 0x4c413038 bpe 2 bpr 640 planes 0 size 131072 keys 6 -> 0x0
+SWEET SURF: SpringBoard create id 5 230x186 fmt 0x4c413038 bpe 2 bpr 480 planes 0 size 98304 keys 6 -> 0x0
+SWEET SURF: SpringBoard sel 35
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET FB: swap 6 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET SURF: SpringBoard create id 6 105x144 fmt 0x4c413038 bpe 2 bpr 224 planes 0 size 32768 keys 6 -> 0x0
+SWEET SURF: SpringBoard create id 7 102x144 fmt 0x4c413038 bpe 2 bpr 224 planes 0 size 32768 keys 6 -> 0x0
+SWEET SURF: SpringBoard create id 8 360x246 fmt 0x4c413038 bpe 2 bpr 736 planes 0 size 196608 keys 6 -> 0x0
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET SURF: chronod create id 9 423x423 fmt 0x42475241 bpe 4 bpr 1792 planes 0 size 770048 keys 10 -> 0x0
+SWEET GPU: JM terminal result as 5 slot 0 sequence 1 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 115652953153
+SWEET SURF: chronod sel 10
+SWEET Sandbox: dasd privilege 10001 denied
+SWEET SURF: backboardd trap 4
+SWEET SURF: backboardd trap 5
+SWEET SURF: released pixel owner id 9 wired_now 11927552 abstime 1503840276
+SWEET GPU: JM terminal result as 5 slot 1 sequence 2 state 1 js_status 0x0 mmu_status 0x0 gpu_status 0x0 time_ns 115719377461
+SWEET SURF: chronod trap 1
+CRASH chronod[100] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100378000
+CRASH chronod pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fcb27a0 fp 0x16fcb27c0 far 0x1e2509a70
+CRASH chronod bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x1930836fc 0x1930841b0 0x19308df14
+CRASH chronod reason ns 2 code 0x6: (none)
+SWEET FB: swap 7 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH assetsd[218] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100c28000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f5a6cd0 fp 0x16f5a6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+Process[218] crashed: assetsd. Too many corpses being created.
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+CRASH PosterBoard[221] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1008d8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f6c65b0 fp 0x16f6c6680 far 0x2813fc000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+Process[221] crashed: PosterBoard. Too many corpses being created.
+SWEET Sandbox: ReportMemoryExcepti privilege 1002 denied
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+CRASH assetsd[236] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100ce8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f342cd0 fp 0x16f342cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[238] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102930000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d9b65b0 fp 0x16d9b6680 far 0x1005d4058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 8 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[251] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1044ac000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bd225b0 fp 0x16bd22680 far 0x10701c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET Sandbox: kernel_task privilege 10001 denied
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+process aggregated[171] crossed thread count high watermark (32), EXC_RESOURCE supressed, internal diagnostics disabled.
+process suggestd[118] crossed thread count high watermark (32), EXC_RESOURCE supressed, internal diagnostics disabled.
+SWEET Sandbox: aggregated privilege 1002 denied
+SWEET Sandbox: dasd privilege 1005 denied
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH assetsd[265] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104654000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16baeecd0 fp 0x16baeecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[266] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104c74000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b55a5b0 fp 0x16b55a680 far 0x103400008
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH SiriTTSSynthesiz[275] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102e44000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16cfb9ea0 fp 0x16cfb9ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[277] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1044e0000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b91dec0 fp 0x16b91dee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH KonaSynthesizer[285] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102644000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d7b9ea0 fp 0x16d7b9ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH PosterBoard[276] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102c8c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d4b65b0 fp 0x16d4b6680 far 0x103781000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+Process[276] crashed: PosterBoard. Too many corpses being created.
+SWEET TOUCH: X676C report error=5 status=0x1
+|backboardd| MESA: info: SweetMali: BO storage slab request=64 slice=16384 logical=64 logical_bytes=269565952 backings=15 backing_bytes=271351808
+CRASH SiriTTSSynthesiz[288] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100168000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fc95ea0 fp 0x16fc95ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH MacinTalkAUSP[292] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10052c000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f8d1ec0 fp 0x16f8d1ee0 far 0x101b2c248
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[294] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104aa0000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b35dea0 fp 0x16b35dec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH assetsd[293] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1045e4000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bad2cd0 fp 0x16bad2cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[291] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10416c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bd1a5b0 fp 0x16bd1a680 far 0x2823c8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SMP --- sample 0
+SMP PosterBoard[303] slide 0x5510000 mh 0x102084000 kslide 0x0
+SMP irq total=1372162 timer=800724 ipi=571478 other=0 abstime=1894191388
+SMP fault esr=0x9200004b far=0x10241c070 cnt=615906 SCTLR.SPAN=1 fault_spsr=0x60000000 fault.PAN=0
+SMP kprof hot 0xfffffe00074c3c64:106790 0xfffffe0007bdb1d4:73 0xfffffe0007bdb1d8:486 0xfffffe0007bdb1e0:232 0xfffffe00074c448c:529371 0xfffffe0007bdb1c8:69 0xfffffe0007bdb1cc:113 0xfffffe0007b2900c:1
+SMP kprof live 0xfffffe00074c3c64 0xfffffe00074c2594
+SMP kprof work 0xfffffe0007b2900c 0xfffffe000754ee38 0xfffffe00075677a4 0xfffffe000756bf08 0xfffffe00079b3f6c 0xfffffe00074bcec8 0xfffffe00074bc5a4
+SMP PosterBoard t0 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16dd7a7c0 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1c4445998 0x18e60434c 0x18e603fc4 0x19458fddc 0x10208bce8 0x1a9b34344 0x0
+SMP PosterBoard t0 regs [x16=-47/0xffffffffffffffd1 x0=0x16dd7a8a8 x1=0x507000806 x2=0x200000000 x3=0x280300000000 x4=0x0 x5=0x280300000000 cpsr=0x40000000]
+SMP PosterBoard t0 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP PosterBoard t1 pc 0x1c7b21ad0 lr 0x1d7018140 sp 0x16de02180 bt 0x1c6c91500 0x1c6c92e44 0x1c6cd577c 0x19308a630 0x1930a8780 0x19308542c 0x19308df14 0x1d70aabd0 0x1d70aa720
+SMP PosterBoard t1 regs [x16=515/0x203 x0=0x1000002 x1=0x10250f8b0 x2=0xf02 x3=0x0 x4=0x10 x5=0x63 cpsr=0x40000000]
+SMP PosterBoard t1 kern [state=0x41 cont=0xfffffe000789b270 (unslid 0xfffffe000789b270) wait_event=0xfffffe201505dea0 wr=-1 rsn=0x0 block_hint=0xa pending=0x0]
+SMP PosterBoard t2 pc 0x1c7b21538 lr 0x1930952cc sp 0x16de8cb30 bt 0x193095c78 0x19308ace0 0x19308a8fc 0x1c6ccd650 0x1c6c811b0 0x18c30ad1c 0x18c38cb48 0x1c6c81158 0x1c6c8057c 0x1c6c87ad8 0x1c6c8e304 0x1c6c96bd8 0x1c6cb1f04 0x1c6cb1870 0x1c6cb1968 0x1c6cb1SMP PosterBoard t2 regs [x16=375/0x177 x0=0x283705780 x1=0x16de8cba8 x2=0x1 x3=0x16de8cba8 x4=0x1 x5=0x0 cpsr=0x0]
+SMP PosterBoard t2 kern [state=0x41 cont=0xfffffe000783ebf0 (unslid 0xfffffe000783ebf0) wait_event=0xfffffe167d42fb00 wr=-1 rsn=0x2 block_hint=0x10 pending=0x0]
+SMP PosterBoard t3 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16df15bc0 bt 0x1c7b32db8 0x1c7b21524 0x19307a308 0x19307a694 0x1d70fe0ec 0x18671c224 0x1866b5cb0 0x1866b483c 0x1866b4760 0x1943ce194 0x1c6caf6e0 0x18671fe58 0x1866f69cc 0x1866f6960 0x1866bba20 0x1866bbSMP PosterBoard t3 regs [x16=-47/0xffffffffffffffd1 x0=0x16df15d60 x1=0x40700420e x2=0x0 x3=0x7303 x4=0x0 x5=0x310300000000 cpsr=0x40000000]
+SMP PosterBoard t3 kern [state=0x41 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP PosterBoard t4 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16dfa5c70 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1866c0ef8 0x1866c0df4 0x18e726818 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP PosterBoard t4 regs [x16=-47/0xffffffffffffffd1 x0=0x16dfa5d58 x1=0x507000806 x2=0x200000000 x3=0x3e0300000000 x4=0x0 x5=0x3e0300000000 cpsr=0x40000000]
+SMP PosterBoard t4 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP PosterBoard t5 pc 0x1c7b21538 lr 0x1930952cc sp 0x16e0323b0 bt 0x193095c78 0x19308ace0 0x19308a8fc 0x1c6ca3018 0x1c6ccc354 0x18c301918 0x18c3b230c 0x1c6ccc154 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0 0x1d70aa720
+SMP PosterBoard t5 regs [x16=375/0x177 x0=0x283736000 x1=0x16e032428 x2=0x2 x3=0x16e032428 x4=0x2 x5=0x0 cpsr=0x0]
+SMP PosterBoard t5 kern [state=0x4 cont=0xfffffe000783ebf0 (unslid 0xfffffe000783ebf0) wait_event=0x0 wr=0 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP PosterBoard t5 ksp 0xfffffe441347fe50 kfp 0xfffffe441347fe80 klr 0xfffffe00074c4488 kbt 0x0
+SMP PosterBoard t5 kscan
+SMP PosterBoard t5 kframes
+SMP PosterBoard t6 pc 0x1c7b21704 lr 0x1d70aaec8 sp 0x16e0be8a0 bt 0x28171f7b0 0x2
+SMP PosterBoard t6 regs [x16=368/0x170 x0=0x100 x1=0x16e0beb80 x2=0x2 x3=0x0 x4=0x60002000003d00 x5=0x7fffffffffffffff cpsr=0x0]
+SMP PosterBoard t6 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b495873d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP PosterBoard t7 pc 0x18c306b24 lr 0x18c306118 sp 0x16e1485d0 bt 0x18c37814c 0x18c336bfc 0x18c336ddc 0x18c3f5750 0x18c46b3d4 0x1c6cd0740 0x1c6ccc108 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0 0x1d70aa720
+SMP PosterBoard t7 regs [x16=7902142792/0x1d7012148 x0=0x1020f8080 x1=0x10252bfa0 x2=0xcb0 x3=0x12 x4=0x1 x5=0x1830 cpsr=0x60000000]
+SMP PosterBoard t7 kern [state=0x4 cont=0x0 (unslid 0x0) wait_event=0x0 wr=0 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP PosterBoard t7 ksp 0xfffffe441350ff30 kfp 0x0 klr 0xfffffe00073793f0 kbt
+SMP PosterBoard t7 kscan 0xfffffe00073793f0
+SMP PosterBoard t7 kframes
+SMP PosterBoard t8 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e1d6b30 bt 0x1d70aa720
+SMP PosterBoard t8 regs [x16=368/0x170 x0=0x100 x1=0x16e1d6b80 x2=0x1 x3=0x0 x4=0x283a645c0 x5=0x10251f150 cpsr=0x0]
+SMP PosterBoard t8 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b497c4bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP PosterBoard t9 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e262b30 bt 0x1d70aa720
+SMP PosterBoard t9 regs [x16=368/0x170 x0=0x100 x1=0x16e262b80 x2=0x1 x3=0x0 x4=0x283a0ce80 x5=0x10241b8d0 cpsr=0x0]
+SMP PosterBoard t9 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49ac8bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP PosterBoard t10 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e2eeb30 bt 0x1d70aa720
+SMP PosterBoard t10 regs [x16=368/0x170 x0=0x100 x1=0x16e2eeb80 x2=0x2 x3=0x0 x4=0x60002000006b00 x5=0x7fffffffffffffff cpsr=0x0]
+SMP PosterBoard t10 kern [state=0x4 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0x0 wr=0 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP PosterBoard t10 ksp 0xfffffe441347fe50 kfp 0xfffffe441347fe80 klr 0xfffffe00074c4488 kbt 0xfffffe201594ce00
+SMP PosterBoard t10 kscan 0xfffffe000736e26c 0xfffffe00074bc57c 0xfffffe00074bc5a4 0xfffffe0007379aa0 0xfffffe00073716f0 0xfffffe00074c4488
+SMP PosterBoard t10 kframes
+SMP PosterBoard t11 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e37ab30 bt 0x1d70aa720
+SMP PosterBoard t11 regs [x16=368/0x170 x0=0x100 x1=0x16e37ab80 x2=0x2 x3=0x0 x4=0x60002000003700 x5=0x7fffffffffffffff cpsr=0x0]
+SMP PosterBoard t11 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b495c4bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP PosterBoard t12 pc 0x0 lr 0x0 sp 0x0 bt
+SMP PosterBoard t12 regs [x16=0/0x0 x0=0x0 x1=0x0 x2=0x0 x3=0x0 x4=0x0 x5=0x0 cpsr=0x0]
+SMP PosterBoard t12 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b497bb3d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP lsd[92] slide 0x5510000 mh 0x1025f0000 kslide 0x0
+SMP irq total=1372178 timer=800724 ipi=571494 other=0 abstime=1894211803
+SMP fault esr=0x92000047 far=0x1223cc000 cnt=615913 SCTLR.SPAN=1 fault_spsr=0x80000000 fault.PAN=0
+SMP kprof hot 0xfffffe00074c3c64:106790 0xfffffe0007bdb1d4:73 0xfffffe0007bdb1d8:486 0xfffffe0007bdb1e0:232 0xfffffe00074c448c:529371 0xfffffe0007bdb1c8:69 0xfffffe0007bdb1cc:113 0xfffffe0007b2900c:1
+SMP kprof live 0xfffffe00074c3c64 0xfffffe00074c2594
+SMP kprof work 0xfffffe0007b2900c 0xfffffe000754ee38 0xfffffe00075677a4 0xfffffe000756bf08 0xfffffe00079b3f6c 0xfffffe00074bcec8 0xfffffe00074bc5a4
+SMP lsd t0 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16d80e900 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x1871fccc0 0x1871fcbf4 0x1a9b34344 0x0
+SMP lsd t0 regs [x16=-47/0xffffffffffffffd1 x0=0x16d80e9e8 x1=0x507000806 x2=0x200000000 x3=0x110300000000 x4=0x0 x5=0x110300000000 cpsr=0x40000000]
+SMP lsd t0 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP lsd t1 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16d9aeb30 bt 0x1d70aa720
+SMP lsd t1 regs [x16=368/0x170 x0=0x100 x1=0x16d9aeb80 x2=0x1 x3=0x0 x4=0x1d70ff7c0 x5=0x121f11230 cpsr=0x40000000]
+SMP lsd t1 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b4921dfe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP lsd t2 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16dac6fc0 bt 0x1d70aa720
+SMP lsd t2 regs [x16=368/0x170 x0=0x4 x1=0x0 x2=0x0 x3=0x0 x4=0x70 x5=0x121f11ed0 cpsr=0x40000000]
+SMP lsd t2 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49215fe8 wr=-1 rsn=0x2 block_hint=0xf pending=0x0]
+SMP lsd t3 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16db529c0 bt 0x1d70aa720
+SMP lsd t3 regs [x16=368/0x170 x0=0x100 x1=0x16db52b80 x2=0x2 x3=0x0 x4=0x1d0 x5=0x121f0f380 cpsr=0x0]
+SMP lsd t3 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49214bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP lsd t4 pc 0x0 lr 0x0 sp 0x0 bt
+SMP lsd t4 regs [x16=0/0x0 x0=0x0 x1=0x0 x2=0x0 x3=0x0 x4=0x0 x5=0x0 cpsr=0x0]
+SMP lsd t4 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b491fb3d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP lsd t5 pc 0x0 lr 0x0 sp 0x0 bt
+SMP lsd t5 regs [x16=0/0x0 x0=0x0 x1=0x0 x2=0x0 x3=0x0 x4=0x0 x5=0x0 cpsr=0x0]
+SMP lsd t5 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49be1fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP backboardd[56] slide 0x5510000 mh 0x102074000 kslide 0x0
+SMP irq total=1372186 timer=800725 ipi=571501 other=0 abstime=1894219092
+SMP fault esr=0x92000047 far=0x1223cc000 cnt=615913 SCTLR.SPAN=1 fault_spsr=0x80000000 fault.PAN=0
+SMP kprof hot 0xfffffe00074c3c64:106790 0xfffffe0007bdb1d4:73 0xfffffe0007bdb1d8:486 0xfffffe0007bdb1e0:232 0xfffffe00074c448c:529371 0xfffffe0007bdb1c8:69 0xfffffe0007bdb1cc:113 0xfffffe0007b2900c:1
+SMP kprof live 0xfffffe00074c3c64 0xfffffe00074c2594
+SMP kprof work 0xfffffe0007b2900c 0xfffffe000754ee38 0xfffffe00075677a4 0xfffffe000756bf08 0xfffffe00079b3f6c 0xfffffe00074bcec8 0xfffffe00074bc5a4
+SMP backboardd t0 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16dd8a880 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x10207de40 0x1a9b34344 0x0
+SMP backboardd t0 regs [x16=-47/0xffffffffffffffd1 x0=0x16dd8a968 x1=0x507000806 x2=0x200000000 x3=0x3c0300000000 x4=0x0 x5=0x3c0300000000 cpsr=0x40000000]
+SMP backboardd t0 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t1 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16df29eb0 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x193ab2f70 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t1 regs [x16=-47/0xffffffffffffffd1 x0=0x16df29f98 x1=0x507000806 x2=0x200000000 x3=0x2f0300000000 x4=0x0 x5=0x2f0300000000 cpsr=0x40000000]
+SMP backboardd t1 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t2 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e042b30 bt 0x1d70aa720
+SMP backboardd t2 regs [x16=368/0x170 x0=0x100 x1=0x16e042b80 x2=0x1 x3=0x0 x4=0x1d70ff7c0 x5=0x10251f050 cpsr=0x40000000]
+SMP backboardd t2 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b4928dfe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP backboardd t3 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16e1d69b0 bt 0x1c7b32db8 0x1c7b21524 0x18d7dc884 0x18da1b418 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t3 regs [x16=-47/0xffffffffffffffd1 x0=0x16e1d6a98 x1=0x50300080e x2=0x200000000 x3=0x0 x4=0x0 x5=0x580300000000 cpsr=0x40000000]
+SMP backboardd t3 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t4 pc 0x10b991884 lr 0x10b991850 sp 0x16e3f0220 bt 0x10b98fd74 0x10b8a0674 0x10baaa650 0x10baa9f00 0x10b9dfd30 0x10b7665bc 0x10b80308c 0x10b7fadfc 0x10a0dae84 0x10a0cf284 0x10a0a3cb8 0x18d891ba0 0x18d7dbf64 0x18d7e5658 0x18d813454 0x18d7fd6SMP backboardd t4 regs [x16=0/0x0 x0=0xa8 x1=0x1 x2=0xbf5b x3=0x10c40dee0 x4=0x3 x5=0x3 cpsr=0x80000000]
+SMP backboardd t4 kern [state=0x4 cont=0x0 (unslid 0x0) wait_event=0x0 wr=1 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP backboardd t4 ksp 0xfffffe4413293d20 kfp 0xfffffe4413293d40 klr 0xfffffe00074c9990 kbt 0xfffffe101650f6d0
+SMP backboardd t4 kscan 0xfffffe0007405c14 0xfffffe00074bdb30 0xfffffe00074bcf28 0xfffffe000736e26c 0xfffffe000733518c 0xfffffe00074bc874 0xfffffe00074c9990
+SMP backboardd t4 kframes 0xfffffe0007405c14 0xfffffe00074bdb30 0xfffffe00074bcf28 0xfffffe000736e26c 0xfffffe000733518c 0xfffffe00074bc874
+SMP backboardd t5 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16e509d90 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x18da11ccc 0x18da1b418 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t5 regs [x16=-47/0xffffffffffffffd1 x0=0x16e509e78 x1=0x507000806 x2=0x200000000 x3=0xa72300000000 x4=0x0 x5=0xa72300000000 cpsr=0x40000000]
+SMP backboardd t5 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t6 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16e615d90 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x18da11ccc 0x18da1b418 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t6 regs [x16=-47/0xffffffffffffffd1 x0=0x16e615e78 x1=0x507000806 x2=0x200000000 x3=0xa30300000000 x4=0x0 x5=0xa30300000000 cpsr=0x40000000]
+SMP backboardd t6 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t7 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16e721d90 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x18da11ccc 0x18da1b418 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t7 regs [x16=-47/0xffffffffffffffd1 x0=0x16e721e78 x1=0x507000806 x2=0x200000000 x3=0x880300000000 x4=0x0 x5=0x880300000000 cpsr=0x40000000]
+SMP backboardd t7 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t8 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16e7ade40 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x196ecdfac 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t8 regs [x16=-47/0xffffffffffffffd1 x0=0x16e7adf28 x1=0x507000806 x2=0x200000000 x3=0x970300000000 x4=0x0 x5=0x970300000000 cpsr=0x40000000]
+SMP backboardd t8 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP backboardd t9 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e2f2ae0 bt 0x1d70aa720
+SMP backboardd t9 regs [x16=368/0x170 x0=0x40 x1=0x16e2f2b80 x2=0x0 x3=0x0 x4=0x1930b4e6c x5=0x18 cpsr=0x40000000]
+SMP backboardd t9 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b48e90bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP backboardd t10 pc 0x1c7b21ad0 lr 0x193078128 sp 0x16e83a860 bt 0x1930784a0 0x10208ca78 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0 0x1d70aa720
+SMP backboardd t10 regs [x16=515/0x203 x0=0x1000001 x1=0x10262ce44 x2=0x0 x3=0x0 x4=0x1e0 x5=0x20 cpsr=0x40000000]
+SMP backboardd t10 kern [state=0x41 cont=0xfffffe000789b270 (unslid 0xfffffe000789b270) wait_event=0xfffffe201505e800 wr=-1 rsn=0x2 block_hint=0xa pending=0x0]
+SMP backboardd t11 pc 0x1c7b21f3c lr 0x1d70b5620 sp 0x16e8c6580 bt 0x1d70ac304 0x18da0d6c8 0x18d9f5150 0x1020bd878 0x1020bd170 0x1020bcf28 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0 0x1d70aa720
+SMP backboardd t11 regs [x16=301/0x12d x0=0x106104128 x1=0x90000000a02 x2=0x900 x3=0x218 x4=0x20a0 x5=0x16e8c70e0 cpsr=0x40000000]
+SMP backboardd t11 kern [state=0x41 cont=0xfffffe00077b9670 (unslid 0xfffffe00077b9670) wait_event=0xfffffe29ae090c00 wr=-1 rsn=0x0 block_hint=0xb pending=0x0]
+SMP backboardd t12 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16e266b40 bt 0x1d70aa720
+SMP backboardd t12 regs [x16=368/0x170 x0=0x40 x1=0x16e266b80 x2=0x0 x3=0x0 x4=0x1930b4e6c x5=0x15 cpsr=0x40000000]
+SMP backboardd t12 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49389fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP backboardd t13 pc 0x1c7b20fc4 lr 0x193077d9c sp 0x16e0cef30 bt 0x193078328 0x19308ca80 0x1d70ac0ec 0x1d70aa72c
+SMP backboardd t13 regs [x16=-38/0xffffffffffffffda x0=0x270b x1=0x3b9ac44a00000004 x2=0x3b9ac44a x3=0xfffffc088 x4=0xc0 x5=0x11987e550 cpsr=0x80000000]
+SMP backboardd t13 kern [state=0x1 cont=0xfffffe0007388530 (unslid 0xfffffe0007388530) wait_event=0xfffffe0007008d98 wr=-1 rsn=0x0 block_hint=0x6 pending=0x0]
+SMP SpringBoard[27] slide 0x5510000 mh 0x1048ec000 kslide 0x0
+SMP irq total=1372212 timer=800727 ipi=571525 other=0 abstime=1894238531
+SMP fault esr=0x9600000b far=0x16e83a880 cnt=615914 SCTLR.SPAN=1 fault_spsr=0x60000204 fault.PAN=0
+SMP kprof hot 0xfffffe00074c3c64:106791 0xfffffe0007bdb1d4:73 0xfffffe0007bdb1d8:486 0xfffffe0007bdb1e0:232 0xfffffe00074c448c:529371 0xfffffe0007bdb1c8:69 0xfffffe0007bdb1cc:113 0xfffffe0007b2900c:1
+SMP kprof live 0xfffffe00074c3c64 0xfffffe00074c2594
+SMP kprof work 0xfffffe0007b2900c 0xfffffe000754ee38 0xfffffe00075677a4 0xfffffe000756bf08 0xfffffe00079b3f6c 0xfffffe00074bcec8 0xfffffe00074bc5a4
+SMP SpringBoard t0 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16b512180 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1c4445998 0x18e60434c 0x18e603fc4 0x1cad755e8 0x1a9b34344 0x0
+SMP SpringBoard t0 regs [x16=-47/0xffffffffffffffd1 x0=0x16b512268 x1=0x507000806 x2=0x200000000 x3=0x800700000000 x4=0x0 x5=0x800700000000 cpsr=0x40000000]
+SMP SpringBoard t0 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t1 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b7cab40 bt 0x1d70aa720
+SMP SpringBoard t1 regs [x16=368/0x170 x0=0x40 x1=0x16b7cab80 x2=0x0 x3=0x0 x4=0x1a0 x5=0x20 cpsr=0x40000000]
+SMP SpringBoard t1 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b492c73d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t2 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b8e2b30 bt 0x1d70aa720
+SMP SpringBoard t2 regs [x16=368/0x170 x0=0x100 x1=0x16b8e2b80 x2=0x1 x3=0x0 x4=0x72 x5=0x72 cpsr=0x0]
+SMP SpringBoard t2 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b492c4bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t3 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16b855c70 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1866c0ef8 0x1866c0df4 0x18e726818 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t3 regs [x16=-47/0xffffffffffffffd1 x0=0x16b855d58 x1=0x507000806 x2=0x200000000 x3=0x820f00000000 x4=0x0 x5=0x820f00000000 cpsr=0x40000000]
+SMP SpringBoard t3 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t4 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16ba86b30 bt 0x1d70aa720
+SMP SpringBoard t4 regs [x16=368/0x170 x0=0x100 x1=0x16ba86b80 x2=0x1 x3=0x0 x4=0x280e63b00 x5=0x16 cpsr=0x0]
+SMP SpringBoard t4 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49931fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t5 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16b9f9e40 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x196ecdfac 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t5 regs [x16=-47/0xffffffffffffffd1 x0=0x16b9f9f28 x1=0x507000806 x2=0x200000000 x3=0xc60300000000 x4=0x0 x5=0xc60300000000 cpsr=0x40000000]
+SMP SpringBoard t5 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t6 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16bb12ad0 bt 0x1d70aa720
+SMP SpringBoard t6 regs [x16=368/0x170 x0=0x100 x1=0x16bb12b80 x2=0x2 x3=0x0 x4=0x280606780 x5=0x0 cpsr=0x40000000]
+SMP SpringBoard t6 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b496bf3d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t7 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16bcb6b30 bt 0x1d70aa720
+SMP SpringBoard t7 regs [x16=368/0x170 x0=0x100 x1=0x16bcb6b80 x2=0x1 x3=0x0 x4=0x280185d00 x5=0x0 cpsr=0x0]
+SMP SpringBoard t7 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b494fdfe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t8 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16bd42b40 bt 0x1d70aa720
+SMP SpringBoard t8 regs [x16=368/0x170 x0=0x40 x1=0x16bd42b80 x2=0x0 x3=0x0 x4=0x1a0 x5=0x20 cpsr=0x40000000]
+SMP SpringBoard t8 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49258bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t9 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16bffdc80 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1866c0ef8 0x1866c0da4 0x1caea05b8 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t9 regs [x16=-47/0xffffffffffffffd1 x0=0x16bffdd68 x1=0x507000806 x2=0x200000000 x3=0x1850300000000 x4=0x0 x5=0x1850300000000 cpsr=0x40000000]
+SMP SpringBoard t9 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t10 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16c345c60 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x18c3b0bec 0x1a5b2d1b8 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t10 regs [x16=-47/0xffffffffffffffd1 x0=0x16c345d48 x1=0x507000806 x2=0x200000000 x3=0x2040b00000000 x4=0x0 x5=0x2040b00000000 cpsr=0x40000000]
+SMP SpringBoard t10 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t11 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16c45eb30 bt 0x1d70aa720
+SMP SpringBoard t11 regs [x16=368/0x170 x0=0x100 x1=0x16c45eb80 x2=0x1 x3=0x0 x4=0x281ec1340 x5=0x3c00 cpsr=0x0]
+SMP SpringBoard t11 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b4968dfe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t12 pc 0x1c7b20fac lr 0x193077d24 sp 0x16c71acf0 bt 0x193078360 0x18e6cdd9c 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t12 regs [x16=-36/0xffffffffffffffdc x0=0x26003 x1=0xffffffffffffffff x2=0x1e72569c0 x3=0x1e451f460 x4=0x0 x5=0x107f07a70 cpsr=0x60000000]
+SMP SpringBoard t12 kern [state=0x1 cont=0xfffffe0007388530 (unslid 0xfffffe0007388530) wait_event=0xfffffe0007008d98 wr=-1 rsn=0x0 block_hint=0x6 pending=0x0]
+SMP SpringBoard t13 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16c7a5c80 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1866c0ef8 0x1866c0da4 0x1facaa0d4 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t13 regs [x16=-47/0xffffffffffffffd1 x0=0x16c7a5d68 x1=0x507000806 x2=0x200000000 x3=0x25c0b00000000 x4=0x0 x5=0x25c0b00000000 cpsr=0x40000000]
+SMP SpringBoard t13 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t14 pc 0x1c7b21030 lr 0x1c7b32b18 sp 0x16c831c60 bt 0x1c7b32db8 0x1c7b21524 0x18c36c148 0x18c36d2e0 0x18c371d20 0x1866c0ef8 0x1866c0da4 0x1facb8d80 0x1866d8a5c 0x1d70ac0ec 0x1d70aa72c
+SMP SpringBoard t14 regs [x16=-47/0xffffffffffffffd1 x0=0x16c831d48 x1=0x507000806 x2=0x200000000 x3=0x23c0b00000000 x4=0x0 x5=0x23c0b00000000 cpsr=0x40000000]
+SMP SpringBoard t14 kern [state=0x1 cont=0xfffffe000731fe00 (unslid 0xfffffe000731fe00) wait_event=0x0 wr=-1 rsn=0x0 block_hint=0x2 pending=0x0]
+SMP SpringBoard t15 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b59afc0 bt 0x1d70aa720
+SMP SpringBoard t15 regs [x16=368/0x170 x0=0x4 x1=0x0 x2=0x0 x3=0x0 x4=0x64005 x5=0x0 cpsr=0x0]
+SMP SpringBoard t15 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b492533d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t16 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b626b40 bt 0x1d70aa720
+SMP SpringBoard t16 regs [x16=368/0x170 x0=0x40 x1=0x16b626b80 x2=0x0 x3=0x0 x4=0x1a0 x5=0x20 cpsr=0x40000000]
+SMP SpringBoard t16 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b49749fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t17 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b73eb30 bt 0x1d70aa720
+SMP SpringBoard t17 regs [x16=368/0x170 x0=0x100 x1=0x16b73eb80 x2=0x1 x3=0x0 x4=0x281ea8300 x5=0x3420 cpsr=0x0]
+SMP SpringBoard t17 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b494673d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP SpringBoard t18 pc 0x0 lr 0x0 sp 0x0 bt
+SMP SpringBoard t18 regs [x16=0/0x0 x0=0x0 x1=0x0 x2=0x0 x3=0x0 x4=0x0 x5=0x0 cpsr=0x0]
+SMP SpringBoard t18 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b494b0bf8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP launchd[1] slide 0x5510000 mh 0x104df8000 kslide 0x0
+SMP irq total=1372229 timer=800727 ipi=571541 other=0 abstime=1894259479
+SMP fault esr=0x92000047 far=0x1223d8000 cnt=615916 SCTLR.SPAN=1 fault_spsr=0x40000000 fault.PAN=0
+SMP kprof hot 0xfffffe00074c3c64:106791 0xfffffe0007bdb1d4:73 0xfffffe0007bdb1d8:486 0xfffffe0007bdb1e0:232 0xfffffe00074c448c:529371 0xfffffe0007bdb1c8:69 0xfffffe0007bdb1cc:113 0xfffffe0007b2900c:1
+SMP kprof live 0xfffffe00074c3c64 0xfffffe00074c2594
+SMP kprof work 0xfffffe0007b2900c 0xfffffe000754ee38 0xfffffe00075677a4 0xfffffe000756bf08 0xfffffe00079b3f6c 0xfffffe00074bcec8 0xfffffe00074bc5a4
+SMP launchd t0 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b08ea40 bt 0x1d70aa720
+SMP launchd t0 regs [x16=368/0x170 x0=0x100 x1=0x16b08eb80 x2=0x2 x3=0x0 x4=0xf0 x5=0x1313b2210 cpsr=0x40000000]
+SMP launchd t0 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b48e85fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP launchd t1 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b11aa40 bt 0x1d70aa720
+SMP launchd t1 regs [x16=368/0x170 x0=0x100 x1=0x16b11ab80 x2=0x2 x3=0x0 x4=0xf0 x5=0x131058f30 cpsr=0x40000000]
+SMP launchd t1 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b48ea5fe8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP launchd t2 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b1a6a40 bt 0x1d70aa720
+SMP launchd t2 regs [x16=368/0x170 x0=0x100 x1=0x16b1a6b80 x2=0x2 x3=0x0 x4=0xf0 x5=0x131150050 cpsr=0x40000000]
+SMP launchd t2 kern [state=0x1 cont=0xfffffe00077c2270 (unslid 0xfffffe00077c2270) wait_event=0xfffffe1b48e8f3d8 wr=-1 rsn=0x0 block_hint=0xf pending=0x0]
+SMP launchd t3 pc 0x1c7b2892c lr 0x19308e7f4 sp 0x16b232f90 bt 0x19308e7c8 0x0
+SMP launchd t3 regs [x16=410/0x19a x0=0x0 x1=0xffffffffffffffff x2=0x0 x3=0x16b232fc0 x4=0x16b233040 x5=0x190008ff cpsr=0x0]
+SMP launchd t3 kern [state=0x1 cont=0xfffffe000786d550 (unslid 0xfffffe000786d550) wait_event=0xfffffe24e1bcdf18 wr=-1 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP launchd t4 pc 0x1c7b214f0 lr 0x1d70aac1c sp 0x16b34ab30 bt 0x1d70aa720
+SMP launchd t4 regs [x16=368/0x170 x0=0x100 x1=0x16b34ab80 x2=0x1 x3=0x0 x4=0x80 x5=0x131198380 cpsr=0x40000000]
+SMP launchd t4 kern [state=0x4 cont=0x0 (unslid 0x0) wait_event=0x0 wr=0 rsn=0x0 block_hint=0x0 pending=0x0]
+SMP launchd t4 ksp 0xfffffe441339bf30 kfp 0x0 klr 0xfffffe00073793f0 kbt
+SMP launchd t4 kscan 0xfffffe00073793f0
+SMP launchd t4 kframes
+SMP launchd t5 pc 0x1c7b20fac lr 0x193077d24 sp 0x16b2bef10 bt 0x193078360 0x104dfd898 0x1d70ac0ec 0x1d70aa72c
+SMP launchd t5 regs [x16=-36/0xffffffffffffffdc x0=0x70f47 x1=0x200000003 x2=0x2800001513 x3=0x70b1b00000203 x4=0xd5a00000000 x5=0x70b1b00000000 cpsr=0x60000000]
+SMP launchd t5 kern [state=0x1 cont=0xfffffe0007388530 (unslid 0xfffffe0007388530) wait_event=0xfffffe0007008d98 wr=-1 rsn=0x0 block_hint=0x6 pending=0x0]
+SMP launchd t6 pc 0x1c7b20fac lr 0x193077d24 sp 0x16b3d6f10 bt 0x193078360 0x104dfd898 0x1d70ac0ec 0x1d70aa72c
+SMP launchd t6 regs [x16=-36/0xffffffffffffffdc x0=0x76007 x1=0x200000003 x2=0x2800001513 x3=0x63edf00000203 x4=0xd5a00000000 x5=0x63edf00000000 cpsr=0x60000000]
+SMP launchd t6 kern [state=0x1 cont=0xfffffe0007388530 (unslid 0xfffffe0007388530) wait_event=0xfffffe0007008d98 wr=-1 rsn=0x0 block_hint=0x6 pending=0x0]
+CRASH PosterBoard[303] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102084000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16e14a5b0 fp 0x16e14a680 far 0x141018208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH SiriTTSSynthesiz[311] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104f48000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16aeb5ea0 fp 0x16aeb5ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[314] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102880000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d57dec0 fp 0x16d57dee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[315] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10478c000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b671ea0 fp 0x16b671ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH assetsd[316] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1021c8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ddd6cd0 fp 0x16ddd6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[313] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1041c8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16c0925b0 fp 0x16c092680 far 0x117f40000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[325] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10494c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5c65b0 fp 0x16b5c6680 far 0x16b5be2a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 9 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[335] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100bb0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f47acd0 fp 0x16f47acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[334] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102600000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16dce65b0 fp 0x16dce6680 far 0x1005c8058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 10 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH PosterBoard[345] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100ee4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f0ba5b0 fp 0x16f0ba680 far 0x21a0481d8
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH SiriTTSSynthesiz[353] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10037c000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fa81ea0 fp 0x16fa81ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[354] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100114000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fce9ea0 fp 0x16fce9ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[355] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10097c000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f481ec0 fp 0x16f481ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH SiriTTSSynthesiz[358] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102fec000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ce11ea0 fp 0x16ce11ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[359] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104110000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bcedea0 fp 0x16bcedec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[360] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100f54000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16eea9ec0 fp 0x16eea9ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH assetsd[361] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104568000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ba36cd0 fp 0x16ba36cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[357] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1044a4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bb865b0 fp 0x16bb86680 far 0x127fed000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[370] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102fc4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16cec25b0 fp 0x16cec2680 far 0x105838000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 11 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH SiriTTSSynthesiz[380] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1025e8000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d815ea0 fp 0x16d815ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[381] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1022c8000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16db35ea0 fp 0x16db35ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[382] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1005ac000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f851ed0 fp 0x16f851ef0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH assetsd[383] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102764000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d722cd0 fp 0x16d722cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[379] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104474000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bde65b0 fp 0x16bde6680 far 0x127fa0000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[392] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104310000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16be325b0 fp 0x16be32680 far 0x16bebeb78
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[403] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102fd0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ceb6cd0 fp 0x16ceb6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[401] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100ca4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f5b65b0 fp 0x16f5b6680 far 0x283798000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[411] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1003f0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fb225b0 fp 0x16fb22680 far 0x282d29250
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH SiriTTSSynthesiz[420] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1023b4000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16da49ea0 fp 0x16da49ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[421] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10070c000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f6f1ea0 fp 0x16f6f1ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[422] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104794000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b669ec0 fp 0x16b669ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH SiriTTSSynthesiz[426] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100924000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f4d9ea0 fp 0x16f4d9ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[428] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100d38000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f0c5ea0 fp 0x16f0c5ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[429] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104f9c000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ae61ec0 fp 0x16ae61ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[427] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104ca8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b1decd0 fp 0x16b1decf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[425] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102f34000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d1825b0 fp 0x16d182680 far 0x16d297f00
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[437] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100664000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fade5b0 fp 0x16fade680 far 0x13e051208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH SiriTTSSynthesiz[448] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100214000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fbe9ea0 fp 0x16fbe9ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[450] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104d48000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b0b5ea0 fp 0x16b0b5ec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[451] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10019c000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fc61ec0 fp 0x16fc61ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH assetsd[452] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104d18000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b312cd0 fp 0x16b312cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[449] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104210000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bea65b0 fp 0x16bea6680 far 0x1005e8058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[460] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102c28000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d5a65b0 fp 0x16d5a6680 far 0x2827b8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[471] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104c44000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b2cecd0 fp 0x16b2cecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[470] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e9c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b1025b0 fp 0x16b102680 far 0x1430880b0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[479] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e28000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b4325b0 fp 0x16b432680 far 0x16b5ce2a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH MacinTalkAUSP[487] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10220c000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dbf1ed0 fp 0x16dbf1ef0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[488] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100d90000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f06dea0 fp 0x16f06dec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH SiriTTSSynthesiz[489] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1020b8000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dd45ea0 fp 0x16dd45ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH MacinTalkAUSP[498] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104804000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b5f9ec0 fp 0x16b5f9ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[499] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100d88000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f075ea0 fp 0x16f075ec0 far 0x128b4c02c
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH SiriTTSSynthesiz[501] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100c1c000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f1e1ea0 fp 0x16f1e1ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH assetsd[502] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102a20000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d722cd0 fp 0x16d722cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[500] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1025dc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16dada5b0 fp 0x16dada680 far 0x2801c0000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[510] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104588000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bd5e5b0 fp 0x16bd5e680 far 0x282fb8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 12 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH MacinTalkAUSP[520] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1027a4000
+CRASH MacinTalkAUSP pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d659ec0 fp 0x16d659ee0 far 0x1e4382e28
+CRASH MacinTalkAUSP bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH MacinTalkAUSP reason ns 2 code 0x6: (none)
+CRASH KonaSynthesizer[521] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1041a0000
+CRASH KonaSynthesizer pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bc5dea0 fp 0x16bc5dec0 far 0x1e4382e28
+CRASH KonaSynthesizer bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH KonaSynthesizer reason ns 2 code 0x6: (none)
+CRASH SiriTTSSynthesiz[522] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104404000
+CRASH SiriTTSSynthesiz pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b9f9ea0 fp 0x16b9f9ec0 far 0x1e4382e28
+CRASH SiriTTSSynthesiz bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6ff0da0 0x1d6ff0d60 0x1855ddd58 0x18c3e3704 0x1b0449d5c
+CRASH SiriTTSSynthesiz reason ns 2 code 0x6: (none)
+CRASH assetsd[524] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100de0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f24acd0 fp 0x16f24acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[523] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102a60000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d53e5b0 fp 0x16d53e680 far 0x16d7f22a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[532] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104d5c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b1b65b0 fp 0x16b1b6680 far 0x2829711a8
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[543] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1022e0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dba6cd0 fp 0x16dba6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[542] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1043dc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bcda5b0 fp 0x16bcda680 far 0x13e059208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[551] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100928000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f9325b0 fp 0x16f932680 far 0x138018608
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[562] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1004b0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f9d6cd0 fp 0x16f9d6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[561] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1009a4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f82a5b0 fp 0x16f82a680 far 0x282640000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH PosterBoard[570] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104578000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b90e5b0 fp 0x16b90e680 far 0x28249c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[581] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10057c000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fa22cd0 fp 0x16fa22cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[580] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102420000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16daf25b0 fp 0x16daf2680 far 0x281ec0000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[589] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104cec000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5fa5b0 fp 0x16b5fa680 far 0x1408f4208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[600] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104bd8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b3c6cd0 fp 0x16b3c6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[599] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1009e0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f7ee5b0 fp 0x16f7ee680 far 0x28173c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[608] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100544000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fe2e5b0 fp 0x16fe2e680 far 0x281ed0000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[619] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10450c000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b97acd0 fp 0x16b97acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[618] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100cc0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f50e5b0 fp 0x16f50e680 far 0x16f5922a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[627] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104348000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16be865b0 fp 0x16be86680 far 0x16d208000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 13 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[638] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104b44000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b3cecd0 fp 0x16b3cecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[637] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10003c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x1701925b0 fp 0x170192680 far 0x282420000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[646] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e88000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5765b0 fp 0x16b576680 far 0x107034000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[657] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1027dc000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d966cd0 fp 0x16d966cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[656] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10030c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16ff4e5b0 fp 0x16ff4e680 far 0x2833e8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[665] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104d9c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b31a5b0 fp 0x16b31a680 far 0x146b14018
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[676] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104304000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bd26cd0 fp 0x16bd26cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[675] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100860000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f96e5b0 fp 0x16f96e680 far 0x280854000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[684] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1009c8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f8065b0 fp 0x16f806680 far 0x28087c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[695] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1022a8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dc6acd0 fp 0x16dc6acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[694] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102e44000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d4a25b0 fp 0x16d4a2680 far 0x104820000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[703] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104748000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bb125b0 fp 0x16bb12680 far 0x281c545a8
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[714] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100e38000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f04ecd0 fp 0x16f04ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[713] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104d08000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5525b0 fp 0x16b552680 far 0x104e28000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[722] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e28000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b2025b0 fp 0x16b202680 far 0x13f88c208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[733] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1040e8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16be2acd0 fp 0x16be2acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[732] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102f78000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d0265b0 fp 0x16d026680 far 0x1400e1208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 14 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH PosterBoard[741] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10006c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fe1a5b0 fp 0x16fe1a680 far 0x282ad0000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[752] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102770000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d716cd0 fp 0x16d716cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[751] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10480c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b81e5b0 fp 0x16b81e680 far 0x28399c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[760] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100224000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fcee5b0 fp 0x16fcee680 far 0x1701462a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[771] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102190000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dcf6cd0 fp 0x16dcf6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[770] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104a48000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5565b0 fp 0x16b556680 far 0x2817d8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[779] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102f90000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d2ca5b0 fp 0x16d2ca680 far 0x140971208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[790] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102660000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dae2cd0 fp 0x16dae2cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[789] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1003a8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fade5b0 fp 0x16fade680 far 0x1411fc208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[798] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104d08000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b2965b0 fp 0x16b296680 far 0x14e828200
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[809] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102730000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d86ecd0 fp 0x16d86ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[808] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1007b8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f8fe5b0 fp 0x16f8fe680 far 0x2819bc000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[817] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104080000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16c0365b0 fp 0x16c036680 far 0x1005ac000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[828] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1003b8000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fb5acd0 fp 0x16fb5acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[827] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e1c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b1825b0 fp 0x16b182680 far 0x16b06a1c0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[836] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x10275c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d8425b0 fp 0x16d842680 far 0x16d7b3f00
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+SWEET FB: swap 15 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH assetsd[847] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102070000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16dfbacd0 fp 0x16dfbacf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[846] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1007ec000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fb865b0 fp 0x16fb86680 far 0x140300008
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[855] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104c30000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b5125b0 fp 0x16b512680 far 0x16b73fc94
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[866] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102fac000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16cedacd0 fp 0x16cedacf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[865] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1024a8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16de3e5b0 fp 0x16de3e680 far 0x10a040000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[874] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1000c0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x1702b25b0 fp 0x1702b2680 far 0x148a40030
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[885] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100adc000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f436cd0 fp 0x16f436cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[884] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100db0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f3925b0 fp 0x16f392680 far 0x282ad4000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[893] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100a38000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f70a5b0 fp 0x16f70a680 far 0x1493e0080
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[904] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104d20000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b1f2cd0 fp 0x16b1f2cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[903] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1047d4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b9fa5b0 fp 0x16b9fa680 far 0x283378000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[912] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100c34000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f6b25b0 fp 0x16f6b2680 far 0x101d3d000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[923] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102e84000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d002cd0 fp 0x16d002cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[922] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100e9c000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f2a65b0 fp 0x16f2a6680 far 0x101c28078
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[931] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104844000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b75a5b0 fp 0x16b75a680 far 0x14b14c0c0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET Sandbox: dasd privilege 1002 denied
+CRASH assetsd[946] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102600000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d99ecd0 fp 0x16d99ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[945] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100b64000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f6f65b0 fp 0x16f6f6680 far 0x1005d4058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[955] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100a38000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f4da5b0 fp 0x16f4da680 far 0x16f8a62a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 16 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+CRASH assetsd[965] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10438c000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bc12cd0 fp 0x16bc12cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[964] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102084000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16e0be5b0 fp 0x16e0be680 far 0x14c5ac000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[975] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1043b4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16bc765b0 fp 0x16bc76680 far 0x130830208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[985] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x10206c000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16de1acd0 fp 0x16de1acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[984] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1029fc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d85e5b0 fp 0x16d85e680 far 0x10b608000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[994] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1041f0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16c06a5b0 fp 0x16c06a680 far 0x2806d8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1004] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104330000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16bcfacd0 fp 0x16bcfacf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1003] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102e64000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d2de5b0 fp 0x16d2de680 far 0x12de8c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1013] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1025a4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d9fa5b0 fp 0x16d9fa680 far 0x104028208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1023] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102ddc000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d1c2cd0 fp 0x16d1c2cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1022] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1021cc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16e0025b0 fp 0x16e002680 far 0x13f81e208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1032] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102360000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16de6e5b0 fp 0x16de6e680 far 0x105ff4000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1043] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100044000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fececd0 fp 0x16fececf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1041] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104e08000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b3c65b0 fp 0x16b3c6680 far 0x28209c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1051] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100fe8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f15a5b0 fp 0x16f15a680 far 0x282048000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1062] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104910000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b576cd0 fp 0x16b576cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1061] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1040dc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16c0f25b0 fp 0x16c0f2680 far 0x281294000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH PosterBoard[1070] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100940000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f91a5b0 fp 0x16f91a680 far 0x1408d1208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 17 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1081] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104cc0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b2decd0 fp 0x16b2decf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1080] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100f60000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f1565b0 fp 0x16f156680 far 0x280888000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1089] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104be4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b8a65b0 fp 0x16b8a6680 far 0x2831a8000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1100] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102d14000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d172cd0 fp 0x16d172cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1099] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102c64000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d33a5b0 fp 0x16d33a680 far 0x280838000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1108] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104a08000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b47e5b0 fp 0x16b47e680 far 0x10b474000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH assetsd[1119] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100cec000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f456cd0 fp 0x16f456cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1118] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1028a8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d9b25b0 fp 0x16d9b2680 far 0x1409ce208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1127] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104c50000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b2365b0 fp 0x16b236680 far 0x13f9b6208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1138] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104874000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b69ecd0 fp 0x16b69ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[1137] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1042a8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16c03e5b0 fp 0x16c03e680 far 0x140a20208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1146] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1004c8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fd925b0 fp 0x16fd92680 far 0x16fc77f00
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1157] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102728000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16da1acd0 fp 0x16da1acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1156] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104b14000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b3fe5b0 fp 0x16b3fe680 far 0x282088000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[1165] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102cdc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d57e5b0 fp 0x16d57e680 far 0x104815408
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1176] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x1024e4000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16da2ecd0 fp 0x16da2ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1175] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1023e0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16ddee5b0 fp 0x16ddee680 far 0x1005d4058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 18 layer 0 surface 1 1080x2400 fmt 0x42475241 bpr 4320 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET TOUCH: X676C report error=5 status=0x1
+CRASH PosterBoard[1184] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102904000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d8ca5b0 fp 0x16d8ca680 far 0x11a710000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1195] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104484000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16ba8ecd0 fp 0x16ba8ecf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+SWEET HID: touch 0 down at 493,1088
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET HID: touch 0 up
+CRASH PosterBoard[1194] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1029f4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d6365b0 fp 0x16d636680 far 0x104124608
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+SWEET Sandbox: searchd op 7
+SWEET HID: key 0x30 down
+SWEET KEYS: key=0 (Power) down=1 mem1=0xffff top=0xc
+SWEET HID: key 0x30 up
+SWEET KEYS: key=0 (Power) down=0 mem1=0xffff top=0xe
+SWEET HID: touch 0 down at 419,1316
+SWEET HID: touch 0 up
+SWEET HID: touch 0 down at 708,11
+SWEET HID: touch 0 up
+CRASH PosterBoard[1204] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100af0000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f7f65b0 fp 0x16f7f6680 far 0x10102c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+|backboardd| MESA: info: SweetMali: BO storage slab request=64 slice=16384 logical=128 logical_bytes=278298624 backings=20 backing_bytes=279232512
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+ufshci: UPIU 0x01 OCS 0xf (try 0)
+CRASH mediaserverd[29] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102240000
+CRASH mediaserverd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16f226c60 fp 0x16f226c80 far 0x1e4382e28
+CRASH mediaserverd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x1930836fc 0x1930841e4 0x19308cc68
+CRASH mediaserverd reason ns 2 code 0x6: (none)
+SWEET AKS: SpringBoard sel 8 arg0 0 in 1/0 out 0/0 -> 0xe00002c7
+SWEET AKS: securityd sel 10 arg0 0 in 2/32 out 1/40 -> 0xe00002c7
+CRASH assetsd[1216] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102200000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16deb6cd0 fp 0x16deb6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1215] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102074000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16e1e65b0 fp 0x16e1e6680 far 0x102550030
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET FB: swap 19 layer 0 surface 2 1080x2400 fmt 0x42475241 bpr 4352 a 0,0 1080x2400 b 0,0 1080x2400
+SWEET FB: display off
+CRASH assetsd[1231] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102c70000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d3bacd0 fp 0x16d3bacf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1232] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104a64000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b4225b0 fp 0x16b422680 far 0x100408e00
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1248] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x104ee4000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16b1d2cd0 fp 0x16b1d2cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1242] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102ce4000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d6025b0 fp 0x16d602680 far 0x1d1c497f0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1252] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100ecc000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16efba5b0 fp 0x16efba680 far 0x1e72c93b0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1270] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102dd0000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d2e6cd0 fp 0x16d2e6cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1262] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102a70000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16d6465b0 fp 0x16d646680 far 0x28117c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1271] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x1007ac000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16fbc65b0 fp 0x16fbc6680 far 0x127fea000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1287] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x100564000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16fa3acd0 fp 0x16fa3acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1281] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104fc8000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16aebe5b0 fp 0x16aebe680 far 0x1005d4058
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1290] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104858000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b8ea5b0 fp 0x16b8ea680 far 0x16ba862a0
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET HID: touch 0 down at 1002,857
+SWEET HID: touch 1 down at 554,1322
+SWEET HID: touch 1 up
+SWEET HID: touch 2 down at 671,1147
+SWEET HID: touch 1 down at 869,1390
+SWEET HID: touch 0 up
+SWEET HID: touch 2 up
+SWEET HID: touch 0 down at 987,743
+SWEET HID: touch 1 up
+SWEET HID: touch 1 down at 853,774
+SWEET HID: touch 0 up
+SWEET HID: touch 1 up
+SWEET HID: touch 0 down at 849,828
+SWEET HID: touch 0 up
+SWEET HID: touch 0 down at 582,742
+SWEET HID: touch 1 down at 244,604
+SWEET HID: touch 0 up
+SWEET HID: touch 1 up
+SWEET HID: touch 2 down at 296,984
+SWEET HID: touch 0 down at 479,1145
+SWEET HID: touch 1 down at 222,639
+SWEET HID: touch 0 up
+SWEET HID: touch 1 up
+SWEET HID: touch 2 up
+SWEET HID: touch 0 down at 850,320
+SWEET HID: touch 1 down at 592,812
+SWEET HID: touch 2 down at 287,1259
+SWEET HID: touch 3 down at 503,346
+SWEET HID: touch 4 down at 251,610
+SWEET HID: touch 4 up
+SWEET HID: touch 2 up
+SWEET HID: touch 0 up
+SWEET HID: touch 1 up
+SWEET HID: touch 3 up
+CRASH assetsd[1307] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102034000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16df6acd0 fp 0x16df6acf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+Data/Stack execution not permitted: PosterBoard[pid 1300] at virtual address 0x1e7254000, protections were read-write
+CRASH PosterBoard[1300] sig 10 code 0x100000002 sub 0x1e7257118 slide 0x5510000 mh 0x104098000
+CRASH PosterBoard pc 0x1e7257118 lr 0x1932589b4 sp 0x16be785a0 fp 0x16be78650 far 0x1e7257118
+CRASH PosterBoard bt 0x19329eb3c 0x19326efdc 0x19329f664 0x193278a1c 0x19329fd74 0x193278a1c 0x1a11b9fb0 0x1930a8780 0x193078ddc 0x1a11b9f40
+CRASH PosterBoard map (far inside) 0x1e6000000-0x1e8000000 prot 3/3 tag 35
+CRASH PosterBoard reason ns 2 code 0xa: (none)
+CRASH PosterBoard[1309] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x102184000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16e04a5b0 fp 0x16e04a680 far 0x1e2782568
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH assetsd[1326] sig 6 code 0x0 sub 0x0 slide 0x5510000 mh 0x102b10000
+CRASH assetsd pc 0x1c7b27198 lr 0x1d70b65f8 sp 0x16d376cd0 fp 0x16d376cf0 far 0x1e4382e28
+CRASH assetsd bt 0x19316c4b8 0x1d6feef54 0x1d6fdfa4c 0x1855e2afc 0x1d6fee424 0x1d6fee3d4 0x1930a8794 0x19307fd48 0x19307f480 0x19308cc68
+CRASH assetsd reason ns 2 code 0x6: (none)
+CRASH PosterBoard[1319] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x104624000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16b8625b0 fp 0x16b862680 far 0x13ee6c000
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+CRASH PosterBoard[1328] sig 5 code 0x600000001 sub 0x1c6cad998 slide 0x5510000 mh 0x100b78000
+CRASH PosterBoard pc 0x1c6cad998 lr 0x1c6cad998 sp 0x16f30e5b0 fp 0x16f30e680 far 0x13e48e208
+CRASH PosterBoard bt 0x1c6cf6a98 0x1c6cf6848 0x1c6cf68f0 0x1c6c8b8e0 0x1930a77a8 0x1930a8780 0x1930836fc 0x1930841e4 0x19308df14 0x1d70aabd0
+CRASH PosterBoard reason ns 2 code 0x5: (none)
+SWEET BOOT: syncing filesystems before diagnostic reset
+SWEET BOOT: diagnostic TOPRGU software reset; retrying every 5000 us

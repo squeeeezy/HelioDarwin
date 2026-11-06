@@ -14,12 +14,12 @@ and cache handling. Their captured JS/MMU/GPU status fields are zero. This is
 phone evidence of GPU job execution; it does not establish correct pixels,
 numerical FP16, frame rate or complete Metal/Vulkan support.
 
-The next renderer failure is now precise: backboardd reaches the adapter's
+That capture identified a renderer failure: backboardd reached the adapter's
 128-live-BO limit before native allocation, refusing requests of 64, 69,632 and
 135,168 bytes with ENOSPC. This is not an observed device-memory allocation
 failure. Released surface owners now show falling wired-byte snapshots; no
 surface NoMemory failure is retained in this console. A bounded suballocation
-remedy is under development, with kernel memory limits preserved.
+remedy is now implemented, with kernel memory limits preserved.
 
 PosterBoard still traps while initializing/publishing a configuration with nil
 paths. Both helper registrations are accepted, but its provider query is denied
@@ -27,11 +27,19 @@ by the real host-entitlement policy: zero results are not evidence of absence.
 Native PosterBoard initially discovers nine providers. The helper's standalone
 legacy registration replaces two valid records without their capability
 metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job is being corrected; original providers and user data must be preserved.
+job has been disabled; original providers and user data must be preserved.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
 a complete rendered UI and wallpaper remain unconfirmed.
+
+The subsequent [01:29:49 capture](https://github.com/squeeeezy/HelioDarwin/blob/x676c/logs/boot-0205-run-40224078640-ui-bo-poster.log)
+used the same kernel with native BO suballocation and the retired registration
+job. It records 128 logical BOs on 20 native backings, ten successful hardware
+JM terminal results and no retained BO-allocation failure. PosterBoard still
+traps: disabling the helper did not repair the two existing malformed provider
+records. The user saw the bootloader image and black screens, without clocks or
+wallpaper. Android returned automatically around 01:42; visible UI remains unverified.
 
 ## First integrated device observation
 
@@ -152,7 +160,7 @@ not the translator's fixed logical preference. Existing Gaussian asset requests
 compile offline, which does not prove native execution or numerical output.
 
 The declared compiler series now includes patch 0003 for sRGB tile-read metadata,
-with actual color-table data forwarding and a triangle/fill-only PointSize
+with actual color-table data forwarding and a triangle-list/triangle-strip fill PointSize
 qualification. In the unchanged 1304-request corpus, 511 requests compile and
 form structural model draws; existing successful stage bytes remain unchanged.
 These models are not captured runtime bindings or GPU results. XR semantics
@@ -324,10 +332,24 @@ This addresses the observed count amplification without assuming unlimited
 memory or complete per-submit resource tracking. Fragmentation, many large
 allocations and real kernel-budget exhaustion can still fail. Diagnostics count
 logical objects and known owned backings separately; Vulkan logical heap usage
-is not an exact measure of wired memory. Device packing and continued execution
-still require a new phone run.
+is not an exact measure of wired memory. The 01:29:49 capture confirms packing
+and continued hardware execution for that workload; broader memory behavior
+and correct rendered pixels remain unverified.
 
 ## Remaining coverage and validation
+
+The 2026-11-06 source candidate adds bounded sampled/shared LA08 IOSurface
+import and canonical nonindexed triangle strips, including the filled-triangle
+PointSize check. Strict arm64 iOS linking and two existing captured-request
+structural shader checks pass; device pixels remain unverified.
+
+Kernel patch 0206 preserves panel-memory source aliases by composing into one
+private 10,368,000-byte buffer before publishing a complete frame to the panel
+mapping. Existing source bounds, cache cleaning and DSI push ordering remain.
+This adds storage and a full-frame CPU copy; it is a correctness correction,
+not a performance result. Patch 0207 publishes the two native VideoToolbox
+linear-alignment dictionary schemas with the existing 64-byte requirement.
+Their hardware and service behavior remains to be checked on the phone.
 
 Patched coherent color tile reads, native depth/stencil/MSAA helpers, views and
 compute write/indirect paths are now integrated source, with device validation

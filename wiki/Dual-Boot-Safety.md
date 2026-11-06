@@ -56,7 +56,8 @@ either PowerShell helper. The root-image flasher accepts the same setting as
 `x676c/tools/auto-deploy.ps1` requires an explicit `-Run`, waits for rooted Android and preserves the previous raw console. It replaces `iosroot` only when `-RootImage IMAGE` is supplied. The root flasher also requires an explicit image path, checks the HFS+ geometry, Android slot B, an unmounted destination and partition capacity, then verifies SHA-256 over the complete written image. Neither helper chooses an old build or local root image implicitly. Source and destination must still be reviewed before writing; verification cannot undo interruption during a write.
 
 The host return window defaults to 20 minutes and can be changed with `-ReturnWaitMinutes`. This is an ADB wait, not a reset timer. A longer diagnostic can select `sweetreboot=600` to allow ten minutes after UFS startup; earlier 420- and 600-second diagnostics returned automatically, while the
-23:17:49 run ended at manual return. The 0205 retry needs its own device run.
+23:17:49 run ended at manual return. With patch 0205, the later 00:26:36 and
+01:29:49 runs returned automatically; recovery from other hangs remains unverified.
 
 Capture [pstore](Pstore-Debugging-on-MediaTek.md) after Android returns and before starting another shim boot, which initializes a fresh console header.
 

@@ -64,10 +64,14 @@ reached a missing MRT/blending path. That path is now implemented and compiled,
 along with canonical per-draw/dispatch binding and native resource, graphics,
 synchronization and API modules. The integrated ABI 4/compute ABI 2 bundle passes
 strict linking and static review, with phone validation pending. A separate shared-cache
-metadata failure affects SpringBoard and several services and remains under
-investigation. Those earlier milestones did not establish job completion; the
+metadata failure affected SpringBoard and several services. Remaining malformed
+poster-provider records and compositor failures are under investigation.
+Those earlier milestones did not establish job completion; the
 later [00:26:36 capture](logs/boot-0205-run-40224078640-ui-texture-layout.log) records successful hardware JM work.
-Correct rendered UI output remains unconfirmed.
+The [01:29:49 capture](logs/boot-0205-run-40224078640-ui-bo-poster.log) records
+128 logical BOs on 20 native backings after suballocation, continued hardware
+completion and persistent PosterBoard failures. Correct rendered UI output
+remains unconfirmed.
 
 Compilation and offline shader validation do not prove that the stock Metal loader,
 PanVK, kernel GPU transport and presentation work together on the phone. Full

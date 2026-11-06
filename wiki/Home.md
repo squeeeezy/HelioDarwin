@@ -48,6 +48,12 @@ on 2026-10-26 records ten hardware JM completions, then identifies the
 adapter's 128-live-BO refusal and PosterBoard configuration failures.
 Correct UI output and wallpaper remain unconfirmed.
 
+The later [01:29:49 capture](https://github.com/squeeeezy/HelioDarwin/blob/x676c/logs/boot-0205-run-40224078640-ui-bo-poster.log)
+records 128 logical BOs on 20 native backings after suballocation, ten successful
+hardware JM terminal results and no retained BO-allocation failure. PosterBoard
+still traps on the existing malformed provider records. Android returned
+automatically around 01:42; the user saw no clock or wallpaper.
+
 ## Documentation boundaries
 
 Hardware observations, implemented source and offline checks are identified
