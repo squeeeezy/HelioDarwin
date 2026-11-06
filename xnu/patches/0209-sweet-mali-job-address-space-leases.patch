@@ -1,0 +1,328 @@
+--- a/iokit/Kernel/arm/SweetMaliUserClient.inc
++++ b/iokit/Kernel/arm/SweetMaliUserClient.inc
+@@ -67,7 +67,7 @@
+ 	SweetMaliUserClient *active;
+ 	IOWorkLoop *gpuWorkLoop;
+ 	IOTimerEventSource *gpuTimer;
+-	uint32_t asUsed;
++	uint32_t asUsed, asStartLogs, asLeaseLogs;
+ 	bool ready, fatal, railsVerified;
+ 	static void timerFired(OSObject *owner, IOTimerEventSource *timer);
+ 	bool init(OSDictionary *properties = NULL) APPLE_KEXT_OVERRIDE
+@@ -82,7 +82,7 @@
+ 		active = NULL;
+ 		gpuWorkLoop = NULL;
+ 		gpuTimer = NULL;
+-		asUsed = 0;
++		asUsed = asStartLogs = asLeaseLogs = 0;
+ 		ready = fatal = false;
+ 		railsVerified = false;
+ 		if (!gpuLock) {
+@@ -500,8 +500,61 @@
+ 		}
+ 		return &t->entries[(va >> 12) & 511];
+ 	}
++	/* Every lease transition and AS operation is serialized by gpuLock.
++	 * Private tables exist independently of the hardware's finite AS slots. */
++	void traceAS(const char *stage, uint32_t present, uint32_t before)
++	{
++		if (gpu->asLeaseLogs < 64) {
++			++gpu->asLeaseLogs;
++			IOLog("SWEET GPU: AS lease %s pid %d client %p as %u present 0x%x "
++			      "before 0x%x after 0x%x time_ns %llu\n", stage,
++			      pid_from_task(owner), this, as, present, before, gpu->asUsed,
++			      sweet_mali_now_ns());
++		}
++	}
++	bool acquireAS()
++	{
++		if (as < 16 || gpu->active || gpu->fatal || !gpu->regs) {
++			return false;
++		}
++		uint32_t present = gpu->rd(MALI_REG_AS_PRESENT) & 0xffffu;
++		uint32_t before = gpu->asUsed;
++		uint32_t available = present & ~before;
++		for (uint32_t candidate = 0; candidate < 16; ++candidate) {
++			if (available & (1u << candidate)) {
++				as = candidate;
++				gpu->asUsed |= 1u << as;
++				traceAS("acquire", present, before);
++				return true;
++			}
++		}
++		traceAS("unavailable", present, before);
++		return false;
++	}
++	void quarantineAS(const char *stage)
++	{
++		if (!quarantined) {
++			quarantined = true;
++			retain();
++		}
++		traceAS(stage, gpu->rd(MALI_REG_AS_PRESENT) & 0xffffu, gpu->asUsed);
++	}
++	void releaseAS(const char *proof)
++	{
++		if (as >= 16 || quarantined) {
++			return;
++		}
++		uint32_t before = gpu->asUsed;
++		/* Only a confirmed MMU detach or completed device reset reaches here. */
++		gpu->asUsed &= ~(1u << as);
++		traceAS(proof, gpu->rd(MALI_REG_AS_PRESENT) & 0xffffu, before);
++		as = ~0u;
++	}
+ 	bool asCommand(uint32_t command)
+ 	{
++		if (as >= 16 || !(gpu->asUsed & (1u << as))) {
++			return false;
++		}
+ 		uint32_t base = MALI_AS_OFFSET(as);
+ 		for (unsigned i = 0; i < 10000; ++i) {
+ 			if (!(gpu->rd(base + MALI_AS_STATUS) & 1)) {
+@@ -520,13 +573,16 @@
+ 	}
+ 	bool flushAS()
+ 	{
++		if (as >= 16) {
++			return false;
++		}
+ 		/* Lock the entire 48-bit VA range: size encoding log2(size)-1. */
+ 		gpu->wr64(MALI_AS_OFFSET(as) + MALI_AS_LOCKADDR_LO, 47);
+ 		return asCommand(MALI_AS_COMMAND_LOCK) && asCommand(MALI_AS_COMMAND_FLUSH_MEM);
+ 	}
+ 	bool bindAS()
+ 	{
+-		if (!root) {
++		if (!root || as >= 16) {
+ 			return false;
+ 		}
+ 		uint32_t base = MALI_AS_OFFSET(as);
+@@ -537,6 +593,14 @@
+ 		gpu->wr64(base + MALI_AS_TRANSTAB_LO, root->physical);
+ 		gpu->wr64(base + MALI_AS_MEMATTR_LO, MALI_G57_AS_MEMATTR);
+ 		gpu->wr(MALI_MMU_IRQ_CLEAR, (1u << as) | (1u << (as + 16)));
++		return asCommand(MALI_AS_COMMAND_UPDATE);
++	}
++	bool detachAS()
++	{
++		if (as >= 16 || !flushAS()) {
++			return false;
++		}
++		gpu->wr64(MALI_AS_OFFSET(as) + MALI_AS_TRANSCFG_LO, 1);
+ 		return asCommand(MALI_AS_COMMAND_UPDATE);
+ 	}
+ 	void clearPages(SweetMaliBO *b)
+@@ -702,6 +766,14 @@
+ 		result.state = state;
+ 		result.exception = exception;
+ 		result.completed_ns = sweet_mali_now_ns();
++		const uint32_t finishedAS = as;
++		if (as >= 16) {
++			/* A violated owner invariant must never index MMIO with a sentinel. */
++			result.state = MMK_JOB_FAULT;
++			gpu->fatal = true;
++			quarantineAS("finish-without-lease");
++			return;
++		}
+ 		uint32_t base = MALI_AS_OFFSET(as);
+ 		result.fault_status = gpu->rd(base + MALI_AS_FAULTSTATUS);
+ 		result.fault_address = gpu->rd64(base + MALI_AS_FAULTADDRESS_LO);
+@@ -724,11 +796,20 @@
+ 			}
+ 			gpu->wr(MALI_REG_GPU_IRQ_CLEAR, MALI_GPU_IRQ_CLEAN_CACHES_COMPLETED);
+ 		}
+-		if (result.state != MMK_JOB_COMPLETE && !gpu->reset()) {
+-			/* DMA may still be active: preserve the wiring and translation pages. */
+-			if (!quarantined) {
+-				quarantined = true;
+-				retain();
++		if (result.state == MMK_JOB_COMPLETE) {
++			if (detachAS()) {
++				releaseAS("retired-detached");
++			} else {
++				/* Do not publish completion when MMU ownership cannot be detached. */
++				result.state = MMK_JOB_TIMEOUT;
++			}
++		}
++		if (result.state != MMK_JOB_COMPLETE) {
++			if (gpu->reset()) {
++				releaseAS("retired-reset");
++			} else {
++				/* DMA may still be active: retain the lease, tables and all BOs. */
++				quarantineAS("retirement-quarantined");
+ 			}
+ 		}
+ 		if (!quarantined) {
+@@ -745,7 +826,7 @@
+ 			++jobResultLogs;
+ 			IOLog("SWEET GPU: JM terminal result as %u slot %u sequence %llu "
+ 			      "state %u js_status 0x%x mmu_status 0x%x gpu_status 0x%x "
+-			      "time_ns %llu\n", as, jobSlot, sequence, result.state,
++			      "time_ns %llu\n", finishedAS, jobSlot, sequence, result.state,
+ 			      result.exception, result.fault_status, result.gpu_fault_status,
+ 			      sweet_mali_now_ns());
+ 		}
+@@ -753,6 +834,10 @@
+ 	void pollJob()
+ 	{
+ 		if (gpu->active != this || result.state != MMK_JOB_PENDING) {
++			return;
++		}
++		if (as >= 16) {
++			finish(MMK_JOB_FAULT, 0);
+ 			return;
+ 		}
+ 		uint32_t done = 1u << jobSlot, failed = 1u << (jobSlot + 16);
+@@ -784,44 +869,34 @@
+ 		if (gpu->active == this && result.state == MMK_JOB_PENDING) {
+ 			finish(MMK_JOB_CANCELLED, 0);
+ 		}
++		/* Idle clients normally hold no lease. Any residual binding belongs
++		 * to this client only; never detach another client's active AS. */
++		if (!quarantined && as < 16) {
++			if (gpu->active && gpu->active != this) {
++				gpu->fatal = true;
++				quarantineAS("close-owner-conflict");
++			} else if (detachAS()) {
++				releaseAS("close-detached");
++			} else if (gpu->reset()) {
++				releaseAS("close-reset");
++			} else {
++				quarantineAS("close-quarantined");
++			}
++		}
+ 		if (!quarantined) {
+-			if (as < 16 && gpu->ready) {
+-				if (!flushAS()) {
+-					/* A device-wide reset must retire another connection's
+-					 * fence too, rather than leaving it apparently pending. */
+-					if (gpu->active) {
+-						gpu->active->finish(MMK_JOB_CANCELLED, 0);
+-					} else {
+-						gpu->reset();
+-					}
+-					if (gpu->fatal) {
+-						quarantined = true;
+-						retain();
+-					}
+-				}
+-				if (!quarantined) {
+-					gpu->wr64(MALI_AS_OFFSET(as) + MALI_AS_TRANSCFG_LO, 1);
+-					asCommand(MALI_AS_COMMAND_UPDATE);
+-				}
+-			}
+-			if (!quarantined) {
+-				for (unsigned i = 0; i < MMK_MAX_BOS; ++i) {
+-					if (bos[i].memory) {
+-						clearPages(&bos[i]);
+-						dropBO(&bos[i]);
+-					}
+-				}
+-				while (tables) {
+-					SweetMaliTable *t = tables;
+-					tables = t->next;
+-					t->memory->release();
+-					IOFreeData(t, sizeof(*t));
+-				}
+-				root = NULL;
+-				if (as < 16) {
+-					gpu->asUsed &= ~(1u << as);
+-				}
+-			}
++			for (unsigned i = 0; i < MMK_MAX_BOS; ++i) {
++				if (bos[i].memory) {
++					clearPages(&bos[i]);
++					dropBO(&bos[i]);
++				}
++			}
++			while (tables) {
++				SweetMaliTable *t = tables;
++				tables = t->next;
++				t->memory->release();
++				IOFreeData(t, sizeof(*t));
++			}
++			root = NULL;
+ 		}
+ 		closed = true;
+ 		IOLockUnlock(gpu->gpuLock);
+@@ -854,28 +929,37 @@
+ 	}
+ 	bool start(IOService *provider) APPLE_KEXT_OVERRIDE
+ 	{
++		static uint32_t failureLogs;
+ 		if (!IOUserClient::start(provider)) {
++			if (__atomic_fetch_add(&failureLogs, 1, __ATOMIC_RELAXED) < 8) {
++				IOLog("SWEET GPU: AS client start pid %d client %p phase super result 0\n",
++				      pid_from_task(owner), this);
++			}
+ 			return false;
+ 		}
+ 		gpu = OSDynamicCast(IOAcceleratorES, provider);
+ 		if (!gpu) {
++			if (__atomic_fetch_add(&failureLogs, 1, __ATOMIC_RELAXED) < 8) {
++				IOLog("SWEET GPU: AS client start pid %d client %p phase provider result 0\n",
++				      pid_from_task(owner), this);
++			}
+ 			return false;
+ 		}
+ 		IOLockLock(gpu->gpuLock);
+ 		if (!gpu->regs) {
+ 			gpu->regs = (volatile uint32_t *)ml_io_map(0x13000000, 0x4000);
+ 		}
+-		if (gpu->regs) {
+-			uint32_t available = gpu->rd(MALI_REG_AS_PRESENT) & 0xffffu & ~gpu->asUsed;
+-			for (as = 0; as < 16; ++as) {
+-				if (available & (1u << as)) {
+-					gpu->asUsed |= 1u << as;
+-					break;
+-				}
+-			}
++		uint32_t present = gpu->regs ? gpu->rd(MALI_REG_AS_PRESENT) & 0xffffu : 0;
++		bool valid = gpu->regs && present;
++		if (gpu->asStartLogs < 64) {
++			++gpu->asStartLogs;
++			IOLog("SWEET GPU: AS client start pid %d client %p regs %p present 0x%x "
++			      "used 0x%x lease none result %u time_ns %llu\n", pid_from_task(owner),
++			      this, (const void *)gpu->regs, present, gpu->asUsed, (unsigned)valid,
++			      sweet_mali_now_ns());
+ 		}
+ 		IOLockUnlock(gpu->gpuLock);
+-		return gpu->regs && as < 16;
++		return valid;
+ 	}
+ 	void stop(IOService *provider) APPLE_KEXT_OVERRIDE
+ 	{
+@@ -1097,8 +1181,19 @@
+ 			if (!gpu->ready && !gpu->reset()) {
+ 				return kIOReturnNotReady;
+ 			}
++			uint32_t base = MALI_JS_OFFSET(req.slot);
++			if (gpu->rd(base + MALI_JS_COMMAND_NEXT) || gpu->rd(base + MALI_JS_COMMAND)) {
++				return kIOReturnBusy;
++			}
++			if (!acquireAS()) {
++				return kIOReturnNoResources;
++			}
+ 			if (!bindAS()) {
+-				gpu->reset();
++				if (gpu->reset()) {
++					releaseAS("bind-failed-reset");
++				} else {
++					quarantineAS("bind-failed-quarantined");
++				}
+ 				return kIOReturnTimeout;
+ 			}
+ 			for (unsigned i = 0; i < req.bo_count; ++i) {
+@@ -1108,11 +1203,6 @@
+ 			memcpy(jobHandles, req.handles, req.bo_count * sizeof(req.handles[0]));
+ 			jobBOCount = req.bo_count;
+ 			jobSlot = req.slot;
+-			uint32_t base = MALI_JS_OFFSET(jobSlot);
+-			if (gpu->rd(base + MALI_JS_COMMAND_NEXT) ||
+-			    gpu->rd(base + MALI_JS_COMMAND)) {
+-				return kIOReturnBusy;
+-			}
+ 			bzero(&result, sizeof(result));
+ 			result.hdr.version = MMK_ABI_VERSION;
+ 			result.hdr.size = sizeof(result);

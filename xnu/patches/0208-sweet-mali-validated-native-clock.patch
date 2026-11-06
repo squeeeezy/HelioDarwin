@@ -1,0 +1,213 @@
+diff --git a/iokit/Kernel/arm/SweetMaliABI.h b/iokit/Kernel/arm/SweetMaliABI.h
+--- a/iokit/Kernel/arm/SweetMaliABI.h
++++ b/iokit/Kernel/arm/SweetMaliABI.h
+@@ -17,7 +17,8 @@
+ 	MMK_BO_RELEASE = 3,
+ 	MMK_SUBMIT = 4,
+ 	MMK_WAIT = 5,
+-	MMK_BO_SYNC = 6
++	MMK_BO_SYNC = 6,
++	MMK_CLOCK = 7
+ };
+ enum MMKBOFlags { MMK_BO_READ = 1u, MMK_BO_WRITE = 2u, MMK_BO_EXEC = 4u, MMK_BO_CPU_CACHED = 8u };
+ /* CPU_CACHED selects explicit CPU cache maintenance. Otherwise native BOs use
+@@ -114,4 +115,18 @@
+ 	uint32_t handle, direction;
+ 	uint64_t offset, length;
+ } MMKBOSync;
++#define MMK_CLOCK_VERSION 1u
++typedef struct {
++	MMKHeader hdr;
++	uint32_t clock_version, reserved;
++} MMKClockRequest;
++typedef struct {
++	MMKHeader hdr;
++	uint32_t clock_version, valid_bits;
++	uint64_t frequency_hz, reset_generation, gpu_ticks;
++	uint64_t raw_cpu_before, raw_cpu_after;
++	uint64_t uptime_before_ns, uptime_after_ns;
++} MMKClockResult;
++typedef char MMKClockRequestSize[(sizeof(MMKClockRequest)==16)?1:-1];
++typedef char MMKClockResultSize[(sizeof(MMKClockResult)==72)?1:-1];
+ #endif
+diff --git a/iokit/Kernel/arm/SweetMaliHw.h b/iokit/Kernel/arm/SweetMaliHw.h
+--- a/iokit/Kernel/arm/SweetMaliHw.h
++++ b/iokit/Kernel/arm/SweetMaliHw.h
+@@ -32,6 +32,9 @@
+ #define MALI_REG_GPU_IRQ_STATUS     0x002cu
+ #define MALI_REG_GPU_COMMAND        0x0030u
+ #define MALI_REG_GPU_STATUS         0x0034u
++#define MALI_GPU_STATUS_CYCLE_COUNT_ACTIVE (1u << 6)
++#define MALI_REG_TIMESTAMP_LO       0x0098u
++#define MALI_MFG_TIMESTAMP_OFFSET   0x0130u
+ #define MALI_REG_GPU_LATEST_FLUSH_ID 0x0038u
+ #define MALI_REG_GPU_FAULTSTATUS    0x003cu
+ #define MALI_REG_GPU_FAULT_ADDR_LO  0x0040u
+@@ -82,6 +85,8 @@
+ #define MALI_GPU_CMD_NOP            0x00u
+ #define MALI_GPU_CMD_SOFT_RESET     0x01u
+ #define MALI_GPU_CMD_HARD_RESET     0x02u
++#define MALI_GPU_CMD_CYCLE_COUNT_START 0x05u
++#define MALI_GPU_CMD_CYCLE_COUNT_STOP 0x06u
+ #define MALI_GPU_CMD_CLEAN_CACHES   0x07u
+ #define MALI_GPU_CMD_CLEAN_INV_CACHES 0x08u
+ 
+diff --git a/iokit/Kernel/arm/SweetMaliUserClient.inc b/iokit/Kernel/arm/SweetMaliUserClient.inc
+--- a/iokit/Kernel/arm/SweetMaliUserClient.inc
++++ b/iokit/Kernel/arm/SweetMaliUserClient.inc
+@@ -61,7 +61,9 @@
+ 
+ public:
+ 	IOLock *gpuLock;
+-	volatile uint32_t *regs;
++	volatile uint32_t *regs, *timestampRegs;
++	uint64_t resetGeneration;
++	bool timestampInputReady, timestampCounterOwned;
+ 	SweetMaliUserClient *active;
+ 	IOWorkLoop *gpuWorkLoop;
+ 	IOTimerEventSource *gpuTimer;
+@@ -74,7 +76,9 @@
+ 			return false;
+ 		}
+ 		gpuLock = IOLockAlloc();
+-		regs = NULL;
++		regs = timestampRegs = NULL;
++		resetGeneration = 0;
++		timestampInputReady = timestampCounterOwned = false;
+ 		active = NULL;
+ 		gpuWorkLoop = NULL;
+ 		gpuTimer = NULL;
+@@ -104,6 +108,9 @@
+ 			gpuWorkLoop->release();
+ 		}
+ 		if (gpuLock) {
++			IOLockLock(gpuLock);
++			releaseClock();
++			IOLockUnlock(gpuLock);
+ 			IOLockFree(gpuLock);
+ 		}
+ 		IOService::free();
+@@ -138,9 +145,63 @@
+ 		}
+ 		return false;
+ 	}
++	void releaseClock()
++	{
++		timestampInputReady = false;
++		if (timestampCounterOwned && regs) {
++			wr(MALI_REG_GPU_COMMAND, MALI_GPU_CMD_CYCLE_COUNT_STOP);
++		}
++		timestampCounterOwned = false;
++	}
++	bool readClock(MMKClockResult *out)
++	{
++		if (!ready || fatal || !timestampInputReady || !timestampCounterOwned ||
++		    !resetGeneration || !(rd(MALI_REG_GPU_STATUS) & MALI_GPU_STATUS_CYCLE_COUNT_ACTIVE)) {
++			return false;
++		}
++		uint64_t frequency;
++		__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequency));
++		if (!frequency) {
++			return false;
++		}
++		clock_get_uptime(&out->uptime_before_ns);
++		absolutetime_to_nanoseconds(out->uptime_before_ns, &out->uptime_before_ns);
++		__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(out->raw_cpu_before) :: "memory");
++		bool stable = false;
++		for (unsigned i = 0; i < 16; ++i) {
++			uint32_t high = rd(MALI_REG_TIMESTAMP_LO + 4);
++			uint32_t low = rd(MALI_REG_TIMESTAMP_LO);
++			if (high == rd(MALI_REG_TIMESTAMP_LO + 4)) {
++				out->gpu_ticks = low | ((uint64_t)high << 32);
++				stable = true;
++				break;
++			}
++		}
++		__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(out->raw_cpu_after) :: "memory");
++		clock_get_uptime(&out->uptime_after_ns);
++		absolutetime_to_nanoseconds(out->uptime_after_ns, &out->uptime_after_ns);
++		uint64_t frequencyAfter;
++		__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequencyAfter));
++		if (!stable || frequency != frequencyAfter ||
++		    out->gpu_ticks < out->raw_cpu_before || out->gpu_ticks > out->raw_cpu_after ||
++		    out->uptime_after_ns < out->uptime_before_ns) {
++			return false;
++		}
++		out->clock_version = MMK_CLOCK_VERSION;
++		out->valid_bits = 64;
++		out->frequency_hz = frequency;
++		out->reset_generation = resetGeneration;
++		return true;
++	}
+ 	bool reset()
+ 	{
+ 		ready = false;
++		releaseClock();
++		if (resetGeneration == UINT64_MAX) {
++			fatal = true;
++			return false;
++		}
++		++resetGeneration;
+ 		wr(MALI_REG_GPU_IRQ_MASK, 0);
+ 		wr(MALI_JOB_IRQ_MASK, 0);
+ 		wr(MALI_MMU_IRQ_MASK, 0);
+@@ -191,6 +252,33 @@
+ 			fatal = true;
+ 			IOLog("SWEET GPU: shader or tiler power-on timed out\n");
+ 			return false;
++		}
++		if (!timestampRegs) {
++			vm_offset_t mapping = ml_io_map(0x13fbf000, 0x1000);
++			if (mapping) {
++				timestampRegs = (volatile uint32_t *)(mapping + MALI_MFG_TIMESTAMP_OFFSET);
++			}
++		}
++		if (timestampRegs) {
++			__asm__ volatile("dmb oshst" ::: "memory");
++			*timestampRegs = 3;
++			__asm__ volatile("dsb sy" ::: "memory");
++			timestampInputReady = *timestampRegs == 3;
++		}
++		if (timestampInputReady) {
++			wr(MALI_REG_GPU_COMMAND, MALI_GPU_CMD_CYCLE_COUNT_START);
++			timestampCounterOwned = true;
++			bool enabled = false;
++			for (unsigned i = 0; i < 10000; ++i) {
++				if (rd(MALI_REG_GPU_STATUS) & MALI_GPU_STATUS_CYCLE_COUNT_ACTIVE) {
++					enabled = true;
++					break;
++				}
++				IODelay(10);
++			}
++			if (!enabled) {
++				releaseClock();
++			}
+ 		}
+ 		ready = true;
+ 		return true;
+@@ -894,6 +982,25 @@
+ 		if (gpu->fatal) {
+ 			return kIOReturnNotReady;
+ 		}
++		if (selector == MMK_CLOCK) {
++			MMKClockRequest req;
++			if (!sweet_mali_input(a, &req, sizeof(req)) ||
++			    !sweet_mali_output_size(a, sizeof(MMKClockResult)) ||
++			    req.clock_version != MMK_CLOCK_VERSION || req.reserved) {
++				return kIOReturnBadArgument;
++			}
++			if (!gpu->railsVerified || gpu->rd(MALI_REG_GPU_ID) != MALI_G57_R0P1_GPU_ID) {
++				return kIOReturnNotReady;
++			}
++			if (!gpu->ready && (gpu->active || !gpu->reset())) {
++				return kIOReturnNotReady;
++			}
++			MMKClockResult out = {};
++			if (!gpu->readClock(&out)) {
++				return kIOReturnNotReady;
++			}
++			return sweet_mali_output(a, &out, sizeof(out));
++		}
+ 		if (selector == MMK_BO_ALLOC || selector == MMK_BO_IMPORT) {
+ 			if (!sweet_mali_output_size(a, sizeof(MMKBOInfo))) {
+ 				return kIOReturnNoSpace;
