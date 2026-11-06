@@ -87,12 +87,33 @@ uint64_t mmvk_trace_native_command(const MMVKCommands *c){return c?(uint64_t)(ui
 uint32_t mmvk_trace_pass_id(const MMVKCommands *c){return c?c->trace_pass+1:0;}
 struct MMVKTraceNode { MMVKTraceNode *next;void *context;MMVKTraceObserver observer; };
 
+static uint32_t timing_trace_counts[3];
+static int timing_trace_ticket(unsigned slot)
+{
+    if(!mmvk_trace_render_enabled()||slot>=3)return 0;
+    uint32_t limit=slot?32:16,seen=__atomic_load_n(&timing_trace_counts[slot],__ATOMIC_RELAXED);
+    while(seen<limit){
+        if(__atomic_compare_exchange_n(&timing_trace_counts[slot],&seen,seen+1,0,__ATOMIC_RELAXED,__ATOMIC_RELAXED))return 1;
+    }
+    return 0;
+}
+
 int mmvk_gpu_timing_enabled(const MMVKDevice *d) {return d&&d->gpu_timing;}
-static MMVKResult timing_clock(MMVKDevice *d,MMKClockResult *clock)
+static MMVKResult timing_clock(MMVKDevice *d,MMKClockResult *clock,const char *phase,uint64_t command)
 {
     int32_t kr=mmk_darwin_clock(d->clock_connection,clock);
-    if(kr||clock->reset_generation!=d->timing_generation||
-       clock->frequency_hz!=d->timing_frequency)return MMVK_ERROR_IO;
+    const char *stage=kr?"native-clock-query":clock->reset_generation!=d->timing_generation?"generation-changed":
+        clock->frequency_hz!=d->timing_frequency?"frequency-changed":NULL;
+    if(stage){
+        if(timing_trace_ticket(1))mmvk_trace_render_log("gpu-timing-clock phase=%s command=%" PRIu64
+            " stage=%s result=%d native=%#x sample_valid=%u generation=%" PRIu64 " frequency_hz=%" PRIu64
+            " expected_generation=%" PRIu64 " expected_frequency_hz=%" PRIu64 " gpu=%" PRIu64
+            " raw_cpu_before=%" PRIu64 " raw_cpu_after=%" PRIu64 " uptime_before_ns=%" PRIu64 " uptime_after_ns=%" PRIu64,
+            phase,command,stage,MMVK_ERROR_IO,(uint32_t)kr,(unsigned)(kr==0),clock->reset_generation,clock->frequency_hz,
+            d->timing_generation,d->timing_frequency,clock->gpu_ticks,clock->raw_cpu_before,clock->raw_cpu_after,
+            clock->uptime_before_ns,clock->uptime_after_ns);
+        return MMVK_ERROR_IO;
+    }
     return MMVK_OK;
 }
 static int timing_anchor_bounds(const MMKClockResult *a,uint64_t tick,uint64_t *low,uint64_t *high)
@@ -135,29 +156,60 @@ static void timing_fence_retired(MMVKFence *f)
     pthread_mutex_lock(&d->queue_lock);
     if(f->timing_retired){pthread_mutex_unlock(&d->queue_lock);return;}
     f->timing_retired=1;f->timing_inflight=0;
-    MMKClockResult after;
+    MMKClockResult after={0};
     uint64_t values[4]={0};
-    if(!f->timing_pool||f->timing_status!=MMVK_OK||timing_clock(d,&after)!=MMVK_OK){
+    const char *stage="missing-query-pool";int query_attempted=0;VkResult vr=VK_SUCCESS;
+    if(!f->timing_pool){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="pre-submit-clock";
+    if(f->timing_status!=MMVK_OK){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="post-fence-clock";
+    if(timing_clock(d,&after,"post-fence",f->trace_submission.command_id)!=MMVK_OK){
         f->timing_status=MMVK_ERROR_IO;goto done;
     }
-    VkResult vr=d->GetQueryPoolResults(d->device,f->timing_pool,0,2,sizeof(values),values,
+    query_attempted=1;stage="query-result";
+    vr=d->GetQueryPoolResults(d->device,f->timing_pool,0,2,sizeof(values),values,
         2*sizeof(uint64_t),VK_QUERY_RESULT_64_BIT|VK_QUERY_RESULT_WITH_AVAILABILITY_BIT);
     if(vr==VK_ERROR_DEVICE_LOST){
-        f->timing_status=MMVK_ERROR_DEVICE_LOST;mmvk_device_mark_quarantined(d);goto done;
+        stage="query-device-lost";f->timing_status=MMVK_ERROR_DEVICE_LOST;mmvk_device_mark_quarantined(d);goto done;
     }
-    if(vr!=VK_SUCCESS||!values[1]||!values[3]||values[2]<values[0]||
-       values[0]<f->timing_before.gpu_ticks||values[2]>after.gpu_ticks||
+    if(vr!=VK_SUCCESS){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="query-availability";
+    if(!values[1]||!values[3]){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="query-interval";
+    if(values[2]<values[0]||values[0]<f->timing_before.gpu_ticks||values[2]>after.gpu_ticks||
        after.gpu_ticks<f->timing_before.gpu_ticks){f->timing_status=MMVK_ERROR_IO;goto done;}
     uint64_t start,end,start_dev,end_dev;
-    if(!timing_host_ns(&f->timing_before,&after,values[0],&start,&start_dev)||
-       !timing_host_ns(&f->timing_before,&after,values[2],&end,&end_dev)||
-       !start||end<start){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="conversion-start-bounds";
+    if(!timing_host_ns(&f->timing_before,&after,values[0],&start,&start_dev)){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="conversion-end-bounds";
+    if(!timing_host_ns(&f->timing_before,&after,values[2],&end,&end_dev)){f->timing_status=MMVK_ERROR_IO;goto done;}
+    stage="converted-host-interval";
+    if(!start||end<start){f->timing_status=MMVK_ERROR_IO;goto done;}
     f->timing=(MMVKGPUMeasuredTiming){.size=sizeof(f->timing),.version=MMVK_GPU_TIMING_VERSION,
         .segment_count=1,.start_ns=start,.end_ns=end,.max_deviation_ns=start_dev>end_dev?start_dev:end_dev,
         .reset_generation=after.reset_generation,.frequency_hz=after.frequency_hz,
         .gpu_start_ticks=values[0],.gpu_end_ticks=values[2]};
-    f->timing_status=MMVK_OK;
-done:pthread_mutex_unlock(&d->queue_lock);
+    f->timing_status=MMVK_OK;stage="measured";
+done:
+    if(timing_trace_ticket(2)){
+        char native[24];
+        if(query_attempted)snprintf(native,sizeof(native),"%d",vr);else snprintf(native,sizeof(native),"not-called");
+        mmvk_trace_render_log("gpu-timing-retired command=%" PRIu64 " stage=%s result=%d query_native=%s query_attempted=%u"
+            " measured_valid=%u generation=%" PRIu64 " frequency_hz=%" PRIu64
+            " raw_start=%" PRIu64 " raw_end=%" PRIu64 " available_start=%" PRIu64 " available_end=%" PRIu64
+            " start_ns=%" PRIu64 " end_ns=%" PRIu64 " max_deviation_ns=%" PRIu64
+            " pre_gpu=%" PRIu64 " pre_generation=%" PRIu64 " pre_frequency_hz=%" PRIu64
+            " pre_raw_cpu_before=%" PRIu64 " pre_raw_cpu_after=%" PRIu64 " pre_uptime_before_ns=%" PRIu64 " pre_uptime_after_ns=%" PRIu64
+            " post_gpu=%" PRIu64 " post_generation=%" PRIu64 " post_frequency_hz=%" PRIu64
+            " post_raw_cpu_before=%" PRIu64 " post_raw_cpu_after=%" PRIu64 " post_uptime_before_ns=%" PRIu64 " post_uptime_after_ns=%" PRIu64,
+            f->trace_submission.command_id,stage,f->timing_status,native,(unsigned)query_attempted,(unsigned)(f->timing_status==MMVK_OK),
+            d->timing_generation,d->timing_frequency,values[0],values[2],values[1],values[3],
+            f->timing.start_ns,f->timing.end_ns,f->timing.max_deviation_ns,
+            f->timing_before.gpu_ticks,f->timing_before.reset_generation,f->timing_before.frequency_hz,
+            f->timing_before.raw_cpu_before,f->timing_before.raw_cpu_after,f->timing_before.uptime_before_ns,f->timing_before.uptime_after_ns,
+            after.gpu_ticks,after.reset_generation,after.frequency_hz,after.raw_cpu_before,after.raw_cpu_after,after.uptime_before_ns,after.uptime_after_ns);
+    }
+    pthread_mutex_unlock(&d->queue_lock);
 }
 MMVKResult mmvk_fence_gpu_timing(MMVKFence *f,MMVKGPUMeasuredTiming *out,MMVKError *e)
 {
@@ -204,7 +256,7 @@ VkResult mmvk_queue_submit_observed(MMVKCommands *c,const VkSubmitInfo *submit,M
     trace_observers_sample(c->trace_observers,&f->trace_submission,0);
     f->trace_observers=c->trace_observers;c->trace_observers=NULL;
     if(c->timing_pool){
-        f->timing_status=timing_clock(c->dev,&f->timing_before);
+        f->timing_status=timing_clock(c->dev,&f->timing_before,"pre-submit",f->trace_submission.command_id);
         f->timing_pool=c->timing_pool;c->timing_pool=VK_NULL_HANDLE;f->timing_inflight=1;
     }
     VkResult r=c->dev->QueueSubmit(c->dev->queue,1,submit,f->fence);
@@ -327,12 +379,18 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
         if (family[d->family].queueCount && (family[d->family].queueFlags&(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT))==(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT)) break;
     if (d->family==families) {mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"no graphics/compute queue");goto fail;}
 #if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
-    MMKClockResult clock;
+    MMKClockResult clock={0};
     kr=mmk_darwin_clock(connection,&clock);
-    if(kr||family[d->family].timestampValidBits!=64||
-       !d->properties.limits.timestampComputeAndGraphics||
-       d->properties.limits.timestampPeriod!=(float)(1000000000.0/(double)clock.frequency_hz)){
-        mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,kr,"GPU timing requires validated native clock and matching 64-bit query support");goto fail;
+    const char *clock_stage=kr?"native-clock-query":family[d->family].timestampValidBits!=64?"query-valid-bits":
+        !d->properties.limits.timestampComputeAndGraphics?"query-stage-support":
+        d->properties.limits.timestampPeriod!=(float)(1000000000.0/(double)clock.frequency_hz)?"query-period":NULL;
+    if(timing_trace_ticket(0))mmvk_trace_render_log("gpu-timing-admission stage=%s result=%d native=%#x sample_valid=%u"
+        " generation=%" PRIu64 " frequency_hz=%" PRIu64 " query_valid_bits=%u query_all_stages=%u period_ns=%.9g",
+        clock_stage?clock_stage:"clock-and-queue-valid",clock_stage?MMVK_ERROR_UNSUPPORTED:MMVK_OK,(uint32_t)kr,
+        (unsigned)(kr==0),clock.reset_generation,clock.frequency_hz,family[d->family].timestampValidBits,
+        d->properties.limits.timestampComputeAndGraphics,(double)d->properties.limits.timestampPeriod);
+    if(clock_stage){
+        mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,kr,"GPU timing admission failed at %s",clock_stage);goto fail;
     }
     d->timing_generation=clock.reset_generation;d->timing_frequency=clock.frequency_hz;
 #endif
@@ -459,8 +517,15 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     memcpy(d->caps.max_compute_workgroup_size,l->maxComputeWorkGroupSize,sizeof(l->maxComputeWorkGroupSize));
     snprintf(d->caps.device_name,sizeof(d->caps.device_name),"%s",d->properties.deviceName);
     *out=d;
+    if(d->gpu_timing&&timing_trace_ticket(0))mmvk_trace_render_log("gpu-timing-admission stage=device-ready result=0 generation=%" PRIu64
+        " frequency_hz=%" PRIu64 " query_valid_bits=%u period_ns=%.9g",d->timing_generation,d->timing_frequency,
+        family[d->family].timestampValidBits,(double)d->properties.limits.timestampPeriod);
     return mmvk_vkresult(e,VK_SUCCESS,"device created");
 fail:
+#if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
+    if(timing_trace_ticket(0))mmvk_trace_render_log("gpu-timing-admission stage=backend-device-failed result=%d native=%#x reason=%s",
+        e?e->code:MMVK_ERROR_DRIVER_UNAVAILABLE,e?(uint32_t)e->native_code:0,e?e->message:"unavailable");
+#endif
     if(mmvk_device_destroy(d)!=MMVK_OK)*out=d;
     return e?e->code:MMVK_ERROR_DRIVER_UNAVAILABLE;
 }

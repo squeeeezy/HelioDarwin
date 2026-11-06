@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Internal diagnostics reuse the AIR verification digest implementation. */
+void MMShaderSHA256(const void *bytes,size_t size,uint8_t digest[32]);
 
 #define MM_SHADER_ABI_VERSION 4u
 enum { MM_SHADER_COMPILER_CAP_TILE_IMAGE = 1u };

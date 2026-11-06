@@ -116,6 +116,10 @@ static void sha256(const unsigned char *p, size_t size, unsigned char out[32]) {
             out[4 * i + j] = (unsigned char)(h[i] >> (24 - 8 * j));
 }
 
+void MMShaderSHA256(const void *bytes,size_t size,uint8_t digest[32]) {
+    sha256(bytes,size,digest);
+}
+
 /* A tag list ends with bare ENDT; every other tag has a u16 payload size. */
 static int next_tag(const unsigned char *b, uint64_t *at, uint64_t end, const unsigned char **tag,
                     const unsigned char **data, uint16_t *length) {
