@@ -1,0 +1,312 @@
+{
+  "schema": 1,
+  "xnu_source_commit": "cb6a8f77da655932229c8097d0663c0fcd2aab62",
+  "generator": "iig(DriverKit-286 Oct 1 2023 17:03:00)",
+  "original_xcode": "15.0.1",
+  "original_sdk": "MacOSX14.0.sdk",
+  "historical_sdk_retained": false,
+  "generator_reproduced": false,
+  "provenance_ci_log_sha256": "1d9ec6682e113ea3564b1c1625456b9ede55dd67d8b3eaa4ea1b7e99e7a56fc9",
+  "config": {
+    "MACOS_VERSION": "13.5",
+    "KERNEL_CONFIG": "DEVELOPMENT",
+    "MACHINE_CONFIG": "SWEET"
+  },
+  "preprocessor_flags": [
+    "-x",
+    "c++",
+    "-std=gnu++1z",
+    "-D__IIG=1",
+    "-DDRIVERKIT_PRIVATE=1",
+    "-DPRIVATE_WIFI_ONLY=1",
+    "-DXNU_PLATFORM_MacOSX"
+  ],
+  "source_include_order": [
+    "iokit",
+    "osfmk",
+    "bsd",
+    "EXTERNAL_HEADERS"
+  ],
+  "mapping": {
+    "IOBufferMemoryDescriptor.iig": {
+      "header": "IOBufferMemoryDescriptor.h",
+      "impl": "IOBufferMemoryDescriptor.iig.cpp"
+    },
+    "IODataQueueDispatchSource.iig": {
+      "header": "IODataQueueDispatchSource.h",
+      "impl": "IODataQueueDispatchSource.iig.cpp"
+    },
+    "IODispatchQueue.iig": {
+      "header": "IODispatchQueue.h",
+      "impl": "IODispatchQueue.iig.cpp"
+    },
+    "IODispatchSource.iig": {
+      "header": "IODispatchSource.h",
+      "impl": "IODispatchSource.iig.cpp"
+    },
+    "IODMACommand.iig": {
+      "header": "IODMACommand.h",
+      "impl": "IODMACommand.iig.cpp"
+    },
+    "IOEventLink.iig": {
+      "header": "IOEventLink.h",
+      "impl": "IOEventLink.iig.cpp"
+    },
+    "IOInterruptDispatchSource.iig": {
+      "header": "IOInterruptDispatchSource.h",
+      "impl": "IOInterruptDispatchSource.iig.cpp"
+    },
+    "IOMemoryDescriptor.iig": {
+      "header": "IOMemoryDescriptor.h",
+      "impl": "IOMemoryDescriptor.iig.cpp"
+    },
+    "IOMemoryMap.iig": {
+      "header": "IOMemoryMap.h",
+      "impl": "IOMemoryMap.iig.cpp"
+    },
+    "IOService.iig": {
+      "header": "IOService.h",
+      "impl": "IOService.iig.cpp"
+    },
+    "IOServiceNotificationDispatchSource.iig": {
+      "header": "IOServiceNotificationDispatchSource.h",
+      "impl": "IOServiceNotificationDispatchSource.iig.cpp"
+    },
+    "IOServiceStateNotificationDispatchSource.iig": {
+      "header": "IOServiceStateNotificationDispatchSource.h",
+      "impl": "IOServiceStateNotificationDispatchSource.iig.cpp"
+    },
+    "IOUserClient.iig": {
+      "header": "IOUserClient.h",
+      "impl": "IOUserClient.iig.cpp"
+    },
+    "IOUserServer.iig": {
+      "header": "IOUserServer.h",
+      "impl": "IOUserServer.iig.cpp"
+    },
+    "IOWorkGroup.iig": {
+      "header": "IOWorkGroup.h",
+      "impl": "IOWorkGroup.iig.cpp"
+    },
+    "OSAction.iig": {
+      "header": "OSAction.h",
+      "impl": "OSAction.iig.cpp"
+    },
+    "OSObject.iig": {
+      "header": "OSObject.h",
+      "impl": "OSObject.iig.cpp"
+    }
+  },
+  "inputs": {
+    "object/bsd/sys/_posix_availability.h": "452bff9ae32655a49b65802e29b21c67a546be1446553f908ef9850a694746bd",
+    "object/bsd/sys/_symbol_aliasing.h": "2d2bd7dfc69db01109682be89af531450a97222928f7ac1d793957f0bb171284",
+    "source/bsd/i386/_types.h": "c789dc19fe2fa181a66bae5a2bebb2a094bd78ca9f5d04ece2d89be5747edc7d",
+    "source/bsd/i386/types.h": "0e044799e0942372540686938544f1a1b3c3d35e1e83e4a28cd52fd4fad8b071",
+    "source/bsd/machine/_types.h": "f27264f8fdec9f164b4fc2b556f666ed7c5c0e5b88fd9f23db0b731ffa6cf864",
+    "source/bsd/machine/types.h": "76e7c59451d996fe674a6fc7e518366609a95875c9b9aec9fd590a3ac138dddd",
+    "source/bsd/sys/_types/_int16_t.h": "e40d40ad59c6dc98577b2c7cfdba1121ebfee17b29e093cbd10b7936df496d8e",
+    "source/bsd/sys/_types/_int32_t.h": "77127195e57f1690402377ddd72e3dcda684ddf591346f08ef4772dddcbbc281",
+    "source/bsd/sys/_types/_int64_t.h": "a2427b34e5e83996bd28d83cec920cf3b82a366af90e767234557bd11fa33a18",
+    "source/bsd/sys/_types/_int8_t.h": "607f6beede0251eb801e763493df26fd45d46eb951e4ff9cac17f1ac951b8cc0",
+    "source/bsd/sys/_types/_intptr_t.h": "7b45af46d5dc1c1790e726c0eb7c56be27e1245ee027521520a1fdc9ce300448",
+    "source/bsd/sys/_types/_mach_port_t.h": "8f178c4c396766f74c2cf8240af9ca420aef38b67bd0d6b7b1ec84c2c48dfc91",
+    "source/bsd/sys/_types/_u_int16_t.h": "9dabbd8280c28416a5ba115355678d2540588df1a7251bd9b4a13e30c309a71b",
+    "source/bsd/sys/_types/_u_int32_t.h": "196cba7a865c086bba457758d3b2605a4c1299c54a758366b7d420a585895f1d",
+    "source/bsd/sys/_types/_u_int64_t.h": "d096eee54a5acc2c3cd5cf71256d69198ada8f8d82cdb0a717bc8ed65650ad93",
+    "source/bsd/sys/_types/_u_int8_t.h": "7505dbbdf3ecca2b8e585871ad81c0e67a3cb63c97c47abe73fe262e071a3ebb",
+    "source/bsd/sys/_types/_uintptr_t.h": "e435f739013a22883da08b7d8b8819d6fd421756d025b369fecdee90ff40eb39",
+    "source/bsd/sys/_types.h": "05c2492e48ffb3929b077b1d191b25495361c87773a761951f9b61b4602b2f3d",
+    "source/bsd/sys/cdefs.h": "1c9b7e900ac563138aa3d72a81fa04fbf744adb927788c903c7a15ed56f254f1",
+    "source/EXTERNAL_HEADERS/ptrcheck.h": "d7ecac4ed69d6cd811c7e33468040debad9b50dfb0a40cf5679f242531bc32a9",
+    "source/EXTERNAL_HEADERS/stddef.h": "e25557850984df7eefe30cd7c69d88172f551bad5098726597a6dddb12db49da",
+    "source/EXTERNAL_HEADERS/stdint.h": "4e2a54baec4860212bfc76553598cff70e5f1e87483f97e2221c733c82ecf9d0",
+    "source/EXTERNAL_HEADERS/sys/_pthread/_pthread_types.h": "105f94fda71abcd5079ab540987ff4d2ff6bc88561ab809d6020c41b07b630d1",
+    "source/iokit/DriverKit/IOBufferMemoryDescriptor.iig": "688feb80ce5f2438a7f2789ecf10544aa9c107d2d17fd21ee759ee90191e5983",
+    "source/iokit/DriverKit/IODataQueueDispatchSource.iig": "0d1479c4843867a12ac84494624f8ef5dcd06ffa4482165b55425cb6e31ba701",
+    "source/iokit/DriverKit/IODispatchQueue.iig": "c117da6edd587b9bd43fe65ddf1c21a7bb3db40ef5d6ce96f767c4dcd5df271a",
+    "source/iokit/DriverKit/IODispatchSource.iig": "b8e7c08fc4817e4e124bcf85cfd0fe6c53486037850582cdd385462a9fda31f0",
+    "source/iokit/DriverKit/IODMACommand.iig": "0f0e3e01d07ef058e4e97226b0657d1acb36ce74ec9e31b34c2b6dbee05fdaf1",
+    "source/iokit/DriverKit/IOEventLink.iig": "972a0b8a6675155cbd03fca24f39a1a0a0a15a4bc8499e9c184329dbe518507d",
+    "source/iokit/DriverKit/IOInterruptDispatchSource.iig": "fa110ff11ff90c6d0639d11101631510283440976bf76d84cc76fcfed238f9a8",
+    "source/iokit/DriverKit/IOMemoryDescriptor.iig": "4ed4ed39fcfa89f9ff70b7a7a7889f457cd9cf98054d2a0cf54e0c8446bd3fdd",
+    "source/iokit/DriverKit/IOMemoryMap.iig": "335655b5e7d7b160cc9be9494279911a89ce73f9d35257381815caddad98a6fc",
+    "source/iokit/DriverKit/IOReturn.h": "4767dd8a847d4b7dcff0b74c7a67013f0462f3ea6313e5a483f49fe046f93ab1",
+    "source/iokit/DriverKit/IOService.iig": "d8756d78a1be18561e999949e9508a4f5ed700b99359d4efe3cd88fe1470f621",
+    "source/iokit/DriverKit/IOServiceNotificationDispatchSource.iig": "d4d443fb1b75a26c2e2d6da92d875d5317dff5759d94e18dac065a2a84eae643",
+    "source/iokit/DriverKit/IOServiceStateNotificationDispatchSource.iig": "6bff4922ed765ea3fb11ec742d86e1ee220b715254a37551729628684cb78163",
+    "source/iokit/DriverKit/IOUserClient.iig": "313e814c5203bcb7c7390e87ae00845d45765039204ff628be9c98a3f6ee5a7f",
+    "source/iokit/DriverKit/IOUserServer.iig": "94e6842addf0097f46a9deb8810b5642d90a0afb0d790e00a208f26c16b8df04",
+    "source/iokit/DriverKit/IOWorkGroup.iig": "afe77e23460b87de542227172f528774f82911bbdd5eb10da8443d50ad849e77",
+    "source/iokit/DriverKit/OSAction.iig": "d1f61a6e9db58d34a3a77880e6262d92e514968d4b1f60be736fe830b90f4f2e",
+    "source/iokit/DriverKit/OSObject.iig": "2e7f15edaf527123f7366980f838e8c368f16cd0f2478cc6ef3f4d105f3678d3",
+    "source/osfmk/mach/boolean.h": "c050da6ed29d186ac403c0ba187031aca3ac32da2b4e618e0d0c8ba1b7665523",
+    "source/osfmk/mach/error.h": "dc2640f5c3a348c61c0a31644f9208fc3c05002e3659ed03461239c0f8e92728",
+    "source/osfmk/mach/i386/boolean.h": "ee266280e9982d6efa1decf132c079769e17f66b9ea1908b838c78a8bbbebebb",
+    "source/osfmk/mach/i386/kern_return.h": "3c806753bb3af781d46d45fef3321928691e2e1b4ec86c4d89d163c3f399ad17",
+    "source/osfmk/mach/i386/vm_types.h": "ddbe43c3bfa2a4ea319f87429f1d6fabb83317516b155ab2bceb68f557cfa85a",
+    "source/osfmk/mach/kern_return.h": "4577d58f74dfbb8ef07ce460f82cb7a45999ad2a0479486df8d22658d4847f50",
+    "source/osfmk/mach/machine/boolean.h": "a22e0c8c541b9117a86d85ab4a977eda49917a9867b24576f5972b6fa6554f23",
+    "source/osfmk/mach/machine/kern_return.h": "160d3b4460244b7f469a34f3030071bd717d2918cb748527c1207ca78310d51d",
+    "source/osfmk/mach/machine/vm_types.h": "1c2a4ff4b5843ded602775a447494f353a295015ca8d913a0a13439f4ee28654",
+    "source/osfmk/mach/port.h": "cc7aa46a7211a076bafb507baa6ce38c333c6b96418e2e7193e8cadd8ceabf97",
+    "source/iokit/DriverKit/IORPC.h": "2876c631f84240faf655fad1c06d2fcec4abfd5b777c2d297cb0aaf0b8715c49",
+    "source/iokit/IOKit/IORPC.h": "2876c631f84240faf655fad1c06d2fcec4abfd5b777c2d297cb0aaf0b8715c49",
+    "source/iokit/DriverKit/Makefile": "e47aa8b27a5245d755fbe84afa82aad3366b48d7b97e25eb5c21268593e0e90a",
+    "source/makedefs/MakeInc.cmd": "27eafbe51abab33e3ff4f08bb0804c893fe6d7210a79ea9c0516aef35386308d",
+    "source/makedefs/MakeInc.def": "957c8b46af707f6a03cc930b158532c32273b595bfeb3ad0aa7ca0b3714c38ae",
+    "source/config/MasterVersion": "bac7ab4d4c54ea7b15fab02801cb60ac09138e405d0f376bb5ecb532b765fbea"
+  },
+  "outputs": {
+    "IOBufferMemoryDescriptor.h": {
+      "sha256": "f94c44c193e2848a7a60cfb243416edce67f01db73dba26fbfc06371e07701db",
+      "size": 7553
+    },
+    "IOBufferMemoryDescriptor.iig.cpp": {
+      "sha256": "4af517065cf6c454f990569527f8f499e601adacfd0bc37adf561e809448706b",
+      "size": 15457
+    },
+    "IODataQueueDispatchSource.h": {
+      "sha256": "f84db5be8cbf03eedce846f4b7e10a1744e58e8c3ef4659ebc8690af37551395",
+      "size": 20226
+    },
+    "IODataQueueDispatchSource.iig.cpp": {
+      "sha256": "a0604b51283e7e7e29389fe87aa1bba36be516e5ef9059844c0966ccc1e1c43a",
+      "size": 46681
+    },
+    "IODispatchQueue.h": {
+      "sha256": "298474017874d3ce1765fda41cd2f17a9a0c61ecb3ba5b5206447647687c5d5f",
+      "size": 14460
+    },
+    "IODispatchQueue.iig.cpp": {
+      "sha256": "0360a81bf7bb0924b3d48acf02b674440c46843c9e9c6629794d7052a95462ee",
+      "size": 14797
+    },
+    "IODispatchSource.h": {
+      "sha256": "d86775bc417d5b74c7f75042a6e83ae41c936efa758e66d50d76dc871cdc15ad",
+      "size": 6710
+    },
+    "IODispatchSource.iig.cpp": {
+      "sha256": "1570740d35d7dcdb85410b06344b8433f9feb746a8559eb0e0218b6268827a86",
+      "size": 23879
+    },
+    "IODMACommand.h": {
+      "sha256": "c804b3b30a13918511955dc205ad585cda8a118dd2aefbd740c381450d2df54a",
+      "size": 12700
+    },
+    "IODMACommand.iig.cpp": {
+      "sha256": "49b661eb5a46123bd65ac8137bf3fe5949c4ac3f944aefb5c8859b90b429d879",
+      "size": 31534
+    },
+    "IOEventLink.h": {
+      "sha256": "01d1b3eb769540155765bbcbb02079903245622b0fed22700d2faeec3cda5183",
+      "size": 13795
+    },
+    "IOEventLink.iig.cpp": {
+      "sha256": "250b17bbeacc56815b73e984014c44aa745b7d87c69cf17b98d3f8c07f4f5690",
+      "size": 20085
+    },
+    "IOInterruptDispatchSource.h": {
+      "sha256": "32f5b3d8be2ef1f5ee9a7f48a0cba9e800ab7a58a9ee2565b300f7c24531a01f",
+      "size": 13333
+    },
+    "IOInterruptDispatchSource.iig.cpp": {
+      "sha256": "b9cc580f1754903a52394fd321594234f392e4421a0159eef2eaa3cd52628bcf",
+      "size": 32422
+    },
+    "IOMemoryDescriptor.h": {
+      "sha256": "6d87c158c7b76bd4141c929a34e9f35134428c29472ba67c6bee862a5b5495b1",
+      "size": 12951
+    },
+    "IOMemoryDescriptor.iig.cpp": {
+      "sha256": "7fb8e77c85cbb0a075d4e314189331d94cb644eca90ba75091f6df13429fc398",
+      "size": 28786
+    },
+    "IOMemoryMap.h": {
+      "sha256": "911177c8c7f526e327dd887f319840616e36af773676c31a0288a19d4f284701",
+      "size": 5249
+    },
+    "IOMemoryMap.iig.cpp": {
+      "sha256": "5fa81d0c4880a4ad6b48d69c4f8832705848f6ffa1723a34b4fed763b264b87a",
+      "size": 9323
+    },
+    "IOService.h": {
+      "sha256": "06e993982da992aede4522c7f6efd5bb642b7f73259ed7ef5ce60eaec97647c3",
+      "size": 49636
+    },
+    "IOService.iig.cpp": {
+      "sha256": "07ade382539c44d1a9889dd3986e7ddda6b49ad083457129236d2f179aa60125",
+      "size": 186710
+    },
+    "IOServiceNotificationDispatchSource.h": {
+      "sha256": "c5b472d0baa8b07f819aa734100e94888aec2a9c2031d2543e4107d71ad18727",
+      "size": 12278
+    },
+    "IOServiceNotificationDispatchSource.iig.cpp": {
+      "sha256": "f3457ded0e25cdf9832f774de84de2b7ace7598606baf007e2110fba0adf8c83",
+      "size": 29403
+    },
+    "IOServiceStateNotificationDispatchSource.h": {
+      "sha256": "674cd650178af900d274065e3f8b0290e1f2d2b89a519b527d4235d1a1705463",
+      "size": 11409
+    },
+    "IOServiceStateNotificationDispatchSource.iig.cpp": {
+      "sha256": "2c96b9afa88693fcda629d2b0487834cc633b5ddd0716a20990a4a5efd7bd1d7",
+      "size": 29445
+    },
+    "IOUserClient.h": {
+      "sha256": "1eaf8c0193d1afbad122a364fbd8b59c0f700e5479f44b09c6000256fa8a9eac",
+      "size": 24125
+    },
+    "IOUserClient.iig.cpp": {
+      "sha256": "17314d07453be4e9061145bd80aaa96508faff595ea0fa24bda8b90c6efc9e90",
+      "size": 44811
+    },
+    "IOUserServer.h": {
+      "sha256": "82724343555ba818aa235f45af1327eb1e5ffc5334decc7f26637e774ffef04b",
+      "size": 5986
+    },
+    "IOUserServer.iig.cpp": {
+      "sha256": "3b7b31944c357964b2463517844d0dc1ddec0da7a0693c5e82392734eac2276e",
+      "size": 20420
+    },
+    "IOWorkGroup.h": {
+      "sha256": "8aa44276089a7d10c439076bc748c92f5382c580d71054c25dc3099044d2c2c7",
+      "size": 10135
+    },
+    "IOWorkGroup.iig.cpp": {
+      "sha256": "4e0289243d453c946a5eadc5296ff68b68e75f296b15d92929f10b47026ccec2",
+      "size": 20133
+    },
+    "OSAction.h": {
+      "sha256": "3f5397b49d7b5ea6ed1954d09e588cc58a8a8c6adf586a6e3b888bcc7f7f4f83",
+      "size": 12251
+    },
+    "OSAction.iig.cpp": {
+      "sha256": "e996bb408071562a993616a245a49bd1482d068efe57f14a4768c16a4103cf60",
+      "size": 18661
+    },
+    "OSObject.h": {
+      "sha256": "9b3913d3b77fdc225cbf740153e541e5963f7e2242ad9689b075d78697b0b4db",
+      "size": 9362
+    },
+    "OSObject.iig.cpp": {
+      "sha256": "d2ccdb58b0ec7331ea24c7bc034ac544f63103ba0674f8785c42bdb60e533ade",
+      "size": 14743
+    }
+  },
+  "package_sha256": "d57e2d0fb8c910444a2f918975696e14e79eceba4a90da56a963e1b3888a6856",
+  "dependency_capture_note": "Current OSS closure derived by clang dependency preprocessing using a substitute Darwin standard-header set, not a recreation of historical IIG or SDK. Only OSS input hashes included. SDK effects on fixed types/packing are checked in actual target compilation.",
+  "external_dependency_basenames": [
+    "_intmax_t.h",
+    "_uint16_t.h",
+    "_uint32_t.h",
+    "_uint64_t.h",
+    "_uint8_t.h",
+    "_uintmax_t.h",
+    "stdint.h"
+  ],
+  "xnu_version": "8796 generation; captured CI kernel banner xnu-8796.141.3",
+  "provenance_ci_run": "https://github.com/squeeeezy/HelioDarwin/actions/runs/39984534077",
+  "provenance_ci_head": "f2e9307049a23c8f302eedab18e753038f735842",
+  "provenance_ci_conclusion": "success"
+}
