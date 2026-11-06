@@ -60,6 +60,14 @@ file is `/private/var/mobile/Library/Logs/SweetRepairPosterMetadata.log`.
 
 The candidate builds locally. Native registration acceptance, persistence,
 renewed provider discovery and wallpaper pixels still require a device run.
+
+The 2026-11-06 run subsequently accepted both scoped registrations, read back
+the original entitlement dictionaries, rediscovered all nine providers and moved
+the retained stores back under `Extensions`. The native four-path update reached
+three SpringBoard observers. The previous PosterBoard assertion loop is absent
+from the retained console. Home-configuration/sandbox path errors, Aegir snapshot
+failures and corrupt displayed pixels remain open; correct wallpaper and durable
+state across another iOS boot are not established.
 To remove the dependency, use
 `sudo python3 tools/sweet_daemons.py MOUNTED_ROOT --remove-poster-metadata-repair`.
 This restores a recorded executable preimage; it retains provider data and logs.

@@ -54,6 +54,11 @@ hardware JM terminal results and no retained BO-allocation failure. PosterBoard
 still traps on the existing malformed provider records. Android returned
 automatically around 01:42; the user saw no clock or wallpaper.
 
+On 2026-11-06, run `42153642642` restored nine-provider discovery and native
+configuration delivery to SpringBoard. Hardware jobs continued completing, but
+the display showed corrupt geometry; sampled panel-memory frames were already
+corrupt before scanout. Correct UI output remains unresolved.
+
 ## Documentation boundaries
 
 Hardware observations, implemented source and offline checks are identified

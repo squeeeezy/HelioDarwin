@@ -351,6 +351,12 @@ not a performance result. Patch 0207 publishes the two native VideoToolbox
 linear-alignment dictionary schemas with the existing 64-byte requirement.
 Their hardware and service behavior remains to be checked on the phone.
 
+The 2026-11-06 device run retained successful hardware jobs and recovered native
+poster discovery/configuration delivery, but framebuffer samples already contain
+corrupt blue geometry before scanout. Bounded opt-in host/texture/draw operand
+tracing is available; it does not itself fix rendering or provide GPU execution
+timestamps. Correct UI output remains unresolved.
+
 Patched coherent color tile reads, native depth/stencil/MSAA helpers, views and
 compute write/indirect paths are now integrated source, with device validation
 pending. Full frontend coverage is not implied: constant-blend and pipeline

@@ -8,6 +8,32 @@ Mali-G57 MC2, using a Vulkan backend and an XNU Job Manager transport.
 The source builds for arm64 iOS. End-to-end GPU rendering with this driver has
 not been validated on the phone, and Metal or Vulkan conformance is not claimed.
 
+The 2026-11-06 run with kernel `42153642642` restored all nine native poster
+providers and delivered the selected configuration to SpringBoard. Hardware JM
+completion continued, but the screen showed corrupt blue geometry and fragments
+of the prior bootloader image. Captured framebuffer samples already contain the
+blue geometry before physical scanout. Correct UI pixels remain unresolved.
+
+### Bounded render diagnostics
+
+Tracing is disabled by default. Enable `MALIMETAL_TRACE_RENDER=1` before process
+launch, or place a root-owned, read-only, single-link regular `render-trace.enabled`
+file beside the installed bundle binary containing `1` or `1` plus a newline.
+Restart the relevant process after changing it.
+
+The tracer records bounded draw arguments, planned/applied bindings, shader
+specialization/push data, host-buffer observations before submission and after
+confirmed retirement, and existing texture transfer/publication operands.
+It adds no GPU commands or waits. Host samples are not GPU-execution observations;
+equal pre/post samples do not exclude transient writes. Private, GPU-written
+and unsafe indexed spans are explicitly unavailable.
+
+Each process writes at most 384 KiB, including previous file contents, to
+`/private/var/tmp/MaliMetal-render-trace-PID.log`, falling back to its actual
+`TMPDIR`. Files require mode 0600 and matching ownership. Keep these traces local:
+they can contain captured UI data. This diagnostic candidate does not implement
+GPU execution timing or correct the corrupt draw.
+
 The 00:26:36 run on 2026-10-26 used kernel `40224078640` (`1c09edc`)
 and userspace `3e97131`. The 141,245-byte console records ten successful native
 JM terminal results, including fragment jobs, after hardware completion polling

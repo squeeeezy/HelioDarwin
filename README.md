@@ -73,6 +73,11 @@ The [01:29:49 capture](logs/boot-0205-run-40224078640-ui-bo-poster.log) records
 completion and persistent PosterBoard failures. Correct rendered UI output
 remains unconfirmed.
 
+The 2026-11-06 device run restored nine-provider discovery and selected
+configuration delivery to SpringBoard. It still showed corrupt geometry;
+framebuffer samples place the corruption before physical scanout. Correct
+clock, wallpaper and UI output remain unresolved.
+
 Compilation and offline shader validation do not prove that the stock Metal loader,
 PanVK, kernel GPU transport and presentation work together on the phone. Full
 Metal or Vulkan conformance is not claimed. Resource argument consumers, XR render
