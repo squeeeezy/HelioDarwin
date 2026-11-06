@@ -210,7 +210,11 @@ def main():
                         help='explicit arm64 iOS PanVK library to include in the bundle')
     parser.add_argument('--mps-common', action='store_true',
                         help='enable experimental target-pinned native MPS Common qualification')
+    parser.add_argument('--gpu-timing', action='store_true',
+                        help='enable experimental measured GPU timing; requires admitted native kernel clock and timestamp queries')
     args = parser.parse_args()
+    if args.gpu_timing and not args.vulkan_icd:
+        parser.error('--gpu-timing requires an explicit matching --vulkan-icd artifact; native clock/query support is checked at runtime')
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=True)
     sysroot = args.sysroot.resolve(strict=True)
@@ -232,6 +236,8 @@ def main():
               '-isystem', str(Path(ziglang.__file__).parent / 'lib/libc/include/any-darwin-any')]
     if args.mps_common:
         common.append('-DMM_ENABLE_MPS_COMMON_BACKEND=1')
+    if args.gpu_timing:
+        common.append('-DMM_ENABLE_REAL_GPU_TIMING=1')
     provider_manifest = None
     provider_archive = None
     if args.air_provider:
@@ -292,6 +298,9 @@ def main():
         'publication': 'guarded native RW acquire/release registry' if args.mps_common else None,
         'hardware_qualified': False,
     }
+    manifest['gpu_timing'] = {'enabled': args.gpu_timing, 'experimental': True,
+        'runtime_required': 'validated native MMK clock and matching 64-bit GPU timestamp queries',
+        'kernel_scheduler_timing': False, 'hardware_qualified': False}
     manifest['air_provider'] = provider_manifest
     manifest['components'] = {}
     if args.air_provider:

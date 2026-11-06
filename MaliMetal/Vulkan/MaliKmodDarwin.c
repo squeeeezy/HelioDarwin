@@ -41,6 +41,22 @@ int32_t mmk_darwin_query(uint32_t connection,MMKQuery *query)
     return call(connection,MMK_QUERY,&request,sizeof(request),query,sizeof(*query));
 }
 
+int32_t mmk_darwin_clock(uint32_t connection,MMKClockResult *clock)
+{
+    if (!clock) return MMK_BAD_ARGUMENT;
+    MMKClockRequest request={ .hdr=MMK_HDR(MMKClockRequest),.clock_version=MMK_CLOCK_VERSION };
+    MMKClockResult result={0};
+    memset(clock,0,sizeof(*clock));
+    int32_t kr=call(connection,MMK_CLOCK,&request,sizeof(request),&result,sizeof(result));
+    if (kr) return kr;
+    if (result.clock_version!=MMK_CLOCK_VERSION || result.valid_bits!=64 ||
+        !result.frequency_hz || !result.reset_generation ||
+        result.gpu_ticks<result.raw_cpu_before || result.gpu_ticks>result.raw_cpu_after ||
+        result.uptime_after_ns<result.uptime_before_ns) return MMK_BAD_REPLY;
+    *clock=result;
+    return 0;
+}
+
 int32_t mmk_darwin_open_peer(uint32_t connection,uint32_t *peer)
 {
     if (!connection || !peer) return MMK_BAD_ARGUMENT;

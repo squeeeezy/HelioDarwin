@@ -118,6 +118,18 @@ def apply(work):
     edit('src/panfrost/vulkan/panvk_instance.c',
          '   if (build_id_len < BUILD_ID_EXPECTED_HASH_LENGTH)',
          '   if (build_id_len < (DETECT_OS_APPLE ? 16 : BUILD_ID_EXPECTED_HASH_LENGTH))')
+    edit('src/panfrost/vulkan/panvk_vX_physical_device.c',
+         '      .KHR_shader_clock = device->kmod.dev->props.gpu_can_query_timestamp,',
+         '#if defined(MESA_XNU)\n      .KHR_shader_clock = false,\n#else\n      .KHR_shader_clock = device->kmod.dev->props.gpu_can_query_timestamp,\n#endif')
+    edit('src/panfrost/vulkan/panvk_vX_physical_device.c',
+         '      .shaderSubgroupClock = device->kmod.dev->props.gpu_can_query_timestamp,',
+         '#if defined(MESA_XNU)\n      .shaderSubgroupClock = false,\n#else\n      .shaderSubgroupClock = device->kmod.dev->props.gpu_can_query_timestamp,\n#endif')
+    edit('src/panfrost/vulkan/panvk_vX_device.c',
+         '#include "kmod/pan_kmod.h"',
+         '#include "kmod/pan_kmod.h"\n#if defined(MESA_XNU)\n#include <errno.h>\n#endif')
+    edit('src/panfrost/vulkan/panvk_vX_device.c',
+         '   struct panvk_physical_device *pdev =\n      to_panvk_physical_device(vk_dev->physical);\n\n   *timestamp = pan_kmod_query_timestamp(pdev->kmod.dev);',
+         '#if defined(MESA_XNU)\n   extern int pan_kmod_xnu_query_timestamp(const struct pan_kmod_dev *, uint64_t *);\n   int error = pan_kmod_xnu_query_timestamp(to_panvk_device(vk_dev)->kmod.dev, timestamp);\n   if (error == ENODEV) return vk_device_set_lost(vk_dev, "native timestamp device lost");\n   if (error == ENOTSUP) return VK_ERROR_FEATURE_NOT_PRESENT;\n   if (error) return VK_ERROR_UNKNOWN;\n#else\n   struct panvk_physical_device *pdev =\n      to_panvk_physical_device(vk_dev->physical);\n\n   *timestamp = pan_kmod_query_timestamp(pdev->kmod.dev);\n#endif')
     edit('src/panfrost/vulkan/panvk_vX_device.c',
          '   device->vk.copy_sync_payloads = vk_drm_syncobj_copy_payloads;',
          '#if !defined(MESA_XNU)\n   device->vk.copy_sync_payloads = vk_drm_syncobj_copy_payloads;\n#endif')

@@ -100,6 +100,41 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
                                                                   count:2]];
 }
 
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+/* These are already calibrated host mach-domain nanoseconds. Never substitute
+ * CPU scheduling/fence observations for missing GPU measurements. */
+static MMVKResult MaliMetalMergeGPUMeasurement(MMVKGPUMeasuredTiming *aggregate,
+                                              const MMVKGPUMeasuredTiming *sample,
+                                              MMVKError *error) {
+    const char *failure=NULL;
+    if(sample->size!=sizeof(*sample)||sample->version!=MMVK_GPU_TIMING_VERSION||
+       !sample->segment_count||!sample->frequency_hz||!sample->start_ns||sample->end_ns<sample->start_ns||
+       sample->gpu_end_ticks<sample->gpu_start_ticks)
+        failure="Native GPU timing has an invalid measured interval or ABI";
+    else if(aggregate->segment_count&&
+            (aggregate->reset_generation!=sample->reset_generation||aggregate->frequency_hz!=sample->frequency_hz))
+        failure="Command GPU timing crosses a reset generation or clock frequency";
+    else if(sample->segment_count>UINT32_MAX-aggregate->segment_count)
+        failure="Command GPU timing segment count overflow";
+    if(failure){
+        if(error){memset(error,0,sizeof(*error));error->code=MMVK_ERROR_STATE;snprintf(error->message,sizeof(error->message),"%s",failure);}
+        return MMVK_ERROR_STATE;
+    }
+    if(!aggregate->segment_count){*aggregate=*sample;return MMVK_OK;}
+    MMVKGPUMeasuredTiming merged=*aggregate;
+    /* Equal generation/frequency makes raw GPU points authoritative. Separate
+     * calibration uncertainty must not choose which execution endpoint wins. */
+    if(sample->gpu_start_ticks<merged.gpu_start_ticks){merged.start_ns=sample->start_ns;merged.gpu_start_ticks=sample->gpu_start_ticks;}
+    if(sample->gpu_end_ticks>merged.gpu_end_ticks){merged.end_ns=sample->end_ns;merged.gpu_end_ticks=sample->gpu_end_ticks;}
+    if(merged.end_ns<merged.start_ns){
+        if(error){memset(error,0,sizeof(*error));error->code=MMVK_ERROR_STATE;snprintf(error->message,sizeof(error->message),"GPU endpoint calibration produces a reversed host interval");}
+        return MMVK_ERROR_STATE;
+    }
+    if(sample->max_deviation_ns>merged.max_deviation_ns)merged.max_deviation_ns=sample->max_deviation_ns;
+    merged.segment_count+=sample->segment_count;*aggregate=merged;return MMVK_OK;
+}
+#endif
+
 @interface MaliMetalCommandQueue ()
 - (void)runBuffer:(MaliMetalCommandBuffer *)buffer;
 - (void)enqueueBuffer:(MaliMetalCommandBuffer *)buffer;
@@ -358,6 +393,9 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
     NSMutableArray *_debugScopes;
     NSError *_error;
     MTLCommandBufferStatus _status;
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+    MMVKGPUMeasuredTiming _gpuMeasuredTiming;
+#endif
     BOOL _retainedReferences, _activeEncoder, _slotReleased;
     BOOL _scheduledHandlersDone, _completedHandlersDone, _submitted, _nativeQuarantined;
     pthread_mutex_t _lock;
@@ -454,6 +492,18 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
     pthread_mutex_unlock(&_lock);
     return error;
 }
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+- (CFTimeInterval)GPUStartTime {
+    pthread_mutex_lock(&_lock);
+    CFTimeInterval time=_status==MTLCommandBufferStatusCompleted?(CFTimeInterval)_gpuMeasuredTiming.start_ns/1.0e9:0.0;
+    pthread_mutex_unlock(&_lock);return time;
+}
+- (CFTimeInterval)GPUEndTime {
+    pthread_mutex_lock(&_lock);
+    CFTimeInterval time=_status==MTLCommandBufferStatusCompleted?(CFTimeInterval)_gpuMeasuredTiming.end_ns/1.0e9:0.0;
+    pthread_mutex_unlock(&_lock);return time;
+}
+#endif
 - (void)requireEncoding {
     if ([self status] >= MTLCommandBufferStatusCommitted)
         [NSException raise:@"NSInternalInconsistencyException"
@@ -866,6 +916,11 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
     MaliMetalDevice *device = (MaliMetalDevice *)[self device];
     [device lockExecution];
     MMVKError error = {0};
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+    MMVKGPUMeasuredTiming measuredTiming={.size=sizeof(measuredTiming),.version=MMVK_GPU_TIMING_VERSION};
+    if(!_error&&!mmvk_gpu_timing_enabled([device backendDevice]))
+        [self recordUnsupported:"Experimental GPU timing requires admitted native query/calibration support"];
+#endif
     if (!_error)
         [self recordBackendResult:mmvk_commands_create([device backendDevice], &_commands, &error)
                             error:&error];
@@ -920,6 +975,15 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
             if(result<0){mmvk_device_mark_quarantined([device backendDevice]);break;}
         } while(result==MMVK_TIMEOUT||result==MMVK_NOT_READY);
         [self recordBackendResult:result error:&error];
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+        if(!_error){
+            MMVKGPUMeasuredTiming sample={.size=sizeof(sample),.version=MMVK_GPU_TIMING_VERSION};
+            MMVKError timingError={0};MMVKResult timingResult=mmvk_fence_gpu_timing(_fence,&sample,&timingError);
+            if(timingResult==MMVK_OK)timingResult=MaliMetalMergeGPUMeasurement(&measuredTiming,&sample,&timingError);
+            /* A timing-data failure does not undo physical fence retirement. */
+            [self recordBackendResult:timingResult error:&timingError];
+        }
+#endif
     }
     if(mmvk_device_is_quarantined([device backendDevice])){
         if(!_error)[self recordBackendResult:MMVK_ERROR_DEVICE_LOST error:&error];
@@ -938,6 +1002,14 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
         do{pending=mmvk_sync_stream_drain(_syncStream,5000000000ull,&error);}
         while(pending==MMVK_TIMEOUT||pending==MMVK_NOT_READY);
         [self recordBackendResult:pending error:&error];
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+        if(!_error&&mmvk_sync_stream_has_accepted_submissions(_syncStream)){
+            MMVKGPUMeasuredTiming sample={.size=sizeof(sample),.version=MMVK_GPU_TIMING_VERSION};
+            MMVKError timingError={0};MMVKResult timingResult=mmvk_sync_stream_gpu_timing(_syncStream,&sample,&timingError);
+            if(timingResult==MMVK_OK)timingResult=MaliMetalMergeGPUMeasurement(&measuredTiming,&sample,&timingError);
+            [self recordBackendResult:timingResult error:&timingError];
+        }
+#endif
         if(pending<0)mmvk_device_mark_quarantined([device backendDevice]);
         if(mmvk_device_is_quarantined([device backendDevice])){
             mmvk_sync_stream_quarantine(_syncStream);[self quarantineNativeOwners];
@@ -957,7 +1029,14 @@ static NSError *MaliMetalCommandError(MMVKResult result, const char *message) {
             [self recordBackendResult:[_presentations[i] presentAfterGPUCompletion:&error] error:&error];
         }
     }
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+    if(!_error&&!measuredTiming.segment_count)
+        [self recordUnsupported:"Successful command has no measured native GPU execution interval"];
+#endif
     pthread_mutex_lock(&_lock);
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+    if(!_error)_gpuMeasuredTiming=measuredTiming;
+#endif
     _status = _error ? MTLCommandBufferStatusError : MTLCommandBufferStatusCompleted;
     _scheduledHandlersDone = YES;
     pthread_cond_broadcast(&_changed);

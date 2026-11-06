@@ -63,6 +63,7 @@ struct xnu_dev {
    uint64_t cell_size,backing_bytes,logical_bytes;
    bool lost,owns_connection;
    uint64_t next_atom,completed_success;
+   uint64_t clock_generation,clock_frequency;
 };
 static struct xnu_dev *xd(struct pan_kmod_dev *d)
 { return container_of(d,struct xnu_dev,base); }
@@ -116,6 +117,13 @@ xnu_create(int connection,uint32_t flags,const struct pan_kmod_driver *driver,
    p->supported_bo_flags=PAN_KMOD_BO_FLAG_EXECUTABLE|PAN_KMOD_BO_FLAG_NO_MMAP;
    p->allowed_group_priorities_mask=PAN_KMOD_GROUP_ALLOW_PRIORITY_MEDIUM;
    p->gpu_can_query_timestamp=false;p->timestamp_device_coherent=false;
+   MMKClockResult clock;
+   if(!mmk_darwin_clock(d->connection,&clock)){
+      d->clock_generation=clock.reset_generation;d->clock_frequency=clock.frequency_hz;
+      p->timestamp_frequency=clock.frequency_hz;
+      p->timestamp_cycles_to_ns_factor=1000000000.0/(double)clock.frequency_hz;
+      p->gpu_can_query_timestamp=true;
+   }
    return &d->base;
 }
 
@@ -139,6 +147,11 @@ pan_kmod_xnu_dev_clone(struct pan_kmod_dev *physical,
       return NULL;
    }
    xd(dev)->owns_connection=true;
+   if(physical->props.gpu_can_query_timestamp &&
+      (!dev->props.gpu_can_query_timestamp ||
+       dev->props.timestamp_frequency!=physical->props.timestamp_frequency)){
+      pan_kmod_dev_destroy(dev);errno=EIO;return NULL;
+   }
    return dev;
 }
 
@@ -383,8 +396,29 @@ static enum pan_kmod_vm_state xnu_vm_state(struct pan_kmod_vm *vm)
    simple_mtx_lock(&d->lock);bool lost=d->lost;
    simple_mtx_unlock(&d->lock);return lost?PAN_KMOD_VM_FAULTY:PAN_KMOD_VM_USABLE;
 }
+int pan_kmod_xnu_query_timestamp(const struct pan_kmod_dev *base,uint64_t *timestamp);
+int pan_kmod_xnu_query_timestamp(const struct pan_kmod_dev *base,uint64_t *timestamp)
+{
+   if(!timestamp)return EINVAL;
+   struct xnu_dev *d=container_of(base,struct xnu_dev,base);
+   simple_mtx_lock(&d->lock);
+   int error=0;
+   MMKClockResult clock;
+   if(!base->props.gpu_can_query_timestamp)error=ENOTSUP;
+   else if(d->lost)error=ENODEV;
+   else if(mmk_darwin_clock(d->connection,&clock) ||
+           clock.reset_generation!=d->clock_generation ||
+           clock.frequency_hz!=d->clock_frequency)error=EIO;
+   else *timestamp=clock.gpu_ticks;
+   simple_mtx_unlock(&d->lock);
+   return error;
+}
 static uint64_t xnu_timestamp(const struct pan_kmod_dev *d)
-{(void)d;errno=ENOTSUP;return 0;}
+{
+   uint64_t timestamp=0;
+   errno=pan_kmod_xnu_query_timestamp(d,&timestamp);
+   return timestamp;
+}
 
 uint64_t kbase_kmod_job_submit_dep(struct pan_kmod_dev *base,uint64_t chain,uint32_t requirements,
     struct pan_kmod_bo **bos,uint32_t count,uint64_t dep0,uint8_t type0,uint64_t dep1,uint8_t type1,bool no_waiter)

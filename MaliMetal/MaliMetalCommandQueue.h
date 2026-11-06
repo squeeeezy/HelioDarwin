@@ -22,6 +22,11 @@
 @property(readonly) MTLCommandBufferStatus status;
 @property(readonly) NSError *error;
 @property(readonly) BOOL retainedReferences;
+#ifdef MM_ENABLE_REAL_GPU_TIMING
+/* Measured native GPU execution, converted to the system mach-time domain. */
+@property(readonly) CFTimeInterval GPUStartTime;
+@property(readonly) CFTimeInterval GPUEndTime;
+#endif
 - (instancetype)initWithQueue:(MaliMetalCommandQueue *)queue;
 - (instancetype)initWithQueue:(MaliMetalCommandQueue *)queue
            retainedReferences:(BOOL)retainedReferences;

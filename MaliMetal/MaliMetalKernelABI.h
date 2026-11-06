@@ -17,7 +17,8 @@ enum MMKSelector {
 	MMK_BO_RELEASE = 3,
 	MMK_SUBMIT = 4,
 	MMK_WAIT = 5,
-	MMK_BO_SYNC = 6
+	MMK_BO_SYNC = 6,
+	MMK_CLOCK = 7
 };
 enum MMKBOFlags { MMK_BO_READ = 1u, MMK_BO_WRITE = 2u, MMK_BO_EXEC = 4u, MMK_BO_CPU_CACHED = 8u };
 /* CPU_CACHED selects explicit CPU cache maintenance. Otherwise native BOs use
@@ -114,4 +115,18 @@ typedef struct {
 	uint32_t handle, direction;
 	uint64_t offset, length;
 } MMKBOSync;
+#define MMK_CLOCK_VERSION 1u
+typedef struct {
+	MMKHeader hdr;
+	uint32_t clock_version, reserved;
+} MMKClockRequest;
+typedef struct {
+	MMKHeader hdr;
+	uint32_t clock_version, valid_bits;
+	uint64_t frequency_hz, reset_generation, gpu_ticks;
+	uint64_t raw_cpu_before, raw_cpu_after;
+	uint64_t uptime_before_ns, uptime_after_ns;
+} MMKClockResult;
+typedef char MMKClockRequestSize[(sizeof(MMKClockRequest)==16)?1:-1];
+typedef char MMKClockResultSize[(sizeof(MMKClockResult)==72)?1:-1];
 #endif

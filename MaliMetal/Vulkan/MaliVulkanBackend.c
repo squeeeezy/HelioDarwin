@@ -86,6 +86,100 @@ uint64_t mmvk_trace_command_id(const MMVKCommands *c){return c?c->trace_id:0;}
 uint64_t mmvk_trace_native_command(const MMVKCommands *c){return c?(uint64_t)(uintptr_t)c->cmd:0;}
 uint32_t mmvk_trace_pass_id(const MMVKCommands *c){return c?c->trace_pass+1:0;}
 struct MMVKTraceNode { MMVKTraceNode *next;void *context;MMVKTraceObserver observer; };
+
+int mmvk_gpu_timing_enabled(const MMVKDevice *d) {return d&&d->gpu_timing;}
+static MMVKResult timing_clock(MMVKDevice *d,MMKClockResult *clock)
+{
+    int32_t kr=mmk_darwin_clock(d->clock_connection,clock);
+    if(kr||clock->reset_generation!=d->timing_generation||
+       clock->frequency_hz!=d->timing_frequency)return MMVK_ERROR_IO;
+    return MMVK_OK;
+}
+static int timing_anchor_bounds(const MMKClockResult *a,uint64_t tick,uint64_t *low,uint64_t *high)
+{
+    uint64_t delta=tick>=a->gpu_ticks?tick-a->gpu_ticks:a->gpu_ticks-tick;
+    uint64_t whole=delta/a->frequency_hz,remainder=delta%a->frequency_hz;
+    if(whole>UINT64_MAX/1000000000u||remainder>UINT64_MAX/1000000000u)return 0;
+    uint64_t base=whole*1000000000u,product=remainder*1000000000u;
+    uint64_t fraction=product/a->frequency_hz,round=product%a->frequency_hz!=0;
+    if(base>UINT64_MAX-fraction)return 0;
+    uint64_t floor=base+fraction;
+    if(round&&floor==UINT64_MAX)return 0;
+    uint64_t ceil=floor+round;
+    if(tick>=a->gpu_ticks){
+        if(a->uptime_after_ns>UINT64_MAX-ceil)return 0;
+        *low=a->uptime_before_ns+floor;*high=a->uptime_after_ns+ceil;
+    }else{
+        if(a->uptime_before_ns<ceil)return 0;
+        *low=a->uptime_before_ns-ceil;*high=a->uptime_after_ns-floor;
+    }
+    return *low<=*high;
+}
+static int timing_host_ns(const MMKClockResult *before,const MMKClockResult *after,
+                           uint64_t tick,uint64_t *host,uint64_t *deviation)
+{
+    uint64_t a,b,c,d;
+    if(!timing_anchor_bounds(before,tick,&a,&b)||!timing_anchor_bounds(after,tick,&c,&d))return 0;
+    uint64_t low=a>c?a:c,high=b<d?b:d;
+    if(low>high)return 0;
+    *host=low+(high-low)/2;
+    uint64_t spread=high-*host;
+    uint64_t granularity=1000000000u/before->frequency_hz+(1000000000u%before->frequency_hz!=0);
+    if(spread>UINT64_MAX-granularity)return 0;
+    *deviation=spread+granularity;return 1;
+}
+static void timing_fence_retired(MMVKFence *f)
+{
+    MMVKDevice *d=f->dev;
+    if(!d->gpu_timing)return;
+    pthread_mutex_lock(&d->queue_lock);
+    if(f->timing_retired){pthread_mutex_unlock(&d->queue_lock);return;}
+    f->timing_retired=1;f->timing_inflight=0;
+    MMKClockResult after;
+    uint64_t values[4]={0};
+    if(!f->timing_pool||f->timing_status!=MMVK_OK||timing_clock(d,&after)!=MMVK_OK){
+        f->timing_status=MMVK_ERROR_IO;goto done;
+    }
+    VkResult vr=d->GetQueryPoolResults(d->device,f->timing_pool,0,2,sizeof(values),values,
+        2*sizeof(uint64_t),VK_QUERY_RESULT_64_BIT|VK_QUERY_RESULT_WITH_AVAILABILITY_BIT);
+    if(vr==VK_ERROR_DEVICE_LOST){
+        f->timing_status=MMVK_ERROR_DEVICE_LOST;mmvk_device_mark_quarantined(d);goto done;
+    }
+    if(vr!=VK_SUCCESS||!values[1]||!values[3]||values[2]<values[0]||
+       values[0]<f->timing_before.gpu_ticks||values[2]>after.gpu_ticks||
+       after.gpu_ticks<f->timing_before.gpu_ticks){f->timing_status=MMVK_ERROR_IO;goto done;}
+    uint64_t start,end,start_dev,end_dev;
+    if(!timing_host_ns(&f->timing_before,&after,values[0],&start,&start_dev)||
+       !timing_host_ns(&f->timing_before,&after,values[2],&end,&end_dev)||
+       !start||end<start){f->timing_status=MMVK_ERROR_IO;goto done;}
+    f->timing=(MMVKGPUMeasuredTiming){.size=sizeof(f->timing),.version=MMVK_GPU_TIMING_VERSION,
+        .segment_count=1,.start_ns=start,.end_ns=end,.max_deviation_ns=start_dev>end_dev?start_dev:end_dev,
+        .reset_generation=after.reset_generation,.frequency_hz=after.frequency_hz,
+        .gpu_start_ticks=values[0],.gpu_end_ticks=values[2]};
+    f->timing_status=MMVK_OK;
+done:pthread_mutex_unlock(&d->queue_lock);
+}
+MMVKResult mmvk_fence_gpu_timing(MMVKFence *f,MMVKGPUMeasuredTiming *out,MMVKError *e)
+{
+    if(!f||!out)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing GPU timing fence/output");
+    if(!f->dev->gpu_timing)return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"experimental GPU timing is not enabled");
+    int quarantined=mmvk_device_is_quarantined(f->dev);
+    pthread_mutex_lock(&f->dev->queue_lock);
+    MMVKResult r=!f->timing_retired?MMVK_NOT_READY:f->timing_status;
+    if(quarantined)
+        r=f->timing_status==MMVK_ERROR_DEVICE_LOST?MMVK_ERROR_DEVICE_LOST:MMVK_ERROR_STATE;
+    if(r==MMVK_OK)*out=f->timing;
+    pthread_mutex_unlock(&f->dev->queue_lock);
+    return r==MMVK_OK?MMVK_OK:mmvk_errorf(e,r,r==MMVK_ERROR_DEVICE_LOST?VK_ERROR_DEVICE_LOST:0,"GPU query timing is unavailable or invalid");
+}
+VkResult mmvk_commands_finish_recording(MMVKCommands *c)
+{
+    if(c->in_render)return VK_ERROR_UNKNOWN;
+    mmvk_memory_barrier(c);
+    if(c->timing_pool)c->dev->CmdWriteTimestamp(c->cmd,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,c->timing_pool,1);
+    VkResult r=c->dev->EndCommandBuffer(c->cmd);c->submitted=1;return r;
+}
+
 int mmvk_commands_add_trace_observer(MMVKCommands *c,void *context,MMVKTraceObserver observer)
 {
     if(!c||c->submitted||!mmvk_trace_render_enabled()||!observer.sample||!observer.destroy)return 0;
@@ -109,7 +203,12 @@ VkResult mmvk_queue_submit_observed(MMVKCommands *c,const VkSubmitInfo *submit,M
     f->trace_submission=(MMVKTraceSubmission){c->trace_id,(uint64_t)(uintptr_t)c->cmd};
     trace_observers_sample(c->trace_observers,&f->trace_submission,0);
     f->trace_observers=c->trace_observers;c->trace_observers=NULL;
-    return c->dev->QueueSubmit(c->dev->queue,1,submit,f->fence);
+    if(c->timing_pool){
+        f->timing_status=timing_clock(c->dev,&f->timing_before);
+        f->timing_pool=c->timing_pool;c->timing_pool=VK_NULL_HANDLE;f->timing_inflight=1;
+    }
+    VkResult r=c->dev->QueueSubmit(c->dev->queue,1,submit,f->fence);
+    return r;
 }
 
 MMVKResult mmvk_errorf(MMVKError *e,MMVKResult code,int32_t native,const char *fmt,...)
@@ -184,6 +283,7 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     MMVKDevice *d=calloc(1,sizeof(*d));
     if (!d) return mmvk_errorf(e,MMVK_ERROR_MEMORY,0,"device allocation failed");
     pthread_mutex_init(&d->queue_lock,NULL);
+    d->clock_connection=connection;
     d->icd=dlopen(path?path:"/System/Library/Extensions/MaliMetal.bundle/libpanvk_sweetmali.dylib",RTLD_NOW|RTLD_LOCAL);
     if (!d->icd) { mmvk_errorf(e,MMVK_ERROR_DRIVER_UNAVAILABLE,0,"PanVK ICD: %s",dlerror()); goto fail; }
     /* This port-specific entry point verifies the kernel ABI and source pin.
@@ -226,6 +326,16 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     for (d->family=0;d->family<families;d->family++)
         if (family[d->family].queueCount && (family[d->family].queueFlags&(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT))==(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT)) break;
     if (d->family==families) {mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"no graphics/compute queue");goto fail;}
+#if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
+    MMKClockResult clock;
+    kr=mmk_darwin_clock(connection,&clock);
+    if(kr||family[d->family].timestampValidBits!=64||
+       !d->properties.limits.timestampComputeAndGraphics||
+       d->properties.limits.timestampPeriod!=(float)(1000000000.0/(double)clock.frequency_hz)){
+        mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,kr,"GPU timing requires validated native clock and matching 64-bit query support");goto fail;
+    }
+    d->timing_generation=clock.reset_generation;d->timing_frequency=clock.frequency_hz;
+#endif
     float priority=1;
     VkDeviceQueueCreateInfo qi={.sType=VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,.queueFamilyIndex=d->family,.queueCount=1,.pQueuePriorities=&priority};
     if(d->properties.apiVersion<VK_API_VERSION_1_2){mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"AIR translation requires Vulkan 1.2");goto fail;}
@@ -301,6 +411,10 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     d->graphics_enabled=selected_graphics;
 #define LOAD_DEVICE(name) d->name=(PFN_vk##name)d->GetDeviceProcAddr(d->device,"vk" #name); if (!d->name) {mmvk_errorf(e,MMVK_ERROR_DRIVER_UNAVAILABLE,0,"missing vk" #name);goto fail;}
     DEVICE_FUNCS(LOAD_DEVICE)
+#if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
+    TIMING_DEVICE_FUNCS(LOAD_DEVICE)
+    d->gpu_timing=1;
+#endif
 #undef LOAD_DEVICE
     d->GetDeviceQueue(d->device,d->family,0,&d->queue);
     d->GetPhysicalDeviceMemoryProperties(d->physical,&d->memory);
@@ -448,6 +562,13 @@ MMVKResult mmvk_commands_create(MMVKDevice *d,MMVKCommands **out,MMVKError *e)
     r=d->AllocateCommandBuffers(d->device,&ai,&c->cmd);if(r)goto fail;
     VkCommandBufferBeginInfo bi={.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
     r=d->BeginCommandBuffer(c->cmd,&bi);if(r)goto fail;
+    if(d->gpu_timing){
+        VkQueryPoolCreateInfo ti={.sType=VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
+            .queryType=VK_QUERY_TYPE_TIMESTAMP,.queryCount=2};
+        r=d->CreateQueryPool(d->device,&ti,NULL,&c->timing_pool);if(r)goto fail;
+        d->CmdResetQueryPool(c->cmd,c->timing_pool,0,2);
+        d->CmdWriteTimestamp(c->cmd,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,c->timing_pool,0);
+    }
     *out=c;return mmvk_vkresult(e,VK_SUCCESS,"command list created");
 fail:mmvk_commands_destroy(c);return mmvk_vkresult(e,r,"command list creation");
 }
@@ -462,6 +583,7 @@ void mmvk_commands_destroy(MMVKCommands *c)
     mmvk_graphics_commands_cleanup(c);
     if(c->descriptors)d->DestroyDescriptorPool(d->device,c->descriptors,NULL);
     if(c->pool)d->DestroyCommandPool(d->device,c->pool,NULL);
+    if(c->timing_pool)d->DestroyQueryPool(d->device,c->timing_pool,NULL);
     trace_observers_destroy(c->trace_observers);
     free(c->written_buffers);free(c->written_images);
     free(c);
@@ -501,8 +623,7 @@ MMVKResult mmvk_commands_submit(MMVKCommands *c,MMVKFence **out,MMVKError *e)
     if(!out||c->in_render)return mmvk_errorf(e,MMVK_ERROR_STATE,0,"cannot submit an open render pass");
     *out=NULL;MMVKFence *f=calloc(1,sizeof(*f));
     if(!f)return mmvk_errorf(e,MMVK_ERROR_MEMORY,0,"fence allocation failed");f->dev=c->dev;
-    mmvk_memory_barrier(c);
-    VkResult r=c->dev->EndCommandBuffer(c->cmd);c->submitted=1;
+    VkResult r=mmvk_commands_finish_recording(c);
     if(r){free(f);return mmvk_vkresult(e,r,"vkEndCommandBuffer");}
     VkFenceCreateInfo fi={.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     r=c->dev->CreateFence(c->dev->device,&fi,NULL,&f->fence);
@@ -515,17 +636,29 @@ MMVKResult mmvk_commands_submit(MMVKCommands *c,MMVKFence **out,MMVKError *e)
     if(!r)for(uint32_t n=0;n<c->image_count;n++){c->images[n].image->layout=VK_IMAGE_LAYOUT_GENERAL;c->images[n].image->generation++;}
     pthread_mutex_unlock(&c->dev->queue_lock);
     if(r){
-        if(r==VK_ERROR_OUT_OF_HOST_MEMORY||r==VK_ERROR_OUT_OF_DEVICE_MEMORY){c->dev->DestroyFence(c->dev->device,f->fence,NULL);trace_observers_destroy(f->trace_observers);free(f);}
+        if(!c->dev->gpu_timing&&(r==VK_ERROR_OUT_OF_HOST_MEMORY||r==VK_ERROR_OUT_OF_DEVICE_MEMORY)){mmvk_fence_destroy(f);}
         else{mmvk_device_mark_quarantined(c->dev);*out=f;}
         return mmvk_vkresult(e,r,"vkQueueSubmit");
     }
     *out=f;return mmvk_vkresult(e,VK_SUCCESS,"submitted");
 }
 MMVKResult mmvk_fence_wait(MMVKFence *f,uint64_t timeout,MMVKError *e)
-{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->WaitForFences(f->dev->device,1,&f->fence,VK_TRUE,timeout);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkWaitForFences");}
+{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->WaitForFences(f->dev->device,1,&f->fence,VK_TRUE,timeout);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev)){timing_fence_retired(f);if(f->timing_status==MMVK_ERROR_DEVICE_LOST)r=VK_ERROR_DEVICE_LOST;else if(!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);}if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkWaitForFences");}
 MMVKResult mmvk_fence_status(MMVKFence *f,MMVKError *e)
-{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->GetFenceStatus(f->dev->device,f->fence);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkGetFenceStatus");}
-void mmvk_fence_destroy(MMVKFence *f){if(f&&!mmvk_device_is_quarantined(f->dev)){f->dev->DestroyFence(f->dev->device,f->fence,NULL);trace_observers_destroy(f->trace_observers);free(f);}}
+{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->GetFenceStatus(f->dev->device,f->fence);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev)){timing_fence_retired(f);if(f->timing_status==MMVK_ERROR_DEVICE_LOST)r=VK_ERROR_DEVICE_LOST;else if(!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);}if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkGetFenceStatus");}
+void mmvk_fence_destroy(MMVKFence *f)
+{
+    if(!f||mmvk_device_is_quarantined(f->dev))return;
+    if(f->timing_pool&&f->timing_inflight){
+        VkResult status=f->dev->GetFenceStatus(f->dev->device,f->fence);
+        if(status!=VK_SUCCESS){mmvk_device_mark_quarantined(f->dev);return;}
+        timing_fence_retired(f);
+    }
+    if(mmvk_device_is_quarantined(f->dev))return;
+    if(f->timing_pool)f->dev->DestroyQueryPool(f->dev->device,f->timing_pool,NULL);
+    f->dev->DestroyFence(f->dev->device,f->fence,NULL);
+    trace_observers_destroy(f->trace_observers);free(f);
+}
 
 VkDescriptorType mmvk_descriptor_type(MMVKBindingType type)
 {

@@ -19,6 +19,7 @@ struct MMVKSyncStream {
     MMVKSyncSegment *segments;
     size_t count, capacity, completed, accepted_count;
     uint32_t quarantined;
+    MMVKGPUMeasuredTiming timing; MMVKResult timing_status;
     struct MMVKSyncStream *quarantine_next;
 };
 static pthread_mutex_t sync_quarantine_lock=PTHREAD_MUTEX_INITIALIZER;
@@ -150,8 +151,7 @@ static MMVKResult submit_segment(MMVKCommands *c, MMVKEvent *signal, uint64_t va
     /* Metal signals below an earlier value have no effect. All submissions use
      * the same native queue, so last_submitted is an ordered lower bound. */
     uint32_t signal_count=signal&&value>current && value>signal->last_submitted;
-    mmvk_memory_barrier(c);
-    vr=c->dev->EndCommandBuffer(c->cmd);c->submitted=1;
+    vr=mmvk_commands_finish_recording(c);
     if(vr) {if(signal)pthread_mutex_unlock(&signal->lock);mmvk_fence_destroy(f);return mmvk_vkresult(e,vr,"vkEndCommandBuffer");}
     VkTimelineSemaphoreSubmitInfo timeline={.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,
         .signalSemaphoreValueCount=signal_count,.pSignalSemaphoreValues=&value};
@@ -211,11 +211,35 @@ MMVKResult mmvk_sync_stream_drain(MMVKSyncStream *s, uint64_t timeout, MMVKError
         MMVKSyncSegment *segment=&s->segments[s->completed];
         MMVKResult r=mmvk_fence_wait(segment->fence,remaining,e);
         if(r!=MMVK_OK){if(r<0)mmvk_sync_stream_quarantine(s);return r;}
+        if(s->dev->gpu_timing&&s->timing_status==MMVK_OK){
+            MMVKGPUMeasuredTiming sample;MMVKResult measured=mmvk_fence_gpu_timing(segment->fence,&sample,NULL);
+            if(measured!=MMVK_OK)s->timing_status=measured<0?measured:MMVK_ERROR_IO;
+            else if(!s->timing.segment_count)s->timing=sample;
+            else if(sample.reset_generation!=s->timing.reset_generation||sample.frequency_hz!=s->timing.frequency_hz||
+                    s->timing.segment_count>UINT32_MAX-sample.segment_count)s->timing_status=MMVK_ERROR_IO;
+            else{
+                if(sample.gpu_start_ticks<s->timing.gpu_start_ticks){s->timing.start_ns=sample.start_ns;s->timing.gpu_start_ticks=sample.gpu_start_ticks;}
+                if(sample.gpu_end_ticks>s->timing.gpu_end_ticks){s->timing.end_ns=sample.end_ns;s->timing.gpu_end_ticks=sample.gpu_end_ticks;}
+                if(sample.max_deviation_ns>s->timing.max_deviation_ns)s->timing.max_deviation_ns=sample.max_deviation_ns;
+                s->timing.segment_count+=sample.segment_count;
+            }
+        }
         mmvk_fence_destroy(segment->fence);mmvk_commands_destroy(segment->commands);
         segment->fence=NULL;segment->commands=NULL;s->completed++;
     }
     sync_unquarantine_retired(s);
     return MMVK_OK;
+}
+MMVKResult mmvk_sync_stream_gpu_timing(MMVKSyncStream *s,MMVKGPUMeasuredTiming *out,MMVKError *e)
+{
+    if(!s||!out)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing GPU timing stream/output");
+    if(!s->dev->gpu_timing)return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"experimental GPU timing is not enabled");
+    if(s->completed!=s->count||!s->count)return mmvk_errorf(e,MMVK_NOT_READY,0,"GPU timing segments are not all retired");
+    if(mmvk_sync_stream_quarantined(s)||mmvk_device_is_quarantined(s->dev))return mmvk_errorf(e,MMVK_ERROR_STATE,0,"GPU timing stream is quarantined");
+    if(s->timing_status!=MMVK_OK||s->timing.segment_count!=s->accepted_count||
+       s->timing.end_ns<s->timing.start_ns)
+        return mmvk_errorf(e,MMVK_ERROR_IO,0,"GPU timing stream has missing or invalid measurements");
+    *out=s->timing;return MMVK_OK;
 }
 MMVKResult mmvk_sync_stream_destroy(MMVKSyncStream *s, MMVKError *e)
 {

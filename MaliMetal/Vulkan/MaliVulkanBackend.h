@@ -190,6 +190,15 @@ MMVKResult mmvk_commands_draw_indexed(MMVKCommands *,uint32_t index_count,uint32
     uint32_t first_index,int32_t base_vertex,uint32_t first_instance,MMVKError *);
 MMVKResult mmvk_commands_end_render(MMVKCommands *, MMVKError *);
 MMVKResult mmvk_commands_submit(MMVKCommands *, MMVKFence **out, MMVKError *);
+#define MMVK_GPU_TIMING_VERSION 1u
+typedef struct {
+    uint32_t size,version,segment_count,reserved;
+    uint64_t start_ns,end_ns,max_deviation_ns,reset_generation,frequency_hz;
+    uint64_t gpu_start_ticks,gpu_end_ticks;
+} MMVKGPUMeasuredTiming;
+typedef char MMVKGPUMeasuredTimingSize[(sizeof(MMVKGPUMeasuredTiming)==72)?1:-1];
+int mmvk_gpu_timing_enabled(const MMVKDevice *);
+MMVKResult mmvk_fence_gpu_timing(MMVKFence *,MMVKGPUMeasuredTiming *,MMVKError *);
 MMVKResult mmvk_fence_wait(MMVKFence *, uint64_t timeout_ns, MMVKError *);
 MMVKResult mmvk_fence_status(MMVKFence *, MMVKError *);
 void mmvk_fence_destroy(MMVKFence *);

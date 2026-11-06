@@ -33,6 +33,7 @@ MMVKResult mmvk_sync_stream_boundary(MMVKSyncStream *, MMVKCommands **commands,
  * this transport: failed submissions stay owned/quarantined. Destroy refuses
  * pending segments. Only real successful fences retire their storage. */
 MMVKResult mmvk_sync_stream_drain(MMVKSyncStream *, uint64_t timeout_ns, MMVKError *);
+MMVKResult mmvk_sync_stream_gpu_timing(MMVKSyncStream *,MMVKGPUMeasuredTiming *,MMVKError *);
 MMVKResult mmvk_sync_stream_destroy(MMVKSyncStream *, MMVKError *);
 /* GPU availability to host; invalidate mapped allocation only after completion. */
 MMVKResult mmvk_commands_synchronize_buffer(MMVKCommands *, MMVKBuffer *, MMVKError *);

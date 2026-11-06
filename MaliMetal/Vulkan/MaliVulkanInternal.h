@@ -6,6 +6,8 @@
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan_core.h>
 #include <pthread.h>
+#include "MaliKmodDarwin.h"
+#define TIMING_DEVICE_FUNCS(X) X(CreateQueryPool) X(DestroyQueryPool) X(CmdResetQueryPool) X(CmdWriteTimestamp) X(GetQueryPoolResults)
 
 #define INSTANCE_FUNCS(X) \
  X(DestroyInstance) X(EnumeratePhysicalDevices) X(GetPhysicalDeviceProperties) \
@@ -37,6 +39,7 @@ struct MMVKDevice {
     void *icd;
     VkInstance instance; VkPhysicalDevice physical; VkDevice device; VkQueue queue;
     uint32_t family,api_version,quarantined; MMVKCapabilities caps;
+    uint32_t gpu_timing,clock_connection; uint64_t timing_generation,timing_frequency;
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures enabled_features;
     VkPhysicalDeviceVulkan11Features enabled11;
@@ -51,7 +54,7 @@ struct MMVKDevice {
     VkPhysicalDeviceMemoryProperties memory;
     pthread_mutex_t queue_lock;
     PFN_vkGetInstanceProcAddr GetInstanceProcAddr;
-    INSTANCE_FUNCS(DECLARE) DEVICE_FUNCS(DECLARE)
+    INSTANCE_FUNCS(DECLARE) DEVICE_FUNCS(DECLARE) TIMING_DEVICE_FUNCS(DECLARE)
 };
 #undef DECLARE
 #include "MaliVulkanResourcesInternal.h"
@@ -81,10 +84,14 @@ struct MMVKCommands { MMVKDevice *dev; VkCommandPool pool; VkCommandBuffer cmd;
     struct { MMVKImage *image; uint64_t generation; } images[64]; uint32_t image_count;
     uint64_t trace_id; uint32_t trace_pass;
     MMVKTraceNode *trace_observers;
+    VkQueryPool timing_pool;
 };
 struct MMVKFence { MMVKDevice *dev; VkFence fence;
     MMVKTraceSubmission trace_submission; MMVKTraceNode *trace_observers;
     uint32_t trace_retired;
+    VkQueryPool timing_pool; MMKClockResult timing_before;
+    MMVKGPUMeasuredTiming timing; MMVKResult timing_status;
+    uint32_t timing_retired,timing_inflight;
 };
 
 
@@ -104,5 +111,6 @@ MMVKResult mmvk_prepare_descriptor_image(MMVKCommands *, MMVKImage *, uint32_t, 
 MMVKResult mmvk_bind_snapshot(MMVKCommands *, MMVKError *);
 /* Internal submission observation only; caller preserves native queue locking. */
 VkResult mmvk_queue_submit_observed(MMVKCommands *,const VkSubmitInfo *,MMVKFence *);
+VkResult mmvk_commands_finish_recording(MMVKCommands *);
 
 #endif
