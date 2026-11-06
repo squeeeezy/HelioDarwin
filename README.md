@@ -63,9 +63,11 @@ loading. The function-descriptor call subsequently passed on the phone and
 reached a missing MRT/blending path. That path is now implemented and compiled,
 along with canonical per-draw/dispatch binding and native resource, graphics,
 synchronization and API modules. The integrated ABI 4/compute ABI 2 bundle passes
-strict linking and static review, with phone validation pending. A separate shared-cache
-metadata failure affected SpringBoard and several services. Remaining malformed
-poster-provider records and compositor failures are under investigation.
+strict linking and static review, with expanded runtime validation pending.
+Earlier captures also exposed shared-cache and poster-provider metadata failures.
+The later November 6 run restored native provider discovery and selected
+configuration delivery; correct compositor output remains unresolved. That
+provider recovery does not establish a repair of the shared-cache failure.
 Those earlier milestones did not establish job completion; the
 later [00:26:36 capture](logs/boot-0205-run-40224078640-ui-texture-layout.log) records successful hardware JM work.
 The [01:29:49 capture](logs/boot-0205-run-40224078640-ui-bo-poster.log) records
@@ -77,6 +79,15 @@ The 2026-11-06 device run restored nine-provider discovery and selected
 configuration delivery to SpringBoard. It still showed corrupt geometry;
 framebuffer samples place the corruption before physical scanout. Correct
 clock, wallpaper and UI output remain unresolved.
+
+The source now leases hardware address-space slots per validated job while
+preserving each client's private VM and buffer ownership and the global
+one-active-job rule. Optional measured GPU timing is disabled by default and
+requires a matching kernel clock interface, native ICD and bundle. Kernel CI
+`42175315331`, native ICD builds and bundle linking passed. These are build
+checks; hardware qualification of AS reuse and timing publication remains
+pending. The corrupt-geometry cause remains unknown,
+and bounded diagnostics are available.
 
 Compilation and offline shader validation do not prove that the stock Metal loader,
 PanVK, kernel GPU transport and presentation work together on the phone. Full

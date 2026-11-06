@@ -99,12 +99,17 @@ The MFG mux uses topckgen CLK_CFG at `+0x50`, set/clear `+0x54/+0x58`, and CLK_C
 
 MFGPLL control locations include apmixedsys `+0x268` and power control `+0x274`. A complete PLL enable/program/lock sequence and coordinated voltage/frequency transitions have not been validated for XNU. Android OPP tables are not evidence that XNU is running at those frequencies or voltages.
 
+The experimental timestamp path validates its native counter separately from
+MFG clock policy. It does not measure the MFG operating frequency or establish
+DVFS support. Patch 0208 provides the native clock interface used by that path;
+hardware calibration/query publication remains unqualified.
+
 ## GPU memory and JM transport
 
 The versioned IOKit ABI keeps MMIO programming in the kernel. Its source implements:
 
 - Owned BO handles, allocation, task-memory pinning for supported imports, and release. A CPU virtual address is never treated as a GPU virtual address.
-- Per-connection address spaces and four-level AArch64 page tables with **4 KiB GPU pages**. XNU CPU VM pages are **16 KiB**; allocations and task imports obey that CPU-page granularity.
+- Per-client GPU virtual address spaces and four-level AArch64 page tables with **4 KiB GPU pages**. A present/free physical hardware AS slot is leased per validated job instead of reserved by an idle connection. XNU CPU VM pages remain **16 KiB**; allocations and task imports obey that CPU-page granularity.
 - Kernel-assigned GPU addresses, reused free VA ranges, guard pages, and explicit CPU/GPU cache ownership.
 - Normal non-cacheable CPU BO mappings through write-combine memory attributes. These are ordinary RAM mappings suitable for buffer accesses, rather than Device-memory mappings. The initial Mesa adapter does not advertise host-cached memory; cached task imports are a separate kernel ABI facility.
 - One active hardware submission globally. The kernel programs address-space registers and `JS_HEAD_NEXT`, affinity/configuration, and `JS_COMMAND_NEXT = START`.
@@ -112,6 +117,16 @@ The versioned IOKit ABI keeps MMIO programming in the kernel. Its source impleme
 - Fault/status capture and GPU cache cleaning before completion becomes CPU-visible. If recovery fails, the device is marked unavailable and affected pinned BOs/page tables are retained so potentially active DMA cannot access freed memory.
 
 The register layout is GPU_CONTROL at `0x0000`, JOB_CONTROL at `0x1000`, and MMU at `0x2000`. Job slot *n* starts at `0x1800 + n * 0x80`; address space *n* starts at `0x2400 + n * 0x40`. `AS_PRESENT = 0xff` and `JS_PRESENT = 0x7` are availability bitmaps, not address-space/job counts encoded as integers.
+
+Patch 0209 preserves each client's task, BO handles, GPU virtual address space
+and page tables while leasing a real present/free hardware AS slot only for a
+validated job under the global GPU lock. Opening an idle connection no longer
+reserves a hardware slot. Completion releases the lease only after cache handling
+and confirmed MMU flush/detach; a confirmed reset can also release it. Failed
+recovery retains the lease and potentially DMA-visible owners. Global one-job
+execution and existing memory limits are unchanged. Runtime AS reuse and detach
+cost remain unqualified; this source change does not establish the cause of
+previous connection failures or corrupt pixels.
 
 ### v9 descriptor correction
 
@@ -123,6 +138,6 @@ The exact layouts are recorded in [MaliValhallHw.h](https://github.com/squeeeezy
 
 Observed on the device: readable GPU identification and availability registers, and the Android GPU/core-mask identity above. The preserved MFG bring-up reached those reads.
 
-Checked offline: vendor register/protocol definitions, Mesa descriptor layouts, arm64 kernel compilation, and composition of the GPU, shared PWRAP, display, and input patches.
+Checked offline: vendor register/protocol definitions, Mesa descriptor layouts, arm64 kernel compilation, and composition of the GPU, shared PWRAP, display, and input patches. Kernel CI `42175315331` passed. Hardware qualification of per-job AS reuse, MMU detach behavior, GPU timestamp calibration/query publication and timing uncertainty remains pending.
 
 The integrated boot validated the revised SWINF enable/readback path and native PanVK loading. Later fixes passed the CPU cache-type query, IOKit connection discovery and GPU-buffer cache-mode setup; run `40090751567` created the native Vulkan device. Run `40224078640` then records ten hardware JM completions on native GPU mappings. Still unvalidated: fault recovery, isolation, numerical correctness, correct rendered pixels and sustained performance. No Metal or Vulkan conformance is claimed. See [MaliMetal Driver](https://github.com/squeeeezy/HelioDarwin/wiki/MaliMetal-Driver) for the userspace implementation and its supported-path limits.

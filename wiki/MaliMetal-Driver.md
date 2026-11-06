@@ -21,13 +21,12 @@ failure. Released surface owners now show falling wired-byte snapshots; no
 surface NoMemory failure is retained in this console. A bounded suballocation
 remedy is now implemented, with kernel memory limits preserved.
 
-PosterBoard still traps while initializing/publishing a configuration with nil
-paths. Both helper registrations are accepted, but its provider query is denied
-by the real host-entitlement policy: zero results are not evidence of absence.
-Native PosterBoard initially discovers nine providers. The helper's standalone
-legacy registration replaces two valid records without their capability
-metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job has been disabled; original providers and user data must be preserved.
+In the October 26 00:26:36 capture, PosterBoard still trapped while publishing
+a configuration with nil paths. The helper's real provider query was denied,
+and its legacy registration had replaced two native records without their
+capability metadata. That boot registration action was subsequently disabled.
+The November 6 recovery described below restored native provider discovery and
+selected delivery; correct wallpaper and durable state remain unverified.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
@@ -106,8 +105,9 @@ through the compiler, typed plan, Vulkan render pass/pipeline and command encode
 It preserves slot indices and checks dimensions, aliasing and pipeline/pass
 compatibility. The exact failing shader pair compiled offline and passed SPIR-V
 validation using a Vulkan baseline profile; that profile is not a phone capability
-capture. The updated MRT path and GPU command execution remain unvalidated on
-the phone.
+capture. At that stage the updated MRT path and GPU command execution remained
+unvalidated. Later captures recorded hardware JM completion; correct MRT pixels
+remain unverified.
 
 The next phone boot passed the attachment-count guard but failed native-profile
 parsing: format flags had been serialized without their `VkFormatProperties`
@@ -150,7 +150,8 @@ flag `--mps-common` now prepares an experimental native Common backend using the
 exact MPSCore UUID, exports, native constructor/vtable, real device limits and
 guarded acquire/release cache publication. Apple-family answers stay unchanged.
 It defaults off; enabled bundles strongly link matching MPSCore and libc++.
-Both build modes pass strict linking. Actual native construction, dispatch,
+Both build modes pass strict linking. At that stage native construction was
+still pending; later captures observed native registration/readback. Dispatch,
 blur output and wrapper compatibility remain runtime qualification gates.
 
 The compute descriptor path accepts the caller's threadgroup-width promise
@@ -216,6 +217,16 @@ with compute ABI 2; older providers are rejected during the bundle build.
 Native graphics helpers include depth/stencil/MSAA/resolve and dynamic rendering,
 but existing frontend restrictions and runtime gates still apply.
 
+GPU execution timing is disabled by default. The experimental `--gpu-timing`
+build records two real 64-bit GPU timestamp queries per submission segment and
+collects them only after confirmed physical retirement. It validates query
+availability, clock frequency and reset generation, then converts the measured
+GPU points into mach-uptime estimates with calibration uncertainty. Valid
+completed command buffers expose `GPUStartTime` and `GPUEndTime`; unavailable or
+invalid measurements report an error rather than using CPU scheduling times.
+Kernel scheduler timing remains unavailable. This path builds locally but is
+not yet hardware-qualified.
+
 ## AIR and native shader compilation
 
 The parser reads precompiled Metal libraries, function metadata and constants.
@@ -247,6 +258,16 @@ committed bounded allocations; grow-on-fault paging is not implemented. See
 [GPU Power Sequence](MT6789-GPU-Power-Sequence.md) for rails, clocks, register
 layout and remaining DVFS work.
 
+Patch 0209 preserves each client's task, BO handles, GPU virtual address space
+and page tables while leasing a real present/free hardware AS slot only for a
+validated job under the global GPU lock. Opening an idle connection no longer
+reserves a hardware slot. Completion releases the lease only after cache handling
+and confirmed MMU flush/detach; a confirmed reset can also release it. Failed
+recovery retains the lease and potentially DMA-visible owners. Global one-job
+execution and existing memory limits are unchanged. Runtime AS reuse and detach
+cost remain unqualified; this source change does not establish the cause of
+previous connection failures or corrupt pixels.
+
 Patch 0198 implements the target IOSurface shared-event kernel protocol:
 kernel-owned timelines, Mach rights, read-only task mappings, waits and async
 notifications. Local object compilation and patch composition pass. A private
@@ -262,6 +283,12 @@ builder verifies iOS platform, source and dependency hashes and strict linking.
 It packages dependency provenance and license notices. The offline installer
 verifies the current source digest and copied files before replacing the bundle.
 See [build instructions](https://github.com/squeeeezy/HelioDarwin/blob/x676c/MaliMetal/README.md).
+
+The optional bundle flag `--gpu-timing` requires an explicit matching ICD and
+patch 0208's validated kernel clock interface. Local native ICD and bundle builds
+pass; kernel CI `42175315331` also passed. Hardware timing/AS qualification
+remains pending. See the
+build instructions above for the default-off option and matching dependencies.
 
 Pinned source inputs:
 
@@ -354,8 +381,10 @@ Their hardware and service behavior remains to be checked on the phone.
 The 2026-11-06 device run retained successful hardware jobs and recovered native
 poster discovery/configuration delivery, but framebuffer samples already contain
 corrupt blue geometry before scanout. Bounded opt-in host/texture/draw operand
-tracing is available; it does not itself fix rendering or provide GPU execution
-timestamps. Correct UI output remains unresolved.
+tracing is available; host tracing neither fixes rendering nor records GPU
+timestamp jobs. The separate optional measured timing path is described above.
+The corrupt-geometry cause remains unknown; further diagnostics are available.
+Correct UI output remains unresolved.
 
 Patched coherent color tile reads, native depth/stencil/MSAA helpers, views and
 compute write/indirect paths are now integrated source, with device validation

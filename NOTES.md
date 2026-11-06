@@ -20,6 +20,15 @@ This page summarizes the current implementation and observed milestones.
 
 ## Current source
 
+The source now leases hardware address-space slots per validated job while
+preserving each client's private VM and buffer ownership and the global
+one-active-job rule. Optional measured GPU timing is disabled by default and
+requires a matching kernel clock interface, native ICD and bundle. Kernel CI
+`42175315331`, native ICD builds and bundle linking passed. These are build
+checks; hardware qualification of AS reuse and timing publication remains
+pending. The corrupt-geometry cause remains unknown,
+and bounded diagnostics are available.
+
 The ADT publishes six A55 cores, GICR base `0x0c040000`, 16 KiB CPU pages and
 RAM base `0x140000000` with size `0xffff0000`. Both A76 cores remain excluded.
 The old secondary-core display pump and its lifetime timer are not started.
@@ -41,12 +50,13 @@ MaliMetal includes native AIR translation, Vulkan commands and an iOS PanVK buil
 Selected real CoreAnimation render/compute shaders pass offline checks. Complete
 Metal coverage and assembled GPU rendering remain unfinished. PosterBoard and
 native UIKit geometry have explicit, build-gated compatibility tools awaiting
-device validation. The latest diagnostic reached CoreAnimation shader loading;
+device validation at that stage. An earlier diagnostic reached CoreAnimation shader loading;
 a function-descriptor API gap passed a phone check, exposing missing MRT/blending
 support, followed by native-profile schema and buffer-window failures. The
 integrated ABI 4/compute ABI 2 candidate now passes strict native linking and
-structural planning for both observed pipelines. GPU execution and the expanded
-API/helper paths still require device validation. Later diagnostics below
+structural planning for both observed pipelines. Later captures established
+hardware JM completion; expanded API/helper behavior and correct pixels still
+require validation. The chronological diagnostics below
 identify additional MPS, registration and file-mapping contracts.
 
 The 2026-10-25 integrated boot selected Vulkan 1.3, buffer device addresses,
@@ -185,16 +195,17 @@ The next renderer failure is now precise: backboardd reaches the adapter's
 128-live-BO limit before native allocation, refusing requests of 64, 69,632 and
 135,168 bytes with ENOSPC. This is not an observed device-memory allocation
 failure. Released surface owners now show falling wired-byte snapshots; no
-surface NoMemory failure is retained in this console. A bounded suballocation
-remedy is under development, with kernel memory limits preserved.
+surface NoMemory failure is retained in this console. The later bounded suballocation
+implementation preserves the kernel memory limits.
 
-PosterBoard still traps while initializing/publishing a configuration with nil
-paths. Both helper registrations are accepted, but its provider query is denied
-by the real host-entitlement policy: zero results are not evidence of absence.
-Native PosterBoard initially discovers nine providers. The helper's standalone
-legacy registration replaces two valid records without their capability
-metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job is being corrected; original providers and user data must be preserved.
+In that October 26 00:26:36 capture, PosterBoard still trapped while
+initializing/publishing a configuration with nil paths. Both helper
+registrations had been accepted, but its provider query was denied by the real
+host-entitlement policy: zero results are not evidence of absence. Native
+PosterBoard initially discovered nine providers. The helper's standalone legacy
+registration replaced two valid records without their capability metadata;
+PosterBoard rejected them and lost its defaults. That custom boot registration
+job was subsequently disabled; original providers and user data are preserved.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
@@ -215,8 +226,9 @@ This addresses the observed count amplification without assuming unlimited
 memory or complete per-submit resource tracking. Fragmentation, many large
 allocations and real kernel-budget exhaustion can still fail. Diagnostics count
 logical objects and known owned backings separately; Vulkan logical heap usage
-is not an exact measure of wired memory. Device packing and continued execution
-still require a new phone run.
+is not an exact measure of wired memory. The subsequent October 26 01:29:49
+capture recorded packing and continued execution; broader memory behavior and
+correct pixels remain unverified.
 
 The custom poster helper now checks the stock query-authorization method
 before discovery interpretation or any registration/prewarm action. Its installed
@@ -229,15 +241,17 @@ The captured legacy registration path first unregisters a provider, then passes
 a flat installation dictionary where a plugin-identifier map is expected. The
 replacement can report success while losing genuine signing/capability metadata.
 Stopping that custom boot action preserves the stock registration path. Removed
-provider stores remain in DeletedExtensions; stock discovery has a verified
-restore path for them. The next run must establish valid provider identities,
-restored coordinators, nonnil publisher paths and visible wallpaper. No cache
-wipe or custom store is used; user data and original capability metadata are preserved.
+provider stores were retained in DeletedExtensions, with a verified native
+restore path. The November 6 run restored all nine providers and selected native
+configuration delivery to SpringBoard. Correct wallpaper and durable state
+remain unverified. No cache wipe or custom store is used; user data and original
+capability metadata are preserved.
 
 ## Priorities
 
-1. Validate the assembled native display/input/MaliMetal candidate, recording
-   actual failures and separating loading, rendering and scanout.
+1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,
+   while investigating correct pixels separately. Record actual failures and
+   distinguish loading, rendering and scanout.
 2. Resolve shader/API coverage required by the observed system calls; then extend
    graphics features and application compatibility.
 3. Restore services as their keybag, storage and hardware dependencies become

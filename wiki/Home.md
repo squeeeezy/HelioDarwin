@@ -40,8 +40,8 @@ require runtime validation.
 
 The preceding [signed-cache capture](https://github.com/squeeeezy/HelioDarwin/blob/x676c/logs/boot-0202-run-40219933214-ui-signed-cache.log)
 records successful AMFI membership queries and PosterBoard startup.
-Texture-layout and native memory failures still prevent a confirmed
-rendered UI; the user returned manually to Android.
+That earlier capture retained texture-layout and native memory failures and no
+confirmed rendered UI; the user returned manually to Android.
 
 The [00:26:36 capture](https://github.com/squeeeezy/HelioDarwin/blob/x676c/logs/boot-0205-run-40224078640-ui-texture-layout.log)
 on 2026-10-26 records ten hardware JM completions, then identifies the
@@ -58,6 +58,10 @@ On 2026-11-06, run `42153642642` restored nine-provider discovery and native
 configuration delivery to SpringBoard. Hardware jobs continued completing, but
 the display showed corrupt geometry; sampled panel-memory frames were already
 corrupt before scanout. Correct UI output remains unresolved.
+
+The source now adds per-job hardware AS leasing and optional measured GPU timing, with kernel CI `42175315331` passed and hardware
+qualification pending. The corrupt-frame cause remains unknown and further
+diagnostics are available.
 
 ## Documentation boundaries
 

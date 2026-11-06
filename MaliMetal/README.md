@@ -14,6 +14,15 @@ completion continued, but the screen showed corrupt blue geometry and fragments
 of the prior bootloader image. Captured framebuffer samples already contain the
 blue geometry before physical scanout. Correct UI pixels remain unresolved.
 
+The source now leases hardware address-space slots per validated job while
+preserving each client's private VM and buffer ownership and the global
+one-active-job rule. Optional measured GPU timing is disabled by default and
+requires a matching kernel clock interface, native ICD and bundle. Kernel CI
+`42175315331`, native ICD builds and bundle linking passed. These are build
+checks; hardware qualification of AS reuse and timing publication remains
+pending. The corrupt-geometry cause remains unknown,
+and bounded diagnostics are available.
+
 ### Bounded render diagnostics
 
 Tracing is disabled by default. Enable `MALIMETAL_TRACE_RENDER=1` before process
@@ -28,11 +37,22 @@ It adds no GPU commands or waits. Host samples are not GPU-execution observation
 equal pre/post samples do not exclude transient writes. Private, GPU-written
 and unsafe indexed spans are explicitly unavailable.
 
+The opt-in capture also distinguishes SPIR-V inputs saved at native pipeline
+creation from the current draw's modules, including cache reuse. It records
+native vertex layouts and bindings. Eligible shared UInt16 index buffers are
+sampled up to 64 indices; up to three selected Metal1 vertex records use the
+recorded native stride and checked offsets. Private, GPU-written, aliasable,
+heap-backed or otherwise unsafe inputs remain unavailable. Samples are bounded
+host observations, not proof of the bytes consumed by GPU execution.
+
 Each process writes at most 384 KiB, including previous file contents, to
 `/private/var/tmp/MaliMetal-render-trace-PID.log`, falling back to its actual
 `TMPDIR`. Files require mode 0600 and matching ownership. Keep these traces local:
-they can contain captured UI data. This diagnostic candidate does not implement
-GPU execution timing or correct the corrupt draw.
+they can contain captured UI data. Host operand tracing adds no GPU timestamp
+commands and does not correct the corrupt draw. The separate optional measured
+GPU timing path below remains unqualified on hardware.
+With timing enabled, the same bounded logger records admission and already
+collected timing results or failure stages; logging adds no measurements.
 
 The 00:26:36 run on 2026-10-26 used kernel `40224078640` (`1c09edc`)
 and userspace `3e97131`. The 141,245-byte console records ten successful native
@@ -48,13 +68,14 @@ failure. Released surface owners now show falling wired-byte snapshots; no
 surface NoMemory failure is retained in this console. A bounded suballocation
 remedy is now implemented, with kernel memory limits preserved.
 
-PosterBoard still traps while initializing/publishing a configuration with nil
-paths. Both helper registrations are accepted, but its provider query is denied
-by the real host-entitlement policy: zero results are not evidence of absence.
-Native PosterBoard initially discovers nine providers. The helper's standalone
-legacy registration replaces two valid records without their capability
-metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job has been disabled; original providers and user data must be preserved.
+In the October 26 00:26:36 capture, PosterBoard still trapped while publishing
+a configuration with nil paths. Both helper registrations had been accepted,
+but the real host-entitlement policy denied the helper's provider query. Native
+PosterBoard initially discovered nine providers; the helper's legacy registration
+replaced two valid records without their capability metadata. The custom boot
+registration job was subsequently disabled. The November 6 recovery described
+above restored provider discovery and selected delivery; correct wallpaper and
+durable state remain unverified.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
@@ -234,7 +255,8 @@ creation and command encoding. Each attachment retains its own format, write
 mask and supported blend state. The failing CoreAnimation shader pair compiled
 offline and passed SPIR-V validation with the new path. This uses an offline
 Vulkan baseline profile, not a captured phone profile. The MRT/blending update
-and GPU job execution still need phone validation.
+required further phone validation at that stage. Later captures recorded
+hardware JM completion; correct MRT pixels remain unvalidated.
 
 The MRT candidate passed the earlier attachment-count guard on the phone, then
 the AIR compiler rejected the native Vulkan profile's format-property structure.
@@ -299,6 +321,23 @@ validation. The bundle includes dependency provenance and license notices.
 The local encoder protocol declarations do not enumerate native method
 requirements, so compilation alone cannot check Metal selector completeness.
 
+### Optional measured GPU timing
+
+Add `--gpu-timing` to the bundle build command only with an explicit matching
+`--vulkan-icd` artifact, a kernel containing patch 0208's validated clock
+interface, and the corresponding native timestamp-query implementation. Rebuild
+the ICD and bundle from matching sources. The option defaults off; an enabled
+candidate rejects missing or inconsistent native clock/query support.
+
+```powershell
+python MaliMetal/build.py --sysroot IOS_SYSROOT --vulkan-headers MESA_INCLUDE --air-provider AIR_BUILD --vulkan-icd PATH_TO_IOS_ICD --gpu-timing --wsl --linker /usr/bin/ld64.lld-18
+```
+
+The native ICD and enabled bundle build locally. Kernel CI
+[`42175315331`](https://github.com/squeeeezy/HelioDarwin/actions/runs/42175315331)
+passed; hardware qualification remains pending. Timestamp-counter frequency is separate from the
+MFG operating frequency and does not establish DVFS support.
+
 ## Coverage limits
 
 | Path | Implemented source and current boundary |
@@ -315,10 +354,19 @@ requirements, so compilation alone cannot check Metal selector completeness.
 Resource allocation validates protection options; protected allocations remain
 unsupported. Encoder debug groups retain real nesting state, and disabled
 visibility mode is checked; nonzero visibility queries are not implemented.
-GPU/kernel timing getters remain unavailable to profiling paths. Root-based
-publication avoids duplicate readbacks of unchanged IOSurfaces, and Scheduled
-handlers run outside the device mutex. These are source-level changes awaiting
-assembled runtime verification.
+GPU execution timing is disabled by default. The experimental `--gpu-timing`
+build records two real 64-bit GPU timestamp queries per submission segment and
+collects them only after confirmed physical retirement. It validates query
+availability, clock frequency and reset generation, then converts the measured
+GPU points into mach-uptime estimates with calibration uncertainty. Valid
+completed command buffers expose `GPUStartTime` and `GPUEndTime`; unavailable or
+invalid measurements report an error rather than using CPU scheduling times.
+Kernel scheduler timing remains unavailable. This path builds locally but is
+not yet hardware-qualified.
+
+Root-based publication avoids duplicate readbacks of unchanged IOSurfaces, and
+Scheduled handlers run outside the device mutex. These are source-level changes
+awaiting assembled runtime verification.
 
 No complete Apple GPU family is advertised. Device limits and selected Vulkan
 features are checked separately from API/helper presence. Explicit unavailable

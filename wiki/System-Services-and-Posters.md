@@ -58,8 +58,10 @@ loaded images and inspected native methods. One worker pass starts after the
 main runloop is ready; it does not block the main queue. Its owned diagnostic
 file is `/private/var/mobile/Library/Logs/SweetRepairPosterMetadata.log`.
 
-The candidate builds locally. Native registration acceptance, persistence,
-renewed provider discovery and wallpaper pixels still require a device run.
+The candidate builds locally. Before the November 6 run, native registration
+acceptance and renewed provider discovery remained runtime checks. That run
+provided the bounded results below; durable persistence and correct wallpaper
+pixels remain unverified.
 
 The 2026-11-06 run subsequently accepted both scoped registrations, read back
 the original entitlement dictionaries, rediscovered all nine providers and moved
@@ -76,10 +78,11 @@ The captured legacy registration path first unregisters a provider, then passes
 a flat installation dictionary where a plugin-identifier map is expected. The
 replacement can report success while losing genuine signing/capability metadata.
 Stopping that custom boot action preserves the stock registration path. Removed
-provider stores remain in DeletedExtensions; stock discovery has a verified
-restore path for them. The next run must establish valid provider identities,
-restored coordinators, nonnil publisher paths and visible wallpaper. No cache
-wipe or custom store is used; user data and original capability metadata are preserved.
+provider stores were retained in DeletedExtensions, with a verified native
+restore path. The November 6 run restored the providers and selected delivery
+as described above; visible wallpaper and durable state remain unverified. No
+cache wipe or custom store is used; user data and original capability metadata
+are preserved.
 
 
 Private API use is restricted by loaded framework UUIDs and runtime contract checks:
@@ -100,7 +103,7 @@ sudo python3 tools/sweet_daemons.py MOUNTED_ROOT --prepare-posters POSTER_BUILD
 sudo python3 tools/sweet_daemons.py MOUNTED_ROOT --remove-poster-preparation
 ```
 
-Preparation verifies the target build, current sources and arm64/iOS artifacts, preserves the original native PosterBoard job and scoped readiness environment, and installs the custom helper only for explicit diagnostics. Its managed job has no boot registration/prewarm flags and does not run automatically. The supported PosterBoard executable retains its normal dependency on the guard library and the matching framework. Provider metadata, coordinator restoration, native prewarm and visible wallpaper require the next device readback; complete wallpaper-gallery support is not established.
+Preparation verifies the target build, current sources and arm64/iOS artifacts, preserves the original native PosterBoard job and scoped readiness environment, and installs the custom helper only for explicit diagnostics. Its managed job has no boot registration/prewarm flags and does not run automatically. The supported PosterBoard executable retains its normal dependency on the guard library and the matching framework. Earlier provider metadata and delivery checks are superseded by the November 6 results above; durable state, visible wallpaper and complete wallpaper-gallery support remain unverified.
 
 Dependency installation is restricted to pinned executable hashes and UUIDs for this root. Both originals are already ad-hoc signed. The installer appends a load command in verified unused header space, preserving existing dependency ordinals, code/data sections, XML/DER entitlements and signature metadata, then recomputes the existing CodeDirectory page hashes. It retains original bytes and filesystem metadata for rollback and refuses unrelated executable changes. Rollback restores the executable before removing its required component or managed job settings. Current SWEET signature/platform policy remains unchanged; full Apple AMFI validation is not claimed.
 
@@ -148,7 +151,7 @@ sudo python3 tools/sweet_native_display.py MOUNTED_ROOT --remove
 
 For Windows/WSL linking, add `--wsl --linker /usr/bin/ld64.lld-18` to the build command. Root mutations require a POSIX root shell. Inspection is read-only; installation adds a guarded dependency to the pinned SpringBoard executable, retains the ordinary adapter opt-in and feature definition, and removes only its own DYLD injection token. Rollback restores the exact executable before clearing managed settings and restoring the original Jindo definition. Unrelated job fields and environment entries, the dylib, logs and recovery data are preserved.
 
-The artifact compiles for arm64 iOS with strict warnings. Earlier installation through DYLD environment injection did not establish activation: launchd removed the variable and dyld's AMFI policy query was unavailable. The guarded dependency installers pass offline installation/removal checks; runtime activation and the visible result remain unvalidated. Captured diagnostics also include SpringBoard and service failures while reading shared-cache Objective-C metadata; this common failure is under investigation. Startup loading, feature-table regeneration, context propagation to applications, actual provider selection, orientation handling and visible wallpaper still need assembled-boot evidence. Successful compilation is not a claim that the red status area or every UIKit layout issue is fixed.
+The artifact compiles for arm64 iOS with strict warnings. Earlier installation through DYLD environment injection did not establish activation: launchd removed the variable and dyld's AMFI policy query was unavailable. The guarded dependency installers pass offline installation/removal checks; later captures below establish bounded loading/context readback, while the visible result remains unvalidated. Captured diagnostics also include SpringBoard and service failures while reading shared-cache Objective-C metadata; this common failure is under investigation. Broader feature-table regeneration, context propagation to applications, actual provider selection, orientation handling and visible wallpaper still need assembled-boot evidence. Successful compilation is not a claim that the red status area or every UIKit layout issue is fixed.
 
 The 17:39:02 trial confirmed native-display constructor installation. Its context
 readback still had the stock 38/29-point donor insets and cutout, so the adapter
@@ -248,13 +251,14 @@ failure. Released surface owners now show falling wired-byte snapshots; no
 surface NoMemory failure is retained in this console. A bounded suballocation
 remedy is now implemented, with kernel memory limits preserved.
 
-PosterBoard still traps while initializing/publishing a configuration with nil
-paths. Both helper registrations are accepted, but its provider query is denied
-by the real host-entitlement policy: zero results are not evidence of absence.
-Native PosterBoard initially discovers nine providers. The helper's standalone
-legacy registration replaces two valid records without their capability
-metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job has been disabled; original providers and user data must be preserved.
+In that October 26 00:26:36 capture, PosterBoard still trapped while
+initializing/publishing a configuration with nil paths. Both helper
+registrations had been accepted, but its provider query was denied by the real
+host-entitlement policy: zero results are not evidence of absence. Native
+PosterBoard initially discovered nine providers. The helper's standalone legacy
+registration replaced two valid records without their capability metadata;
+PosterBoard rejected them and lost its defaults. The custom repair job has been
+disabled; original providers and user data must be preserved.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;

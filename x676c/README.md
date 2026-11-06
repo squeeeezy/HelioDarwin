@@ -10,11 +10,12 @@ Physical boots execute launchd, SpringBoard and backboardd. The corrected DSI
 sequence has displayed the clock/interface, using system software rendering.
 The native Vulkan device has initialized, and physical touch/key events have
 reached kernel HID. GPU rendering and the native UIKit metadata adapter still
-need further device validation. Current blockers include native MPS pipeline
-construction, signed extension-cache registration and driverkitd memory limits.
+need further device validation. Earlier captures exposed native MPS pipeline
+construction, signed extension-cache registration and driverkitd memory limits;
+later milestones below supersede those earlier blocker summaries.
 See [engineering status](../NOTES.md) and the [wiki](../wiki/Home.md).
 
-The latest diagnostic completed its 600-second window and returned to Android.
+An earlier diagnostic completed its 600-second window and returned to Android.
 Native MPS Common registration and display-context readback succeeded, but no
 complete rendered UI is established. LaunchServices recovery waited on
 MobileGestalt's device-ID inputs: absent Wi-Fi metadata led to probing an
@@ -48,7 +49,7 @@ payload and generated ADT stay outside Git; dumps summarize the cache instead
 of printing its entries. Payload validation does not prove runtime admission.
 
 
-The latest [signed-cache run](../logs/boot-0202-run-40219933214-ui-signed-cache.log) admitted the original
+The October 25 [signed-cache run](../logs/boot-0202-run-40219933214-ui-signed-cache.log) admitted the original
 trust set and served real membership queries. PosterBoard started, but
 missing texture layout, native memory failures and incomplete rendering
 remain. The user returned manually; automatic recovery is not established
@@ -65,26 +66,36 @@ The next renderer failure is now precise: backboardd reaches the adapter's
 128-live-BO limit before native allocation, refusing requests of 64, 69,632 and
 135,168 bytes with ENOSPC. This is not an observed device-memory allocation
 failure. Released surface owners now show falling wired-byte snapshots; no
-surface NoMemory failure is retained in this console. A bounded suballocation
-remedy is under development, with kernel memory limits preserved.
+surface NoMemory failure is retained in this console. The later bounded suballocation
+implementation preserves the kernel memory limits.
 
-PosterBoard still traps while initializing/publishing a configuration with nil
-paths. Both helper registrations are accepted, but its provider query is denied
-by the real host-entitlement policy: zero results are not evidence of absence.
-Native PosterBoard initially discovers nine providers. The helper's standalone
-legacy registration replaces two valid records without their capability
-metadata; PosterBoard rejects them and loses its defaults. The custom repair
-job is being corrected; original providers and user data must be preserved.
+In that October 26 00:26:36 capture, PosterBoard still trapped while
+initializing/publishing a configuration with nil paths. Both helper
+registrations had been accepted, but its provider query was denied by the real
+host-entitlement policy: zero results are not evidence of absence. Native
+PosterBoard initially discovered nine providers. The helper's standalone legacy
+registration replaced two valid records without their capability metadata;
+PosterBoard rejected them and lost its defaults. That custom boot registration
+job was subsequently disabled; original providers and user data are preserved.
 
 The console reaches the 600-second reset and the new vendor retry loop, followed
 by Android B return around 00:39. The user still reported only the bootloader image;
 a complete rendered UI and wallpaper remain unconfirmed.
 
-The following userspace candidate adds bounded BO suballocation and removes
-the custom helper's boot registration/prewarm action. It reuses successful
-kernel `40224078640`; kernel inputs and ABI are unchanged. Strict source,
-artifact and static reviews pass; packing and wallpaper recovery remain
-the next device checks.
+The following userspace candidate added bounded BO suballocation and removed
+the custom helper's boot registration/prewarm action while reusing kernel
+`40224078640`. The later October 26 retry recorded packing and continued JM
+completion. On November 6, native provider discovery and selected delivery to
+SpringBoard recovered; correct UI output and wallpaper remain unresolved.
+
+The source now leases hardware address-space slots per validated job while
+preserving each client's private VM and buffer ownership and the global
+one-active-job rule. Optional measured GPU timing is disabled by default and
+requires a matching kernel clock interface, native ICD and bundle. Kernel CI
+`42175315331`, native ICD builds and bundle linking passed. These are build
+checks; hardware qualification of AS reuse and timing publication remains
+pending. The corrupt-geometry cause remains unknown,
+and bounded diagnostics are available.
 
 ## Boot layout
 

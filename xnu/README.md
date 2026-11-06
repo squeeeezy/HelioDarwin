@@ -4,8 +4,13 @@ The [workflow](../.github/workflows/xnu.yml) builds XNU using
 [blacktop/darwin-xnu-build](https://github.com/blacktop/darwin-xnu-build) at the
 pinned revision recorded in that workflow. Its defaults are macOS source release
 `13.5` (XNU 8796 generation), `DEVELOPMENT` and the `SWEET` machine configuration.
-The target kernel is arm64; the runner is selected by the workflow's `macos-14`
-label and supplies Apple build tools.
+The target kernel is arm64. The workflow selects `macos-15-intel` with pinned
+Xcode 16.0 (`16A242d`); the source selection remains 13.5/DEVELOPMENT/SWEET.
+The [IIG compatibility path](../x676c/tools/iig-8796-source/README.md) reuses
+verified open-source generated 8796 DriverKit sources and checks the IORPC ABI
+at compilation. It does not regenerate these interfaces with a newer IIG or
+package proprietary SDK headers. A complete current-toolchain kernel compile
+and link remains required.
 
 Numbered `patches/*.patch` and supporting shell files are copied to the build
 script's patch directory before compilation. X676C bring-up is layered on the
