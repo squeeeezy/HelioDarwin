@@ -50,11 +50,22 @@ def main(argv):
             require(bool(tail), 'missing include directory')
             item += tail.pop(0)
         includes.append(Path(item[2:]).resolve())
-    require(len(includes) == 5, 'unexpected IIG include count')
+    require(len(includes) == 5, f'unexpected IIG include count: {includes}')
     obj = includes[3].parent
     require(includes == [root / 'iokit', root / 'osfmk', root / 'bsd', obj / 'bsd',
-                         root / 'EXTERNAL_HEADERS'], 'unexpected IIG include order')
-    require(obj.name == 'xnu.obj' and obj.parent.name == 'build', 'unexpected object root')
+                         root / 'EXTERNAL_HEADERS'], f'unexpected IIG include order: {includes}')
+    stages = {
+        root.parent / 'build/xnu-hdrs.obj': [
+            'DEVELOPMENT_ARM64_VMAPPLE/iokit/DriverKit'],
+        root.parent / 'build/xnu.obj': [
+            'DEVELOPMENT_ARM64_SWEET/iokit/DriverKit',
+            'DEVELOPMENT_ARM64_SWEET/iokit/DEVELOPMENT/DriverKit'],
+    }
+    require(obj in stages,
+            f'unexpected object root: {obj}; expected {list(stages)}; cwd={Path.cwd()}')
+    admitted_directories = [obj / relative for relative in stages[obj]]
+    require(Path.cwd().resolve() in admitted_directories,
+            f'unexpected IIG working directory: {Path.cwd()}; expected {admitted_directories}')
     require(len(tail) >= 2 and tail[0] == '-isysroot', 'missing SDK argument')
     require(Path(tail[1]).name in ['MacOSX15.sdk', 'MacOSX15.0.sdk'],
             'expected pinned Xcode 16.0 macOS 15.0 SDK')

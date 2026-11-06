@@ -124,11 +124,26 @@ jobs:
           # source: enough to re-run any single compile command from the log locally.
           SDK=$(xcrun --sdk macosx --show-sdk-path)
           mkdir -p sdk-kernel-platform
-          cp -R "$SDK/System/Library/Frameworks/Kernel.framework/Versions/A/PrivateHeaders/platform" sdk-kernel-platform/ || true
+          platform="$SDK/System/Library/Frameworks/Kernel.framework/Versions/A/PrivateHeaders/platform"
+          if [ -d "$platform" ]; then
+            cp -R "$platform" sdk-kernel-platform/
+          fi
+          # Preserve available evidence even if an earlier setup/export phase
+          # failed before the full kernel object tree was created.
+          paths=()
+          for path in build/xnu.obj build/xnu-hdrs.obj fakeroot/usr/local/include xnu; do
+            if [ -e "dxb/$path" ]; then
+              paths+=("$path")
+            fi
+          done
+          if [ ${#paths[@]} -eq 0 ]; then
+            echo "No XNU build tree is available for packaging" >&2
+            exit 1
+          fi
           tar czf buildtree.tgz \
             --exclude='*.o' --exclude='*.cpo' --exclude='*.a' --exclude='*.dSYM' --exclude='*.unstripped' \
             --exclude='kernel.development.*' --exclude='.git' \
-            -C dxb build/xnu.obj fakeroot/usr/local/include xnu \
+            -C dxb "${paths[@]}" \
             -C .. sdk-kernel-platform
           ls -la buildtree.tgz
 

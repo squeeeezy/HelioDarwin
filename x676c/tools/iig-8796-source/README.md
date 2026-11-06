@@ -29,6 +29,15 @@ writing outputs. Each output is replaced atomically after the complete package
 and all inputs have been verified. It does not invoke a newer generator, alter
 `IORPC`, remove generated fields, or modify runtime IPC behavior.
 
+The pinned upstream script has two native object roots. Initial `installhdrs`
+uses `build/xnu-hdrs.obj`, with IIG running in
+`DEVELOPMENT_ARM64_VMAPPLE/iokit/DriverKit`. The later kernel uses `build/xnu.obj`,
+with IIG in `DEVELOPMENT_ARM64_SWEET/iokit/DriverKit` or
+`DEVELOPMENT_ARM64_SWEET/iokit/DEVELOPMENT/DriverKit`. Only those exact root and
+working-directory pairs are admitted; the two generated BSD input hashes are
+checked in the selected root. The workflow's global `MACHINE_CONFIG=SWEET` does
+not replace the header stage's native VMAPPLE configuration.
+
 Changing the source interfaces, generator flags or target requires a new reviewed
 source package. A full current-toolchain kernel compile/link remains mandatory;
 successful replay alone does not qualify the new runner or toolchain.
