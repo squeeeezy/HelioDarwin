@@ -21,6 +21,8 @@ ARCHIVE = 'private/var/db/sweet-root-tweaks/launchd-original-jobs.plist'
 POSTER_LIBRARY = '/usr/local/lib/sweet/SweetPosterBoard.dylib'
 POSTER_DEPENDENCY_STATE = 'private/var/db/sweet-root-tweaks/poster-dependency.plist'
 POSTER_LOG = '/private/var/mobile/Library/Logs/SweetPosterBoard.log'
+POSTER_REPAIR_LIBRARY = '/usr/local/lib/sweet/SweetRepairPosterMetadata.dylib'
+POSTER_REPAIR_STATE = 'private/var/db/sweet-root-tweaks/poster-metadata-dependency.plist'
 DEPENDENCIES = {
     'com.apple.CommCenter': 'baseband transport and CoreTelephony modem interface',
     'com.apple.locationd': 'location providers, authorization database and sensor interfaces',
@@ -318,6 +320,56 @@ def remove_poster_preparation(root):
     print('Poster dependency restored and startup policy removed; tools, logs and provider data retained')
 
 
+def repair_poster_metadata(root, build):
+    """Opt in to scoped native MI/LS metadata repair in the existing mobile lsd."""
+    if os.name != 'posix' or os.geteuid() != 0:
+        raise ValueError('Poster metadata dependency installation requires an offline POSIX root shell')
+    root, build = Path(root).resolve(strict=True), Path(build)
+    if read(root / 'System/Library/CoreServices/SystemVersion.plist').get('ProductBuildVersion') != '20H392':
+        raise ValueError('Poster metadata repair supports only the inspected 20H392 root')
+    stem = 'SweetRepairPosterMetadata'
+    manifest = json.loads((build / (stem + '.build.json')).read_text(encoding='utf-8'))
+    source = Path(__file__).with_name('posterboard') / (stem + '.c')
+    data = (build / (stem + '.dylib')).read_bytes()
+    expected_uuid = 'cfa9bb6b-7d4b-3397-94f6-595d6f1eddaa'
+    expected_sha = 'c46e8e7330ab1c008aa50873d230a44f68eb57d675e3fe0b01e0917f9596b2e1'
+    if (manifest.get('os_build') != '20H392' or manifest.get('host') != '/usr/libexec/lsd' or
+            manifest.get('host_uid') != 501 or manifest.get('host_uuid') != expected_uuid or
+            manifest.get('host_preimage_sha256') != expected_sha or
+            hashlib.sha256(source.read_bytes()).hexdigest() != manifest.get('source_sha256') or
+            hashlib.sha256(data).hexdigest() != manifest.get('binary_sha256') or
+            sweet_macho_dependency.image_info(data, filetype=6).get('install_name') != POSTER_REPAIR_LIBRARY):
+        raise ValueError('Recovery artifact does not match its current source and supported host')
+    target = sweet_macho_dependency.checked_path(root, 'usr/libexec/lsd')
+    state_path = sweet_macho_dependency.checked_path(root, POSTER_REPAIR_STATE)
+    backup = sweet_macho_dependency.checked_path(root, POSTER_REPAIR_STATE + '.executable')
+    sweet_macho_dependency.file_metadata(target)
+    original = backup.read_bytes() if state_path.exists() else target.read_bytes()
+    patched = sweet_macho_dependency.add_dependency(original, POSTER_REPAIR_LIBRARY, expected_uuid, expected_sha)
+    if target.read_bytes() not in (original, patched):
+        raise ValueError('lsd differs from the genuine preimage and exact dependency candidate')
+    destination = sweet_macho_dependency.checked_path(root, POSTER_REPAIR_LIBRARY.lstrip('/'))
+    if destination.exists():
+        sweet_macho_dependency.file_metadata(destination)
+        if destination.read_bytes() != data:
+            raise ValueError('A different recovery library already exists; roll back before replacing it')
+    else:
+        missing, directory = [], destination.parent
+        while not directory.exists():
+            missing.append(directory)
+            directory = directory.parent
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        for directory in missing:
+            os.chown(directory, 0, 0)
+            os.chmod(directory, 0o755)
+        sweet_macho_dependency.atomic_write(destination, data, 0o755, 0, 0)
+    if destination.read_bytes() != data:
+        raise ValueError('Recovery library failed readback')
+    sweet_macho_dependency.install(root, 'usr/libexec/lsd', POSTER_REPAIR_LIBRARY,
+                                   expected_uuid, expected_sha, POSTER_REPAIR_STATE)
+    print('Installed opt-in scoped mobile-lsd dependency; native preflight and repair remain runtime-pending')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path)
@@ -328,7 +380,23 @@ def main():
                         help='restore the original PosterBoard job and remove the preparation job')
     parser.add_argument('--source-cache', type=Path,
                         help='original launchd cache from the same iOS build')
+    parser.add_argument('--repair-poster-metadata', type=Path, metavar='BUILD_DIR',
+                        help='opt in to genuine scoped MI/LS metadata recovery in mobile lsd')
+    parser.add_argument('--remove-poster-metadata-repair', action='store_true',
+                        help='restore the exact lsd preimage using recorded metadata and rollback guards')
     args = parser.parse_args()
+    operations = (bool(args.restore), bool(args.prepare_posters), args.remove_poster_preparation,
+                  bool(args.repair_poster_metadata), args.remove_poster_metadata_repair)
+    if sum(operations) > 1 or ((args.repair_poster_metadata or args.remove_poster_metadata_repair) and args.source_cache):
+        parser.error('Select one write operation')
+    if args.repair_poster_metadata:
+        repair_poster_metadata(args.root, args.repair_poster_metadata)
+        return
+    if args.remove_poster_metadata_repair:
+        restored = sweet_macho_dependency.remove(args.root, POSTER_REPAIR_STATE)
+        print('Restored exact lsd preimage; recovery library and provider data retained' if restored else
+              'No recorded lsd recovery dependency state; no executable restoration performed')
+        return
     if args.remove_poster_preparation:
         if args.prepare_posters or args.restore or args.source_cache:
             parser.error('--remove-poster-preparation cannot be combined with other write operations')
