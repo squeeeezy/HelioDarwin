@@ -12,10 +12,105 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <inttypes.h>
 
 #include "MaliVulkanInternal.h"
 #include "MaliVulkanGraphics.h"
 #include "MaliVulkanSynchronization.h"
+
+/* Diagnostics never add GPU work or change a render result. The file is private,
+ * bounded including prior contents, and never follows a symbolic link. */
+static pthread_once_t trace_once=PTHREAD_ONCE_INIT;
+static pthread_mutex_t trace_lock=PTHREAD_MUTEX_INITIALIZER;
+static int trace_enabled,trace_fd=-1;
+static size_t trace_bytes;
+static uint64_t trace_next_command,trace_session;
+static int trace_bundle_marker(void)
+{
+    Dl_info library={0};char path[4096];
+    if(!dladdr((const void *)&mmvk_trace_render_enabled,&library)||!library.dli_fname)return 0;
+    const char *slash=strrchr(library.dli_fname,'/');if(!slash)return 0;
+    size_t directory=(size_t)(slash-library.dli_fname);
+    const char marker[]="/render-trace.enabled";
+    if(directory+sizeof(marker)>sizeof(path))return 0;
+    memcpy(path,library.dli_fname,directory);memcpy(path+directory,marker,sizeof(marker));
+    int fd=open(path,O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK);if(fd<0)return 0;
+    struct stat facts;char value[3]={0};
+    int valid=!fstat(fd,&facts)&&S_ISREG(facts.st_mode)&&facts.st_uid==0&&!(facts.st_mode&0222)&&facts.st_nlink==1;
+    ssize_t count=valid?read(fd,value,sizeof(value)):-1;close(fd);
+    return (count==1&&value[0]=='1')||(count==2&&value[0]=='1'&&value[1]=='\n');
+}
+static int trace_open_directory(const char *directory)
+{
+    if(!directory||directory[0]!='/')return 0;
+    char path[4096];int length=snprintf(path,sizeof(path),"%s/MaliMetal-render-trace-%ld.log",directory,(long)getpid());
+    if(length<0||(size_t)length>=sizeof(path))return 0;
+    int fd=open(path,O_WRONLY|O_CREAT|O_APPEND|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK,0600);
+    struct stat facts;
+    if(fd<0)return 0;
+    if(fstat(fd,&facts)||!S_ISREG(facts.st_mode)||facts.st_uid!=geteuid()||facts.st_nlink!=1||
+       (facts.st_mode&0777)!=0600||facts.st_size<0||facts.st_size>=384*1024){close(fd);return 0;}
+    trace_fd=fd;trace_bytes=(size_t)facts.st_size;return 1;
+}
+static void trace_initialize(void)
+{
+    const char *flag=getenv("MALIMETAL_TRACE_RENDER");
+    trace_enabled=(flag&&strcmp(flag,"1")==0)||trace_bundle_marker();
+    if(!trace_enabled)return;
+    arc4random_buf(&trace_session,sizeof(trace_session));
+    if(!trace_open_directory("/private/var/tmp")&&!trace_open_directory(getenv("TMPDIR")))
+        fprintf(stderr,"[MaliMetal] render trace logging unavailable pid=%ld errno=%d\n",(long)getpid(),errno);
+}
+int mmvk_trace_render_enabled(void){pthread_once(&trace_once,trace_initialize);return trace_enabled&&trace_fd>=0;}
+void mmvk_trace_render_log(const char *format,...)
+{
+    if(!mmvk_trace_render_enabled()||trace_fd<0)return;
+    char line[16384];int prefix=snprintf(line,sizeof(line),"pid=%ld session=%016" PRIx64 " ",(long)getpid(),trace_session);
+    if(prefix<0||(size_t)prefix>=sizeof(line)-1)return;
+    va_list ap;va_start(ap,format);int count=vsnprintf(line+prefix,sizeof(line)-(size_t)prefix-1,format,ap);va_end(ap);
+    if(count<0||(size_t)count>=sizeof(line)-(size_t)prefix-1)return;
+    int n=prefix+count;
+    line[n++]='\n';pthread_mutex_lock(&trace_lock);
+    if((size_t)n<=384*1024-trace_bytes){
+        size_t written=0;while(written<(size_t)n){ssize_t amount=write(trace_fd,line+written,(size_t)n-written);
+            if(amount<0&&errno==EINTR)continue;if(amount<=0)break;written+=(size_t)amount;}
+        trace_bytes+=written;
+    }
+    pthread_mutex_unlock(&trace_lock);
+}
+uint64_t mmvk_trace_command_id(const MMVKCommands *c){return c?c->trace_id:0;}
+uint64_t mmvk_trace_native_command(const MMVKCommands *c){return c?(uint64_t)(uintptr_t)c->cmd:0;}
+uint32_t mmvk_trace_pass_id(const MMVKCommands *c){return c?c->trace_pass+1:0;}
+struct MMVKTraceNode { MMVKTraceNode *next;void *context;MMVKTraceObserver observer; };
+int mmvk_commands_add_trace_observer(MMVKCommands *c,void *context,MMVKTraceObserver observer)
+{
+    if(!c||c->submitted||!mmvk_trace_render_enabled()||!observer.sample||!observer.destroy)return 0;
+    MMVKTraceNode *node=malloc(sizeof(*node));if(!node)return 0;
+    *node=(MMVKTraceNode){c->trace_observers,context,observer};c->trace_observers=node;return 1;
+}
+static void trace_observers_destroy(MMVKTraceNode *node)
+{while(node){MMVKTraceNode *next=node->next;node->observer.destroy(node->context);free(node);node=next;}}
+static void trace_observers_sample(MMVKTraceNode *node,const MMVKTraceSubmission *submission,int retired)
+{for(;node;node=node->next)node->observer.sample(node->context,submission,retired);}
+static void trace_fence_retired(MMVKFence *f)
+{
+    if(!f->trace_observers||__atomic_exchange_n(&f->trace_retired,1,__ATOMIC_ACQ_REL))return;
+    trace_observers_sample(f->trace_observers,&f->trace_submission,1);
+}
+/* Caller holds the ordinary queue lock and has completed generation checks.
+ * Transfer before the native call: even an uncertain failed submit must keep
+ * its observations/resources with the fence retained by the existing caller. */
+VkResult mmvk_queue_submit_observed(MMVKCommands *c,const VkSubmitInfo *submit,MMVKFence *f)
+{
+    f->trace_submission=(MMVKTraceSubmission){c->trace_id,(uint64_t)(uintptr_t)c->cmd};
+    trace_observers_sample(c->trace_observers,&f->trace_submission,0);
+    f->trace_observers=c->trace_observers;c->trace_observers=NULL;
+    return c->dev->QueueSubmit(c->dev->queue,1,submit,f->fence);
+}
 
 MMVKResult mmvk_errorf(MMVKError *e,MMVKResult code,int32_t native,const char *fmt,...)
 {
@@ -293,7 +388,12 @@ MMVKResult mmvk_commands_mark_buffer_written(MMVKCommands *c,MMVKBuffer *b,MMVKE
         if(!memory)return mmvk_errorf(e,MMVK_ERROR_MEMORY,0,"cannot track written buffers");
         c->written_buffers=memory;c->written_buffer_capacity=capacity;
     }
-    c->written_buffers[c->written_buffer_count++]=b;return MMVK_OK;
+    c->written_buffers[c->written_buffer_count++]=b;
+    if(mmvk_trace_render_enabled()){
+        __atomic_store_n(&b->gpu_write_recorded,1,__ATOMIC_RELEASE);
+        __atomic_add_fetch(&b->recorded_write_generation,1,__ATOMIC_ACQ_REL);
+    }
+    return MMVK_OK;
 }
 MMVKResult mmvk_commands_mark_image_written(MMVKCommands *c,MMVKImage *i,MMVKError *e)
 {
@@ -341,6 +441,7 @@ MMVKResult mmvk_commands_create(MMVKDevice *d,MMVKCommands **out,MMVKError *e)
     if(mmvk_device_is_quarantined(d))return mmvk_errorf(e,MMVK_ERROR_DEVICE_LOST,0,"native device is quarantined");
     *out=NULL;MMVKCommands *c=calloc(1,sizeof(*c));
     if(!c)return mmvk_errorf(e,MMVK_ERROR_MEMORY,0,"command list allocation failed");c->dev=d;
+    if(mmvk_trace_render_enabled())c->trace_id=__atomic_add_fetch(&trace_next_command,1,__ATOMIC_RELAXED);
     VkCommandPoolCreateInfo pi={.sType=VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,.queueFamilyIndex=d->family,.flags=VK_COMMAND_POOL_CREATE_TRANSIENT_BIT};
     VkResult r=d->CreateCommandPool(d->device,&pi,NULL,&c->pool);if(r)goto fail;
     VkCommandBufferAllocateInfo ai={.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,.commandPool=c->pool,.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY,.commandBufferCount=1};
@@ -361,6 +462,7 @@ void mmvk_commands_destroy(MMVKCommands *c)
     mmvk_graphics_commands_cleanup(c);
     if(c->descriptors)d->DestroyDescriptorPool(d->device,c->descriptors,NULL);
     if(c->pool)d->DestroyCommandPool(d->device,c->pool,NULL);
+    trace_observers_destroy(c->trace_observers);
     free(c->written_buffers);free(c->written_images);
     free(c);
 }
@@ -409,21 +511,21 @@ MMVKResult mmvk_commands_submit(MMVKCommands *c,MMVKFence **out,MMVKError *e)
     pthread_mutex_lock(&c->dev->queue_lock);
     for(uint32_t n=0;n<c->image_count;n++)if(c->images[n].image->generation!=c->images[n].generation){
         pthread_mutex_unlock(&c->dev->queue_lock);mmvk_fence_destroy(f);return mmvk_errorf(e,MMVK_ERROR_STATE,0,"image changed since command recording");}
-    r=c->dev->QueueSubmit(c->dev->queue,1,&submit,f->fence);
+    r=mmvk_queue_submit_observed(c,&submit,f);
     if(!r)for(uint32_t n=0;n<c->image_count;n++){c->images[n].image->layout=VK_IMAGE_LAYOUT_GENERAL;c->images[n].image->generation++;}
     pthread_mutex_unlock(&c->dev->queue_lock);
     if(r){
-        if(r==VK_ERROR_OUT_OF_HOST_MEMORY||r==VK_ERROR_OUT_OF_DEVICE_MEMORY){c->dev->DestroyFence(c->dev->device,f->fence,NULL);free(f);}
+        if(r==VK_ERROR_OUT_OF_HOST_MEMORY||r==VK_ERROR_OUT_OF_DEVICE_MEMORY){c->dev->DestroyFence(c->dev->device,f->fence,NULL);trace_observers_destroy(f->trace_observers);free(f);}
         else{mmvk_device_mark_quarantined(c->dev);*out=f;}
         return mmvk_vkresult(e,r,"vkQueueSubmit");
     }
     *out=f;return mmvk_vkresult(e,VK_SUCCESS,"submitted");
 }
 MMVKResult mmvk_fence_wait(MMVKFence *f,uint64_t timeout,MMVKError *e)
-{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->WaitForFences(f->dev->device,1,&f->fence,VK_TRUE,timeout);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkWaitForFences");}
+{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->WaitForFences(f->dev->device,1,&f->fence,VK_TRUE,timeout);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkWaitForFences");}
 MMVKResult mmvk_fence_status(MMVKFence *f,MMVKError *e)
-{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->GetFenceStatus(f->dev->device,f->fence);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkGetFenceStatus");}
-void mmvk_fence_destroy(MMVKFence *f){if(f&&!mmvk_device_is_quarantined(f->dev)){f->dev->DestroyFence(f->dev->device,f->fence,NULL);free(f);}}
+{if(!f)return mmvk_errorf(e,MMVK_ERROR_ARGUMENT,0,"missing fence");VkResult r=f->dev->GetFenceStatus(f->dev->device,f->fence);if(r==VK_SUCCESS&&!mmvk_device_is_quarantined(f->dev))trace_fence_retired(f);if(r==VK_ERROR_DEVICE_LOST)mmvk_device_mark_quarantined(f->dev);return mmvk_vkresult(e,r,"vkGetFenceStatus");}
+void mmvk_fence_destroy(MMVKFence *f){if(f&&!mmvk_device_is_quarantined(f->dev)){f->dev->DestroyFence(f->dev->device,f->fence,NULL);trace_observers_destroy(f->trace_observers);free(f);}}
 
 VkDescriptorType mmvk_descriptor_type(MMVKBindingType type)
 {
@@ -863,5 +965,5 @@ MMVKResult mmvk_commands_end_render(MMVKCommands *c,MMVKError *e)
     for(uint32_t n=0;n<c->graphics_target_count;n++){
         MMVKResult written=mmvk_commands_mark_image_written(c,c->graphics_targets[n],e);if(written)return written;
     }
-    mmvk_graphics_pass_ended(c);c->in_render=0;c->render_count=0;memset(c->render_targets,0,sizeof(c->render_targets));return MMVK_OK;
+    mmvk_graphics_pass_ended(c);if(mmvk_trace_render_enabled())c->trace_pass++;c->in_render=0;c->render_count=0;memset(c->render_targets,0,sizeof(c->render_targets));return MMVK_OK;
 }

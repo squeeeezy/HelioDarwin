@@ -163,7 +163,7 @@ static MMVKResult submit_segment(MMVKCommands *c, MMVKEvent *signal, uint64_t va
         pthread_mutex_unlock(&c->dev->queue_lock);if(signal)pthread_mutex_unlock(&signal->lock);mmvk_fence_destroy(f);
         return mmvk_errorf(e,MMVK_ERROR_STATE,0,"image changed since event segment recording");
     }
-    vr=c->dev->QueueSubmit(c->dev->queue,1,&info,f->fence);
+    vr=mmvk_queue_submit_observed(c,&info,f);
     if(!vr) {
         if(signal_count) signal->last_submitted=value;
         for(uint32_t n=0;n<c->image_count;n++) {

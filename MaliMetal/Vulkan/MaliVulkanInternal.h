@@ -55,6 +55,8 @@ struct MMVKDevice {
 };
 #undef DECLARE
 #include "MaliVulkanResourcesInternal.h"
+#include "MaliVulkanDiagnostics.h"
+typedef struct MMVKTraceNode MMVKTraceNode;
 struct MMVKPipeline { MMVKDevice *dev; VkPipeline pipeline; VkPipelineLayout layout;
     VkPipelineBindPoint point; VkDescriptorSetLayout sets[4]; uint32_t set_count;
     MMVKBindingLayout bindings[64]; uint32_t binding_count,push_size; VkRenderPass render_pass;
@@ -77,8 +79,13 @@ struct MMVKCommands { MMVKDevice *dev; VkCommandPool pool; VkCommandBuffer cmd;
     MMVKBuffer **written_buffers; uint32_t written_buffer_count,written_buffer_capacity;
     MMVKImage **written_images; uint32_t written_image_count,written_image_capacity;
     struct { MMVKImage *image; uint64_t generation; } images[64]; uint32_t image_count;
+    uint64_t trace_id; uint32_t trace_pass;
+    MMVKTraceNode *trace_observers;
 };
-struct MMVKFence { MMVKDevice *dev; VkFence fence; };
+struct MMVKFence { MMVKDevice *dev; VkFence fence;
+    MMVKTraceSubmission trace_submission; MMVKTraceNode *trace_observers;
+    uint32_t trace_retired;
+};
 
 
 MMVKResult mmvk_errorf(MMVKError *, MMVKResult, int32_t, const char *, ...);
@@ -95,5 +102,7 @@ MMVKResult mmvk_pipeline_layout(MMVKPipeline *, const MMVKPipelineLayout *, MMVK
 MMVKResult mmvk_shader_module(MMVKDevice *, const MMVKShader *, VkShaderModule *, MMVKError *);
 MMVKResult mmvk_prepare_descriptor_image(MMVKCommands *, MMVKImage *, uint32_t, MMVKError *);
 MMVKResult mmvk_bind_snapshot(MMVKCommands *, MMVKError *);
+/* Internal submission observation only; caller preserves native queue locking. */
+VkResult mmvk_queue_submit_observed(MMVKCommands *,const VkSubmitInfo *,MMVKFence *);
 
 #endif

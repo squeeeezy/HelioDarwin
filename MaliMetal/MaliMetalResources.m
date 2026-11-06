@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #import "MaliMetalResources.h"
+#include "Vulkan/MaliVulkanDiagnostics.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -15,6 +16,7 @@
 - (MMVKHeap *)maliHeap;
 @end
 extern void *IOSurfaceGetBaseAddress(void *) __attribute__((weak_import));
+extern uint32_t IOSurfaceGetID(void *) __attribute__((weak_import));
 extern size_t IOSurfaceGetWidth(void *) __attribute__((weak_import));
 extern size_t IOSurfaceGetHeight(void *) __attribute__((weak_import));
 extern size_t IOSurfaceGetBytesPerRow(void *) __attribute__((weak_import));
@@ -32,6 +34,28 @@ extern size_t IOSurfaceGetHeightOfPlane(void *,size_t) __attribute__((weak_impor
 extern size_t IOSurfaceGetBytesPerRowOfPlane(void *,size_t) __attribute__((weak_import));
 extern kern_return_t IOSurfaceLock(void *,uint32_t,uint32_t *) __attribute__((weak_import));
 extern kern_return_t IOSurfaceUnlock(void *,uint32_t,uint32_t *) __attribute__((weak_import));
+/* Import records read metadata only; sample calls occur under the existing
+ * IOSurface lock and finish before that lock is released. */
+static void traceSurface(MMVKImage *image,void *surface,const char *stage,BOOL sample,int status){
+    if(!mmvk_trace_render_enabled()||!surface||!image||!IOSurfaceGetBaseAddress||
+       !IOSurfaceGetAllocSize||!IOSurfaceGetBytesPerRow||!IOSurfaceGetPixelFormat)return;
+    const MMVKImageDescriptorEx *x=mmvk_image_descriptor(image);
+    void *base=IOSurfaceGetBaseAddress(surface);size_t allocation=IOSurfaceGetAllocSize(surface);
+    size_t offset=IOSurfaceGetOffsetOfPlane?IOSurfaceGetOffsetOfPlane(surface,0):SIZE_MAX;
+    size_t row=IOSurfaceGetBytesPerRow(surface),capacity=offset<=allocation?allocation-offset:0;
+    size_t bpe=IOSurfaceGetBytesPerElement?IOSurfaceGetBytesPerElement(surface):0;
+    uint32_t fourcc=IOSurfaceGetPixelFormat(surface);
+    BOOL valid=IOSurfaceGetWidth&&IOSurfaceGetHeight&&IOSurfaceGetPlaneCount&&
+        IOSurfaceGetOffsetOfPlane&&IOSurfaceGetProtectionOptions&&!IOSurfaceGetProtectionOptions(surface)&&
+        IOSurfaceGetElementWidth&&IOSurfaceGetElementHeight&&
+        IOSurfaceGetElementWidth(surface)==1&&IOSurfaceGetElementHeight(surface)==1&&
+        !IOSurfaceGetPlaneCount(surface)&&IOSurfaceGetWidth(surface)==x->width&&
+        IOSurfaceGetHeight(surface)==x->height&&
+        ((fourcc==0x42475241u&&bpe==4)||(fourcc==0x4c413038u&&bpe==2));
+    mmvk_trace_texture_surface(image,stage,(uintptr_t)surface,IOSurfaceGetID?IOSurfaceGetID(surface):0,
+        fourcc,bpe,IOSurfaceGetElementWidth?IOSurfaceGetElementWidth(surface):0,
+        IOSurfaceGetElementHeight?IOSurfaceGetElementHeight(surface):0,base,row,capacity,offset,sample&&valid,status);
+}
 /* LA08 stores luminance and alpha in the two RG8 channels. CoreAnimation's
  * shader applies that interpretation; the import must preserve both bytes. */
 static BOOL surfaceLA08Layout(void *surface, const MMVKImageDescriptorEx *image,
@@ -322,6 +346,17 @@ BOOL MaliMetalResourceOptions(MTLResourceOptions o,MTLStorageMode *storage,MTLCP
     if(storage)*storage=s;if(cache)*cache=c;if(hazard)*hazard=h==1?MTLHazardTrackingModeUntracked:MTLHazardTrackingModeTracked;return YES;
 }
 static uint32_t bufferUsage(void){return MMVK_BUFFER_VERTEX|MMVK_BUFFER_INDEX|MMVK_BUFFER_UNIFORM|MMVK_BUFFER_STORAGE|MMVK_BUFFER_TRANSFER_SRC|MMVK_BUFFER_TRANSFER_DST|64u;}
+static void traceBufferFailure(id device,id object,MMVKBuffer *buffer,NSUInteger length,MTLResourceOptions options,
+                               const char *stage,int result,const MMVKError *error){
+    static uint32_t count;
+    if(!mmvk_trace_render_enabled()||__atomic_fetch_add(&count,1,__ATOMIC_RELAXED)>=32)return;
+    char message[129];size_t n=0;
+    if(error)for(;n<sizeof(message)-1&&n<sizeof(error->message)&&error->message[n];n++){
+        unsigned char c=(unsigned char)error->message[n];message[n]=(c<32||c=='"'||c=='\\')?'?':(char)c;
+    }
+    message[n]=0;
+    mmvk_trace_render_log("{\"event\":\"buffer_init_failure\",\"stage\":\"%s\",\"device\":\"%llx\",\"object\":\"%llx\",\"buffer\":\"%llx\",\"length\":%llu,\"options\":%llu,\"result\":%d,\"local_error\":%d,\"message\":\"%s\"}",stage,(unsigned long long)(uintptr_t)device,(unsigned long long)(uintptr_t)object,(unsigned long long)(uintptr_t)buffer,(unsigned long long)length,(unsigned long long)options,result,error?error->code:0,message);
+}
 @implementation MaliMetalBuffer
 - (instancetype)initWithLength:(NSUInteger)n device:(id<MTLDevice>)device storageMode:(MTLStorageMode)s{return [self initWithLength:n device:(MaliMetalDevice *)device options:s<<4 heap:nil];}
 - (instancetype)initWithBytes:(const void *)p length:(NSUInteger)n device:(id<MTLDevice>)device {
@@ -329,17 +364,19 @@ static uint32_t bufferUsage(void){return MMVK_BUFFER_VERTEX|MMVK_BUFFER_INDEX|MM
 }
 - (instancetype)initWithLength:(NSUInteger)n device:(MaliMetalDevice *)device options:(MTLResourceOptions)o heap:(id)heap {
     self=[super init];if(!self)return nil;
-    if(!device||!n||n>[device maxBufferLength]||n>SIZE_MAX-15||!MaliMetalResourceOptions(o,&_storageMode,&_cpuCacheMode,&_hazardMode)||(heap&&!hasUnprotectedOptions(heap))){[self release];return nil;}
+    if(!device||!n||n>[device maxBufferLength]||n>SIZE_MAX-15||!MaliMetalResourceOptions(o,&_storageMode,&_cpuCacheMode,&_hazardMode)||(heap&&!hasUnprotectedOptions(heap))){traceBufferFailure(device,self,NULL,n,o,"invalid_input",MMVK_ERROR_ARGUMENT,NULL);[self release];return nil;}
     _device=[device retain];_length=n;_purgeableState=2;
     MMVKError error={0};uint64_t nativeLength=(n+15)&~15ul;
-    if(mmvk_buffer_create_storage([device backendDevice],nativeLength,bufferUsage(),(MMVKStorage)_storageMode,heap?[heap maliHeap]:NULL,&_buffer,&error)!=MMVK_OK){[self release];return nil;}
-    if(mmvk_buffer_set_logical_size(_buffer,n,&error)){[self release];return nil;}
+    MMVKResult result=mmvk_buffer_create_storage([device backendDevice],nativeLength,bufferUsage(),(MMVKStorage)_storageMode,heap?[heap maliHeap]:NULL,&_buffer,&error);
+    if(result!=MMVK_OK){traceBufferFailure(device,self,_buffer,n,o,"create_storage",result,&error);[self release];return nil;}
+    result=mmvk_buffer_set_logical_size(_buffer,n,&error);
+    if(result){traceBufferFailure(device,self,_buffer,n,o,"logical_size",result,&error);[self release];return nil;}
     if(_storageMode==MTLStorageModeShared)memset(mmvk_buffer_contents(_buffer),0,(size_t)nativeLength);
     else{
         /* Private padding must also be zero: the compiler may prove a padded
          * vector window. This is a real transfer submission, never a CPU map. */
         [device lockExecution];MMVKResult r=mmvk_buffer_initialize_zero(_buffer,&error);[device unlockExecution];
-        if(r){[self release];return nil;}
+        if(r){traceBufferFailure(device,self,_buffer,n,o,"initialize_zero",r,&error);[self release];return nil;}
     }
     _heap=[heap retain];_allocatedSize=heap?0:(NSUInteger)mmvk_buffer_allocation_size(_buffer);
     if(_allocatedSize)[device accountAllocation:_allocatedSize release:NO];return self;
@@ -489,6 +526,7 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
             return nil;
         }
         _iosurface = (void *)CFRetain(surface);
+        traceSurface(_image,surface,"import",NO,MMVK_OK);
         return self;
     }
     if(mmvk_format_is_two_plane(mmvk_image_format(_image))){
@@ -502,7 +540,8 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
     if(!surface||plane||_storageMode!=MTLStorageModeShared||(!bgra&&!rgba)||x->type!=2||x->mip_levels!=1||x->array_layers!=1||x->samples!=1||!IOSurfaceGetBaseAddress||!IOSurfaceGetWidth||!IOSurfaceGetHeight||!IOSurfaceGetBytesPerRow||!IOSurfaceGetPlaneCount||!IOSurfaceGetAllocSize||!IOSurfaceGetPixelFormat||!IOSurfaceLock||!IOSurfaceUnlock||IOSurfaceGetPlaneCount(surface)||IOSurfaceGetWidth(surface)!=x->width||IOSurfaceGetHeight(surface)!=x->height||IOSurfaceGetPixelFormat(surface)!=(bgra?0x42475241u:0x52474241u)){[self release];return nil;}
     size_t row=IOSurfaceGetBytesPerRow(surface),line=(size_t)x->width*4;
     if(row<line||row>SIZE_MAX/x->height||IOSurfaceGetAllocSize(surface)<(x->height-1)*row+line||!IOSurfaceGetBaseAddress(surface)){[self release];return nil;}
-    _iosurface=(void *)CFRetain(surface);_iosurfacePlane=plane;_pixels=IOSurfaceGetBaseAddress(surface);_bytesPerRow=row;return self;
+    _iosurface=(void *)CFRetain(surface);_iosurfacePlane=plane;_pixels=IOSurfaceGetBaseAddress(surface);_bytesPerRow=row;
+    traceSurface(_image,surface,"import",NO,MMVK_OK);return self;
 }
 - (void)dealloc{mmvk_image_destroy(_image);if(_allocatedSize)[_device accountAllocation:_allocatedSize release:YES];if(_iosurface)CFRelease(_iosurface);[_parent release];[_heap release];[_device release];[super dealloc];}
 - (MMVKImage *)maliImage{return _image;}
@@ -558,6 +597,8 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
     }
     if(!preserve||!_iosurface)return YES;
     if(IOSurfaceLock(_iosurface,1,NULL)!=KERN_SUCCESS){if(e){e->code=MMVK_ERROR_IO;strcpy(e->message,"IOSurface read lock failed");}return NO;}
+    uint64_t trace=mmvk_trace_texture_begin(_image);
+    if(trace)traceSurface(_image,_iosurface,"surface_upload",YES,MMVK_OK);
     MMVKResult r;
     if(_surfaceTwoPlanes){MMVKHostPlane planes[2];const MMVKImageDescriptorEx *x=mmvk_image_descriptor(_image);MMVKImageRegion region={.width=x->width,.height=x->height,.depth=1};
         r=surfaceXRPlanes(_iosurface,x->width,x->height,planes)?mmvk_image_upload_planes(_image,&region,planes,e):MMVK_ERROR_IO;
@@ -567,11 +608,14 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
                 ? mmvk_image_upload(_image, pixels, row, e) : MMVK_ERROR_IO;
     }else{const void *p=IOSurfaceGetBaseAddress(_iosurface);r=p?mmvk_image_upload(_image,p,_bytesPerRow,e):MMVK_ERROR_IO;}
     if(IOSurfaceUnlock(_iosurface,1,NULL)!=KERN_SUCCESS)r=MMVK_ERROR_IO;
+    if(trace)traceSurface(_image,_iosurface,"surface_upload_result",NO,r);
+    mmvk_trace_texture_end(trace);
     if(r&&e&&!e->code){e->code=r;strcpy(e->message,"IOSurface staging upload failed");}return r==MMVK_OK;
 }
 - (BOOL)maliReadbackImage:(MMVKError *)e {
     if(_parent)return [_parent maliReadbackImage:e];if(!_iosurface)return YES;
     if(IOSurfaceLock(_iosurface,0,NULL)!=KERN_SUCCESS){if(e){e->code=MMVK_ERROR_IO;strcpy(e->message,"IOSurface write lock failed");}return NO;}
+    uint64_t trace=mmvk_trace_texture_begin(_image);
     MMVKResult r;
     if(_surfaceTwoPlanes){MMVKHostPlane planes[2];const MMVKImageDescriptorEx *x=mmvk_image_descriptor(_image);MMVKImageRegion region={.width=x->width,.height=x->height,.depth=1};
         r=surfaceXRPlanes(_iosurface,x->width,x->height,planes)?mmvk_image_readback_planes(_image,&region,planes,5000000000ull,e):MMVK_ERROR_IO;
@@ -580,7 +624,10 @@ BOOL MaliMetalTextureDescriptorNative(MTLTextureDescriptor *d,MMVKImageDescripto
         r = surfaceLA08Layout(_iosurface, mmvk_image_descriptor(_image), &pixels, &row)
                 ? mmvk_image_readback(_image, pixels, row, 5000000000ull, e) : MMVK_ERROR_IO;
     }else{void *p=IOSurfaceGetBaseAddress(_iosurface);r=p?mmvk_image_readback(_image,p,_bytesPerRow,5000000000ull,e):MMVK_ERROR_IO;}
+    if(trace)traceSurface(_image,_iosurface,"surface_readback",r==MMVK_OK,r);
     if(IOSurfaceUnlock(_iosurface,0,NULL)!=KERN_SUCCESS)r=MMVK_ERROR_IO;
+    if(trace)traceSurface(_image,_iosurface,"surface_publish_result",NO,r);
+    mmvk_trace_texture_end(trace);
     if(r&&e&&!e->code){e->code=r;strcpy(e->message,"IOSurface staging readback failed");}return r==MMVK_OK;
 }
 - (void)hostTransfer:(void *)bytes row:(NSUInteger)row image:(NSUInteger)plane region:(MTLRegion)region level:(NSUInteger)level slice:(NSUInteger)slice download:(BOOL)download {

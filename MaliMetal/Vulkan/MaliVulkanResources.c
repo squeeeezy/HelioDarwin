@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: MIT */
 #include "MaliVulkanInternal.h"
 #include "MaliVulkanResources.h"
+#include "MaliVulkanDiagnostics.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define FAIL(code,msg) mmvk_errorf(e,code,0,"%s",msg)
 #define NATIVE(f) ((MMVKFormat)(MMVK_FORMAT_NATIVE_BASE+(uint32_t)(f)))
@@ -182,7 +184,93 @@ static int identity_retain(MMVKResourceIdentity *n){
 static int identity_aliasable(MMVKResourceIdentity *n){return n->kind==MMVK_RESOURCE_BUFFER?mmvk_buffer_is_aliasable(n->object):n->kind==MMVK_RESOURCE_TEXTURE?mmvk_image_is_aliasable(n->object):0;}
 uint64_t mmvk_buffer_resource_id(const MMVKBuffer *b){return b&&b->identity?b->identity->id:0;}
 uint64_t mmvk_image_resource_id(const MMVKImage *i){return i&&i->identity?i->identity->id:0;}
+int mmvk_trace_buffer_facts(const MMVKBuffer *b,MMVKTraceBufferFacts *out){
+    if(!b||!out)return 0;
+    *out=(MMVKTraceBufferFacts){.resource_id=mmvk_buffer_resource_id(b),
+        .native_buffer=(uint64_t)(uintptr_t)b->buffer,.gpu_address=b->device_address,
+        .size=b->logical_size,.allocation_size=b->allocation_size,.heap_offset=b->heap_offset,
+        .recorded_write_generation=__atomic_load_n(&b->recorded_write_generation,__ATOMIC_ACQUIRE),
+        .mapped_address=(uintptr_t)b->map,.storage=b->storage,.coherent=b->coherent,
+        .gpu_write_recorded=__atomic_load_n(&b->gpu_write_recorded,__ATOMIC_ACQUIRE),
+        .heap_backed=b->heap!=NULL,.aliasable=__atomic_load_n(&b->aliasable,__ATOMIC_ACQUIRE)};
+    return 1;
+}
 uint64_t mmvk_sampler_resource_id(const MMVKSampler *s){return s&&s->identity?s->identity->id:0;}
+
+/* All texture observations use existing host mappings and ownership windows.
+ * The grid is explicitly sparse, raw byte order, and NOT a full-frame hash. */
+static uint32_t texture_trace_bytes,texture_trace_dropped,texture_trace_metadata;
+static uint64_t texture_trace_roots[2][4],texture_trace_sequence;
+static uint32_t texture_trace_samples[2][4];
+static _Thread_local uint64_t texture_trace_transfer,texture_trace_root;
+static int texture_trace_kind(MMVKImage *i){
+    if(!i)return -1;MMVKImage *root=mmvk_image_root(i);VkFormat f=resource_format(root->desc.format);
+    if((f==VK_FORMAT_B8G8R8A8_UNORM||f==VK_FORMAT_B8G8R8A8_SRGB)&&root->extended.width==1080&&root->extended.height==2400)return 0;
+    return f==VK_FORMAT_R8G8_UNORM?1:-1;
+}
+static int texture_trace_selected(MMVKImage *i){
+    int kind=texture_trace_kind(i);if(kind<0)return 0;uint64_t id=mmvk_image_resource_id(mmvk_image_root(i));
+    for(unsigned n=0;n<4;n++)if(__atomic_load_n(&texture_trace_roots[kind][n],__ATOMIC_ACQUIRE)==id)return id!=0;
+    return 0;
+}
+static void texture_trace_log(const char *format,...) __attribute__((format(printf,1,2)));
+static void texture_trace_log(const char *format,...){
+    if(!mmvk_trace_render_enabled())return;
+    char line[2048];va_list args;va_start(args,format);int length=vsnprintf(line,sizeof(line),format,args);va_end(args);
+    if(length<0||(size_t)length>=sizeof(line))return;
+    /* Overcharge each event for the common PID/session prefix; reserve the
+     * final 128 bytes for one exhaustion notice, keeping this lane <=96KiB. */
+    uint32_t bytes=(uint32_t)length+128,used=__atomic_load_n(&texture_trace_bytes,__ATOMIC_RELAXED);
+    do{if(used>96u*1024u-128||bytes>96u*1024u-128-used){
+        if(!__atomic_exchange_n(&texture_trace_dropped,1,__ATOMIC_RELAXED))mmvk_trace_render_log("{\"event\":\"texture_budget_exhausted\"}");return;
+    }}while(!__atomic_compare_exchange_n(&texture_trace_bytes,&used,used+bytes,0,__ATOMIC_RELAXED,__ATOMIC_RELAXED));
+    mmvk_trace_render_log("%s",line);
+}
+static uint64_t texture_trace_id(MMVKImage *i){
+    uint64_t root=mmvk_image_resource_id(mmvk_image_root(i));
+    return texture_trace_transfer&&texture_trace_root==root?texture_trace_transfer:__atomic_add_fetch(&texture_trace_sequence,1,__ATOMIC_RELAXED);
+}
+uint64_t mmvk_trace_texture_begin(MMVKImage *i){
+    if(!mmvk_trace_render_enabled()||!texture_trace_selected(i))return 0;
+    texture_trace_root=mmvk_image_resource_id(mmvk_image_root(i));
+    texture_trace_transfer=__atomic_add_fetch(&texture_trace_sequence,1,__ATOMIC_RELAXED);return texture_trace_transfer;
+}
+void mmvk_trace_texture_end(uint64_t id){if(id&&texture_trace_transfer==id){texture_trace_transfer=0;texture_trace_root=0;}}
+static void texture_trace_snapshot(MMVKImage *i,uint64_t transfer,const char *stage,unsigned quota,
+                                   const void *bytes,uint64_t capacity,uint64_t row,uint32_t width,uint32_t height){
+    int kind=texture_trace_kind(i);if(kind<0||quota>=4||!bytes||!width||!height)return;
+    uint64_t unit=kind?2:4,line,tail,span;
+    if(!mul64(width,unit,&line)||row<line||!mul64(height-1,row,&tail)||!add64(tail,line,&span)||span>capacity||span>SIZE_MAX||span>UINTPTR_MAX-(uintptr_t)bytes)return;
+    if(__atomic_fetch_add(&texture_trace_samples[kind][quota],1,__ATOMIC_RELAXED)>=4)return;
+    uint32_t nx=width<32?width:32,ny=height<32?height:32;uint64_t hash=UINT64_C(14695981039346656037);
+    const unsigned char *p=bytes;for(uint32_t sy=0;sy<ny;sy++)for(uint32_t sx=0;sx<nx;sx++){
+        uint64_t y=ny>1?(uint64_t)sy*(height-1)/(ny-1):0,x=nx>1?(uint64_t)sx*(width-1)/(nx-1):0;
+        for(uint64_t c=0;c<unit;c++){hash^=p[y*row+x*unit+c];hash*=UINT64_C(1099511628211);}
+    }
+    char first[65];size_t count=line<32?(size_t)line:32;static const char hex[]="0123456789abcdef";
+    for(size_t n=0;n<count;n++){first[n*2]=hex[p[n]>>4];first[n*2+1]=hex[p[n]&15];}first[count*2]=0;
+    texture_trace_log("{\"event\":\"texture_sample\",\"stage\":\"%s\",\"transfer\":%llu,\"resource\":%llu,\"root\":%llu,\"generation\":%llu,\"row\":%llu,\"capacity\":%llu,\"width\":%u,\"height\":%u,\"unit\":%llu,\"nx\":%u,\"ny\":%u,\"algorithm\":\"fnv1a64-grid-endpoints-raw-v1\",\"sparse_hash\":\"%016llx\",\"first\":\"%s\"}",stage,(unsigned long long)transfer,(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)mmvk_image_resource_id(mmvk_image_root(i)),(unsigned long long)mmvk_image_root(i)->generation,(unsigned long long)row,(unsigned long long)capacity,width,height,(unsigned long long)unit,nx,ny,(unsigned long long)hash,first);
+}
+void mmvk_trace_texture_surface(MMVKImage *i,const char *stage,uintptr_t surface,uint32_t sid,uint32_t fourcc,
+    uint64_t bpe,uint64_t ew,uint64_t eh,const void *bytes,uint64_t row,uint64_t capacity,uint64_t offset,int sample,int status){
+    if(!mmvk_trace_render_enabled()||!i)return;int kind=texture_trace_kind(i);if(kind<0)return;
+    uint64_t root=mmvk_image_resource_id(mmvk_image_root(i));
+    if(!strcmp(stage,"import")){
+        if((kind==0&&fourcc!=0x42475241u)||(kind==1&&fourcc!=0x4c413038u))return;
+        for(unsigned n=0;n<4;n++){uint64_t empty=0;if(__atomic_load_n(&texture_trace_roots[kind][n],__ATOMIC_ACQUIRE)==root||__atomic_compare_exchange_n(&texture_trace_roots[kind][n],&empty,root,0,__ATOMIC_RELEASE,__ATOMIC_RELAXED))break;}
+    }
+    if(!texture_trace_selected(i))return;uint64_t transfer=texture_trace_transfer&&texture_trace_root==root?texture_trace_transfer:0;
+    texture_trace_log("{\"event\":\"texture_surface\",\"stage\":\"%s\",\"transfer\":%llu,\"resource\":%llu,\"root\":%llu,\"surface\":\"%llx\",\"surface_id\":%u,\"fourcc\":%u,\"bpe\":%llu,\"element\":[%llu,%llu],\"base\":\"%llx\",\"row\":%llu,\"capacity\":%llu,\"offset\":%llu,\"status\":%d}",stage,(unsigned long long)transfer,(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)root,(unsigned long long)surface,sid,fourcc,(unsigned long long)bpe,(unsigned long long)ew,(unsigned long long)eh,(unsigned long long)(uintptr_t)bytes,(unsigned long long)row,(unsigned long long)capacity,(unsigned long long)offset,status);
+    if(sample&&status==MMVK_OK)texture_trace_snapshot(i,transfer,stage,!strcmp(stage,"surface_upload")?0:3,bytes,capacity,row,i->extended.width,i->extended.height);
+}
+static VkImageUsageFlags image_usage(const MMVKImageDescriptorEx *);
+static VkImageCreateFlags image_flags(const MMVKImageDescriptorEx *);
+static void texture_trace_image(MMVKImage *i,const char *stage,uint64_t alignment,int memory_type){
+    if(!mmvk_trace_render_enabled()||texture_trace_kind(i)<0)return;
+    if(__atomic_fetch_add(&texture_trace_metadata,1,__ATOMIC_RELAXED)>=32)return;
+    MMVKImage *root=mmvk_image_root(i);const MMVKImageDescriptorEx *x=&i->extended;
+    texture_trace_log("{\"event\":\"texture_image\",\"stage\":\"%s\",\"resource\":%llu,\"root\":%llu,\"image\":\"%llx\",\"view\":\"%llx\",\"memory\":\"%llx\",\"bind_offset\":%llu,\"allocation\":%llu,\"alignment\":%llu,\"memory_type\":%d,\"logical_format\":%u,\"native_format\":%u,\"tiling\":%u,\"native_usage\":%u,\"native_flags\":%u,\"extent\":[%u,%u,%u],\"mips\":%u,\"layers\":%u,\"samples\":%u,\"range\":[%u,%u,%u,%u,%u],\"components\":[%u,%u,%u,%u],\"metal_swizzle\":[%u,%u,%u,%u]}",stage,(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)mmvk_image_resource_id(root),(unsigned long long)(uintptr_t)i->image,(unsigned long long)(uintptr_t)i->view,(unsigned long long)(uintptr_t)root->memory,(unsigned long long)root->heap_offset,(unsigned long long)root->allocation_size,(unsigned long long)alignment,memory_type,(unsigned)x->format,(unsigned)resource_format(x->format),(unsigned)VK_IMAGE_TILING_OPTIMAL,(unsigned)image_usage(x),(unsigned)(image_flags(x)|(root->heap?VK_IMAGE_CREATE_ALIAS_BIT:0)),x->width,x->height,x->depth,x->mip_levels,x->array_layers,x->samples,i->range.aspectMask,i->range.baseMipLevel,i->range.levelCount,i->range.baseArrayLayer,i->range.layerCount,(unsigned)i->components.r,(unsigned)i->components.g,(unsigned)i->components.b,(unsigned)i->components.a,i->metal_swizzle[0],i->metal_swizzle[1],i->metal_swizzle[2],i->metal_swizzle[3]);
+}
 uint64_t mmvk_buffer_device_address(const MMVKBuffer *b){return b&&!mmvk_buffer_is_aliasable(b)?b->device_address:0;}
 uint64_t mmvk_buffer_logical_size(const MMVKBuffer *b){return b?b->logical_size:0;}
 MMVKResult mmvk_buffer_set_logical_size(MMVKBuffer *b,uint64_t size,MMVKError *e){
@@ -434,12 +522,15 @@ MMVKResult mmvk_image_create_extended(MMVKDevice *d,const MMVKImageDescriptorEx 
     VkMemoryRequirements req;VkBool32 dedicated;result=image_requirements(d,i->image,&req,&dedicated,e);if(result)goto fail;i->allocation_size=req.size;VkResult vr=VK_SUCCESS;
     VkMemoryDedicatedAllocateInfo dedicatedInfo={.sType=VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,.image=i->image};
     if(h&&dedicated){result=FAIL(MMVK_ERROR_UNSUPPORTED,"image requires dedicated allocation");goto fail;}
+    int selected_memory_type=-1;
     if(h){result=heap_take(h,&req,&i->heap_block,e);if(result)goto fail;i->heap=h;i->heap_offset=i->heap_block->offset;i->memory=h->memory;}
     else{int type=x->transient?mmvk_memory_type(d,req.memoryTypeBits,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT|VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT):-1;
         if(type<0)type=resource_memory_type(d,req.memoryTypeBits,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT);if(type<0){result=FAIL(MMVK_ERROR_UNSUPPORTED,"no device-local image memory type");goto fail;}
+        selected_memory_type=type;
         VkMemoryAllocateInfo ai={.sType=VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,.pNext=dedicated?&dedicatedInfo:NULL,.allocationSize=req.size,.memoryTypeIndex=(uint32_t)type};vr=d->AllocateMemory(d->device,&ai,NULL,&i->memory);if(vr)goto vkfail;}
     vr=d->BindImageMemory(d->device,i->image,i->memory,i->heap_offset);if(vr)goto vkfail;
-    result=create_view_handle(i,e);if(result)goto fail;result=identity_add(d,i,MMVK_RESOURCE_TEXTURE,&i->identity,e);if(result)goto fail;*out=i;return MMVK_OK;
+    result=create_view_handle(i,e);if(result)goto fail;result=identity_add(d,i,MMVK_RESOURCE_TEXTURE,&i->identity,e);if(result)goto fail;*out=i;
+    texture_trace_image(i,"create",req.alignment,selected_memory_type);return MMVK_OK;
 vkfail:result=mmvk_vkresult(e,vr,"image memory binding");
 fail:mmvk_image_destroy(i);return result;
 }
@@ -513,7 +604,8 @@ MMVKResult mmvk_image_create_view(MMVKImage *source,const MMVKImageViewDescripto
     if(!aspect||(aspect&~source->range.aspectMask)||(aspect&~mmvk_format_aspects(v->format))){mmvk_image_destroy(i);return FAIL(MMVK_ERROR_ARGUMENT,"view aspect is incompatible with parent");}
     i->range=(VkImageSubresourceRange){aspect,source->range.baseMipLevel+v->base_level,v->level_count,base_layer,v->layer_count};
     MMVKImageDescriptorEx check=i->extended;check.mutable_format=root->extended.mutable_format;MMVKResult r=validate_image(i->dev,&check,e);
-    if(!r)r=create_view_handle(i,e);if(!r)r=identity_add(i->dev,i,MMVK_RESOURCE_TEXTURE,&i->identity,e);if(r){mmvk_image_destroy(i);return r;}*out=i;return MMVK_OK;
+    if(!r)r=create_view_handle(i,e);if(!r)r=identity_add(i->dev,i,MMVK_RESOURCE_TEXTURE,&i->identity,e);if(r){mmvk_image_destroy(i);return r;}*out=i;
+    texture_trace_image(i,"view",0,-1);return MMVK_OK;
 }
 static MMVKResult region_validate(MMVKImage *i,const MMVKImageRegion *r,VkImageSubresourceLayers *layers,MMVKError *e){
     if(!i||!r||mmvk_image_is_aliasable(i)||r->level>=i->extended.mip_levels||r->layer>=i->extended.array_layers||!r->width||!r->height||!r->depth)return FAIL(MMVK_ERROR_ARGUMENT,"invalid image region subresource");
@@ -644,6 +736,9 @@ static MMVKResult commands_copy_buffer_image_raw(MMVKCommands *c,
     if (result)
         return result;
     mmvk_memory_barrier(c);
+    if(mmvk_trace_render_enabled()&&texture_trace_selected(i)){
+        texture_trace_log("{\"event\":\"texture_copy_operands\",\"transfer\":%llu,\"command\":%llu,\"native_command\":\"%llx\",\"resource\":%llu,\"root\":%llu,\"image\":\"%llx\",\"buffer\":\"%llx\",\"buffer_gpuva\":\"%llx\",\"buffer_size\":%llu,\"buffer_allocation\":%llu,\"map\":\"%llx\",\"coherent\":%u,\"to_image\":%d,\"offset\":%llu,\"row_length\":%u,\"image_height\":%u,\"subresource\":[%u,%u,%u,%u],\"origin\":[%d,%d,%d],\"extent\":[%u,%u,%u]}",(unsigned long long)texture_trace_id(i),(unsigned long long)mmvk_trace_command_id(c),(unsigned long long)mmvk_trace_native_command(c),(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)mmvk_image_resource_id(mmvk_image_root(i)),(unsigned long long)(uintptr_t)i->image,(unsigned long long)(uintptr_t)b->buffer,(unsigned long long)b->device_address,(unsigned long long)b->size,(unsigned long long)b->allocation_size,(unsigned long long)(uintptr_t)b->map,b->coherent,to_image,(unsigned long long)copy.bufferOffset,copy.bufferRowLength,copy.bufferImageHeight,copy.imageSubresource.aspectMask,copy.imageSubresource.mipLevel,copy.imageSubresource.baseArrayLayer,copy.imageSubresource.layerCount,copy.imageOffset.x,copy.imageOffset.y,copy.imageOffset.z,copy.imageExtent.width,copy.imageExtent.height,copy.imageExtent.depth);
+    }
     if (to_image)
         c->dev->CmdCopyBufferToImage(
             c->cmd, b->buffer, i->image, VK_IMAGE_LAYOUT_GENERAL, 1, &copy);
@@ -683,6 +778,7 @@ MMVKResult mmvk_commands_generate_mipmaps(MMVKCommands *c,MMVKImage *i,MMVKError
 typedef struct MMVKResourceRetirement {
     MMVKDevice *device; MMVKCommands *commands; MMVKFence *fence;
     MMVKBuffer *buffer; MMVKImage *image;
+    uint64_t trace_transfer;
     struct MMVKResourceRetirement *next;
 } MMVKResourceRetirement;
 static pthread_mutex_t retirement_lock=PTHREAD_MUTEX_INITIALIZER;
@@ -713,7 +809,11 @@ static MMVKResult retirement_wait(MMVKResourceRetirement **owner,uint64_t timeou
     MMVKResult first=MMVK_OK;MMVKError first_error={0};uint64_t period=timeout==UINT64_MAX?5000000000ull:timeout;
     for(;;){
         MMVKError current={0};MMVKResult result=mmvk_fence_wait((*owner)->fence,period,&current);
-        if(result==MMVK_OK){if(first&&e)*e=first_error;return first;}
+        if(result==MMVK_OK){
+            MMVKResourceRetirement *r=*owner;
+            if(r->trace_transfer)texture_trace_log("{\"event\":\"texture_retirement\",\"transfer\":%llu,\"command\":%llu,\"native_command\":\"%llx\",\"fence\":\"%llx\",\"physical_retired\":true,\"preserved_error\":%d}",(unsigned long long)r->trace_transfer,(unsigned long long)mmvk_trace_command_id(r->commands),(unsigned long long)mmvk_trace_native_command(r->commands),(unsigned long long)(uintptr_t)r->fence,first);
+            if(first&&e)*e=first_error;return first;
+        }
         /* Chunk timeouts for an unbounded operation are progress, not an API
          * deadline failure. Every finite initial failure remains observable. */
         if(first==MMVK_OK&&!(timeout==UINT64_MAX&&(result==MMVK_TIMEOUT||result==MMVK_NOT_READY))){first=result;first_error=current;}
@@ -729,6 +829,9 @@ static MMVKResult retirement_wait(MMVKResourceRetirement **owner,uint64_t timeou
 }
 static MMVKResult retirement_submit(MMVKResourceRetirement **owner,MMVKError *e){
     MMVKResult result=mmvk_commands_submit((*owner)->commands,&(*owner)->fence,e);
+    if((*owner)->trace_transfer){MMVKResourceRetirement *r=*owner;
+        texture_trace_log("{\"event\":\"texture_submit\",\"transfer\":%llu,\"command\":%llu,\"native_command\":\"%llx\",\"fence\":\"%llx\",\"result\":%d,\"accepted\":%s,\"root_generation\":%llu}",(unsigned long long)r->trace_transfer,(unsigned long long)mmvk_trace_command_id(r->commands),(unsigned long long)mmvk_trace_native_command(r->commands),(unsigned long long)(uintptr_t)r->fence,result,result==MMVK_OK?"true":"null",(unsigned long long)(r->image?mmvk_image_root(r->image)->generation:0));
+    }
     /* Wrapper argument/state failures precede submission. Vulkan QueueSubmit
      * OOM must leave submitted resources/state unchanged (unlike fence-wait
      * OOM after a SUCCESSFUL submit, which proves no retirement at all). */
@@ -776,6 +879,15 @@ static MMVKResult image_host_copy_raw(MMVKImage *i,
     result = retirement_create(i->dev, NULL, i, &owner, e);
     if (result)
         return result;
+    uint64_t previous_transfer=0,previous_root=0;
+    int trace=mmvk_trace_render_enabled()&&texture_trace_selected(i);
+    if(trace){
+        previous_transfer=texture_trace_transfer;previous_root=texture_trace_root;
+        owner->trace_transfer=texture_trace_id(i);texture_trace_transfer=owner->trace_transfer;
+        texture_trace_root=mmvk_image_resource_id(mmvk_image_root(i));
+        texture_trace_log("{\"event\":\"texture_host_transfer\",\"transfer\":%llu,\"resource\":%llu,\"root\":%llu,\"generation\":%llu,\"download\":%d,\"host\":\"%llx\",\"capacity\":%llu,\"row\":%llu,\"plane\":%llu,\"needed\":%llu,\"tight\":%llu}",(unsigned long long)owner->trace_transfer,(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)texture_trace_root,(unsigned long long)mmvk_image_root(i)->generation,download,(unsigned long long)(uintptr_t)p,(unsigned long long)capacity,(unsigned long long)row,(unsigned long long)plane,(unsigned long long)needed,(unsigned long long)tight);
+        if(!download&&!previous_transfer)texture_trace_snapshot(i,owner->trace_transfer,"host_upload",0,p,capacity,row,r->width,r->height);
+    }
     result = mmvk_buffer_create(i->dev,
                                 tight,
                                 download ? MMVK_BUFFER_TRANSFER_DST : MMVK_BUFFER_TRANSFER_SRC,
@@ -793,6 +905,7 @@ static MMVKResult image_host_copy_raw(MMVKImage *i,
         result = mmvk_buffer_flush(b, 0, tight, e);
         if (result)
             goto done;
+        if(trace)texture_trace_snapshot(i,owner->trace_transfer,"staging_upload",1,b->map,tight,line,r->width,r->height);
     }
     result = mmvk_commands_create(i->dev, &owner->commands, e);
     if (result)
@@ -811,13 +924,16 @@ static MMVKResult image_host_copy_raw(MMVKImage *i,
         result = mmvk_buffer_invalidate(b, 0, tight, e);
         if (result)
             goto done;
+        if(trace)texture_trace_snapshot(i,owner->trace_transfer,"staging_readback",2,b->map,tight,line,r->width,r->height);
         for (uint32_t z = 0; z < r->depth; z++)
             for (uint32_t y = 0; y < rows; y++)
                 memcpy((char *)p + (size_t)z * plane + (size_t)y * row,
                        (char *)b->map + ((uint64_t)z * rows + y) * line,
                        (size_t)line);
+        if(trace&&!previous_transfer)texture_trace_snapshot(i,owner->trace_transfer,"host_readback",3,p,capacity,row,r->width,r->height);
     }
 done:
+    if(trace){texture_trace_log("{\"event\":\"texture_transfer_end\",\"transfer\":%llu,\"result\":%d,\"quarantined\":%s}",(unsigned long long)texture_trace_transfer,result,mmvk_device_is_quarantined(i->dev)?"true":"false");texture_trace_transfer=previous_transfer;texture_trace_root=previous_root;}
     retirement_destroy(owner);
     return result;
 }

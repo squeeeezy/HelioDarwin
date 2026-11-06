@@ -10,6 +10,7 @@
 #import "MaliMetalMSL.h"
 #import "MaliMetalCommandQueue.h"
 #import "MaliMetalDeviceLimits.h"
+#include "Vulkan/MaliVulkanDiagnostics.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
@@ -711,25 +712,51 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
 }
 
 - (instancetype)initWithAcceleratorPort:(mach_port_t)acceleratorPort {
+    static unsigned int traceCount;
+    BOOL trace = mmvk_trace_render_enabled() && __sync_fetch_and_add(&traceCount, 1) < 16;
+    void *receiver = (void *)self;
+    if (trace)
+        mmvk_trace_render_log("device-init receiver=%p accelerator=%u phase=begin", receiver,
+                              (unsigned int)acceleratorPort);
     self = [super init];
-    if (!self)
+    if (!self) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p phase=super result=nil", receiver);
         return nil;
+    }
     pthread_mutex_init(&_allocationLock, NULL);
     pthread_mutex_init(&_executionLock, NULL);
     _nativeLimits = MaliMetalLimitsStorage(self);
     if (!_nativeLimits) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=limits-abi result=nil",
+                                  receiver, (void *)self);
         NSLog(@"[MaliMetal] Unsupported Metal device-limits ABI");
         [self release];
         return nil;
     }
     kern_return_t kr = IORegistryEntryGetRegistryEntryID(acceleratorPort, &_registryID);
-    if (kr != KERN_SUCCESS ||
-        IOServiceOpen(acceleratorPort, mach_task_self(), 0, &_userClient) != KERN_SUCCESS) {
+    if (kr != KERN_SUCCESS) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=registry-id kr=%d result=nil",
+                                  receiver, (void *)self, kr);
+        [self release];
+        return nil;
+    }
+    kr = IOServiceOpen(acceleratorPort, mach_task_self(), 0, &_userClient);
+    if (kr != KERN_SUCCESS) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=service-open kr=%d result=nil",
+                                  receiver, (void *)self, kr);
         [self release];
         return nil;
     }
     MMVKResult result = mmvk_device_create(_userClient, NULL, &_backend, &_backendError);
     if (result != MMVK_OK) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=backend-create result=%d error=%d native_error=%d message=%.160s return=nil",
+                                  receiver, (void *)self, result, _backendError.code,
+                                  _backendError.native_code, _backendError.message);
         NSLog(@"[MaliMetal] Native Vulkan backend unavailable: %s", _backendError.message);
         [self release];
         return nil;
@@ -742,6 +769,11 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
     if (!caps || (caps->capabilities & required) != required || !compiler ||
         compiler->abi_version != MM_SHADER_ABI_VERSION || !compiler->compile_render || !profile ||
         !profileSize) {
+        if (trace)
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=native-profile caps=%p compiler=%p profile=%p profile_bytes=%llu result=nil",
+                                  receiver, (void *)self, (const void *)caps,
+                                  (const void *)compiler, (const void *)profile,
+                                  (unsigned long long)profileSize);
         NSLog(
             @"[MaliMetal] Registration deferred: native execution/compiler profile is incomplete");
         [self release];
@@ -750,6 +782,10 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
     /* MTLAddDevice calls initLimits and initFeatureQueries after checking both
      * device protocols. Leave those initializers to the loader; the base limits
      * table only describes Apple profiles, while our override uses native caps. */
+    if (trace)
+        mmvk_trace_render_log("device-init receiver=%p phase=complete device=%p backend=%p registry=%llu",
+                              receiver, (void *)self, (void *)_backend,
+                              (unsigned long long)_registryID);
     return self;
 }
 
@@ -1013,7 +1049,24 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
 
 /* Buffer Allocation */
 - (id<MTLBuffer>)newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options {
-    return [[MaliMetalBuffer alloc] initWithLength:length device:self options:options heap:nil];
+    /* Reserve observations for the native Aegir uniform request even after
+     * ordinary startup buffers consume their independent local allowance. */
+    static unsigned int traceCount, uniformTraceCount;
+    BOOL trace = NO;
+    if (mmvk_trace_render_enabled()) {
+        unsigned int *count = length == 432 && options == 1 ? &uniformTraceCount : &traceCount;
+        trace = __sync_fetch_and_add(count, 1) < 32;
+    }
+    if (trace)
+        mmvk_trace_render_log("buffer-new device=%p length=%llu options=0x%llx phase=begin",
+                              (void *)self, (unsigned long long)length,
+                              (unsigned long long)options);
+    id<MTLBuffer> buffer = [[MaliMetalBuffer alloc] initWithLength:length device:self options:options heap:nil];
+    if (trace)
+        mmvk_trace_render_log("buffer-new device=%p length=%llu options=0x%llx buffer=%p phase=return",
+                              (void *)self, (unsigned long long)length,
+                              (unsigned long long)options, (void *)buffer);
+    return buffer;
 }
 - (id<MTLBuffer>)newBufferWithBytes:(const void *)pointer length:(NSUInteger)length options:(MTLResourceOptions)options {
     MTLStorageMode storage;

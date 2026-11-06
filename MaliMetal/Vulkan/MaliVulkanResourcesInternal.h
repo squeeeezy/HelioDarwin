@@ -12,6 +12,9 @@ struct MMVKBuffer {
     MMVKStorage storage; MMVKHeap *heap; MMVKHeapBlock *heap_block;
     uint64_t heap_offset; uint32_t aliasable;
     uint64_t device_address,logical_size; uint32_t references; MMVKResourceIdentity *identity;
+    /* Diagnostic recording history, never a CPU-content generation. Sticky
+     * writes also disqualify coherent mappings from pre-submit raw sampling. */
+    uint64_t recorded_write_generation; uint32_t gpu_write_recorded;
 };
 struct MMVKImage {
     MMVKDevice *dev; VkImage image; VkImageView view; VkDeviceMemory memory;

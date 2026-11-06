@@ -1,10 +1,13 @@
 /* SPDX-License-Identifier: MIT */
 #include "MaliMetalRenderVulkan.h"
 #include "../Vulkan/MaliVulkanResources.h"
+#include "../Vulkan/MaliVulkanDiagnostics.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+#include <inttypes.h>
 
 typedef struct render_variant {
     struct render_variant *next;
@@ -25,7 +28,112 @@ struct MMShaderVulkanRenderExecution {
     MMVKBuffer *buffers[MM_SHADER_MAX_BINDINGS];
     MMVKImage *images[MM_SHADER_MAX_BINDINGS];
     MMVKSampler *samplers[MM_SHADER_MAX_BINDINGS];
+    MMVKDevice *trace_device;
+    MMShaderRenderDrawRequest trace_request;
 };
+typedef struct {
+    uint64_t id;uint32_t pass;MMShaderRenderDrawRequest request;
+    MMVKBuffer *slots[5];uint64_t offsets[5];
+    unsigned char pre[5][192];size_t pre_sizes[5];uint64_t sample_offsets[5];
+    char metadata[8192];size_t metadata_size;int clipped,observed_pre,observed_retired;
+} RenderTrace;
+static uint64_t trace_draw_count;
+static void trace_append(RenderTrace *t,const char *format,...)
+{
+    if(t->clipped)return;
+    va_list ap;va_start(ap,format);int count=vsnprintf(t->metadata+t->metadata_size,sizeof(t->metadata)-t->metadata_size,format,ap);va_end(ap);
+    if(count<0||(size_t)count>=sizeof(t->metadata)-t->metadata_size){t->metadata[t->metadata_size]=0;t->clipped=1;return;}
+    t->metadata_size+=(size_t)count;
+}
+static void trace_hex(const void *bytes,size_t count,char *hex)
+{
+    static const char digits[]="0123456789abcdef";const unsigned char *p=bytes;
+    for(size_t i=0;i<count;i++){hex[2*i]=digits[p[i]>>4];hex[2*i+1]=digits[p[i]&15];}hex[2*count]=0;
+}
+static void trace_append_bytes(RenderTrace *t,const void *bytes,size_t count,size_t cap)
+{
+    if(count>cap){t->clipped=1;return;}char hex[4097];
+    if(count>2048){t->clipped=1;return;}trace_hex(bytes,count,hex);trace_append(t,"%s",hex);
+}
+static uint64_t trace_hash(const unsigned char *bytes,size_t count)
+{uint64_t hash=UINT64_C(14695981039346656037);for(size_t i=0;i<count;i++){hash^=bytes[i];hash*=UINT64_C(1099511628211);}return hash;}
+static void render_trace_destroy(void *context)
+{RenderTrace *t=context;mmvk_trace_render_log("event=draw_trace_destroy draw_id=%" PRIu64 " pre_observed=%d retirement_observed=%d",t->id,t->observed_pre,t->observed_retired);for(unsigned i=0;i<5;i++)mmvk_buffer_destroy(t->slots[i]);free(t);}
+static void render_trace_sample(void *context,const MMVKTraceSubmission *submission,int retired)
+{
+    RenderTrace *t=context;const char *phase=retired?"host_post_retirement":"host_pre_submit";
+    if(retired)t->observed_retired=1;else t->observed_pre=1;
+    if(!retired)mmvk_trace_render_log("event=draw_plan command_id=%" PRIu64 " native_command=%" PRIu64 " draw_id=%" PRIu64 " pass=%u clipped=%d %s",
+        submission->command_id,submission->native_command,t->id,t->pass,t->clipped,t->metadata);
+    for(unsigned slot=0;slot<5;slot++){
+        MMVKTraceBufferFacts facts={0};const char *unavailable=NULL;uint64_t offset=t->offsets[slot];size_t count=slot==0?16:slot==2?64:32;
+        if(!mmvk_trace_buffer_facts(t->slots[slot],&facts))unavailable="unbound_or_not_retained";
+        else if(facts.storage!=MMVK_STORAGE_SHARED)unavailable="private";
+        else if(facts.aliasable||facts.heap_backed)unavailable="alias_or_heap";
+        else if(facts.gpu_write_recorded)unavailable="GPU_write_recorded";
+        else if(!facts.mapped_address)unavailable="unmapped";
+        if(slot==1){
+            if(retired){offset=t->sample_offsets[slot];count=t->pre_sizes[slot];if(!count)unavailable="pre_sample_unavailable";}
+            else if(t->request.kind!=0)unavailable="indexed_vertex_span";
+            /* Shader identity is not established here. Capture a bounded raw
+             * binding prefix, never infer a CA stride or selected vertices. */
+            else count=192;
+        }
+        size_t requested=count;
+        if(!unavailable){
+            if(offset>=facts.size)unavailable="sample_outside_buffer";
+            else if(count>facts.size-offset)count=(size_t)(facts.size-offset);
+        }
+        if(unavailable){mmvk_trace_render_log("event=draw_buffer phase=%s command_id=%" PRIu64 " draw_id=%" PRIu64 " slot=%u resource_id=%" PRIu64 " recorded_GPU_write_generation=%" PRIu64 " unavailable=%s",
+            phase,submission->command_id,t->id,slot,facts.resource_id,facts.recorded_write_generation,unavailable);continue;}
+        unsigned char snapshot[192];memcpy(snapshot,(const void *)(facts.mapped_address+(uintptr_t)offset),count);
+        if(!retired){memcpy(t->pre[slot],snapshot,count);t->pre_sizes[slot]=count;t->sample_offsets[slot]=offset;}
+        char hex[385];trace_hex(snapshot,count,hex);
+        mmvk_trace_render_log("event=draw_buffer phase=%s command_id=%" PRIu64 " draw_id=%" PRIu64 " slot=%u sampling_model=binding_prefix ca_model_assumed=0 resource_id=%" PRIu64 " native_buffer=%" PRIu64 " gpu_address=%" PRIu64 " bound_offset=%" PRIu64 " sample_offset=%" PRIu64 " size=%zu requested_size=%zu buffer_size=%" PRIu64 " storage=%u coherent=%u recorded_GPU_write_generation=%" PRIu64 " hash_fnv1a64=%016" PRIx64 " matches_pre=%d bytes=%s",
+            phase,submission->command_id,t->id,slot,facts.resource_id,facts.native_buffer,facts.gpu_address,t->offsets[slot],offset,count,requested,facts.size,facts.storage,facts.coherent,facts.recorded_write_generation,trace_hash(snapshot,count),
+            retired&&count==t->pre_sizes[slot]&&offset==t->sample_offsets[slot]&&!memcmp(snapshot,t->pre[slot],count),hex);
+    }
+}
+static void render_trace_register(MMVKCommands *commands,MMShaderVulkanRenderExecution *x)
+{
+    if(!mmvk_trace_render_enabled())return;
+    uint64_t id=__atomic_add_fetch(&trace_draw_count,1,__ATOMIC_RELAXED);if(id>16)return;
+    RenderTrace *t=calloc(1,sizeof(*t));if(!t){mmvk_trace_render_log("event=draw_trace_drop reason=allocation");return;}
+    t->id=id;t->pass=mmvk_trace_pass_id(commands);t->request=x->trace_request;
+    const MMShaderRenderDrawPlan *p=&x->plan;const MMShaderRenderDrawRequest *r=&t->request;
+    trace_append(t,"kind=%u primitive=%u start=%u count=%u instances=%u base_instance=%u base_vertex=%d index_type=%u index_length=%" PRIu64 " index_offset=%" PRIu64 " key=",
+        r->kind,r->primitive_type,r->start,r->count,r->instance_count,r->base_instance,r->base_vertex,r->index_type,r->index_length,r->index_offset);
+    trace_append_bytes(t,p->pipeline_key,32,32);trace_append(t," canonical_draw=%u,%u,%u,%u,%u,%u",p->draw_kind,p->draw_arguments[0],p->draw_arguments[1],p->draw_arguments[2],p->draw_arguments[3],p->draw_arguments[4]);
+    for(uint32_t i=0;i<p->specialization_count;i++)trace_append(t," spec[%u]=%u,%u,%zu",i,p->specialization[i].id,p->specialization[i].offset,p->specialization[i].size);
+    trace_append(t," spec_data=");trace_append_bytes(t,p->specialization_data,p->specialization_size,2048);
+    for(uint32_t i=0;i<p->push_count;i++){
+        const MMShaderRenderPush *push=p->pushes+i;
+        /* RecordRender passes both MMVK graphics stages; mmvk_stages maps
+         * those to Vulkan VERTEX_BIT(1)|FRAGMENT_BIT(16), independently of plan. */
+        trace_append(t," push[%u].planned_vulkan_stages=%u push[%u].actual_mm_vk_stages=%u push[%u].actual_vk_stages=%u push[%u].offset=%u push[%u].size=%u push[%u].bytes=",
+            i,push->vulkan_stages,i,MMVK_STAGE_VERTEX|MMVK_STAGE_FRAGMENT,i,0x11u,i,push->offset,i,push->size,i);
+        trace_append_bytes(t,push->bytes,push->size,1024);
+    }
+    for(uint32_t i=0;i<p->descriptor_count;i++){
+        const MMShaderRenderDescriptor *d=p->descriptors+i;MMVKTraceBufferFacts facts={0};
+        if(d->source_kind==MM_SHADER_RENDER_BUFFER&&d->metal_stage<2&&d->metal_index<31)mmvk_trace_buffer_facts((d->metal_stage?x->resources.fragment_buffers:x->resources.vertex_buffers)[d->metal_index].buffer,&facts);
+        else if(d->source_kind==MM_SHADER_RENDER_CONSTANT||d->source_kind==MM_SHADER_RENDER_BYTES||d->source_kind==MM_SHADER_RENDER_ZERO_BUFFER)mmvk_trace_buffer_facts(x->buffers[i],&facts);
+        trace_append(t," descriptor[%u]=%u,%u,%u,%u,%u,%u,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64,
+            i,d->set,d->binding,d->vulkan_type,d->source_kind,d->metal_stage,d->metal_index,d->offset,d->range,facts.resource_id,facts.native_buffer,facts.gpu_address);
+        if(d->source_kind==MM_SHADER_RENDER_BUFFER||d->source_kind==MM_SHADER_RENDER_CONSTANT||d->source_kind==MM_SHADER_RENDER_BYTES||d->source_kind==MM_SHADER_RENDER_ZERO_BUFFER)
+            trace_append(t," descriptor[%u].planned_offset=%" PRIu64 " descriptor[%u].actual_bind_offset=%" PRIu64,
+                i,d->offset,i,d->source_kind==MM_SHADER_RENDER_BUFFER?d->offset:UINT64_C(0));
+        if((d->source_kind==MM_SHADER_RENDER_TEXTURE||d->source_kind==MM_SHADER_RENDER_COMBINED_IMAGE_SAMPLER)&&d->metal_stage<2&&d->metal_index<128)
+            trace_append(t," descriptor_image[%u]=%" PRIu64 ",%" PRIu64,i,
+                mmvk_image_resource_id((d->metal_stage?x->resources.fragment_textures:x->resources.vertex_textures)[d->metal_index]),mmvk_image_resource_id(x->images[i]));
+    }
+    for(unsigned i=0;i<5;i++){
+        MMVKBuffer *buffer=x->resources.vertex_buffers[i].buffer;t->offsets[i]=x->resources.vertex_buffers[i].offset;
+        MMVKError ignored={0};void *retained=NULL;
+        if(buffer&&mmvk_resource_acquire(x->trace_device,mmvk_buffer_resource_id(buffer),MMVK_RESOURCE_BUFFER,&retained,&ignored)==MMVK_OK)t->slots[i]=retained;
+    }
+    if(!mmvk_commands_add_trace_observer(commands,t,(MMVKTraceObserver){render_trace_sample,render_trace_destroy})){render_trace_destroy(t);mmvk_trace_render_log("event=draw_trace_drop reason=observer_allocation");}
+}
 static MMVKResult failure(MMVKError *e,MMVKResult code,const char *text){
     if(e){memset(e,0,sizeof(*e));e->code=code;snprintf(e->message,sizeof(e->message),"%s",text);}return code;
 }
@@ -142,6 +250,7 @@ MMVKResult MMShaderVulkanPrepareRender(MMShaderVulkanRenderCache *cache,const MM
     MMVKResult result=status==MM_SHADER_OK?MMVK_OK:failure(e,MMVK_ERROR_SHADER,error.message);if(result)goto done;
     if(x->plan.abi_version!=MM_SHADER_RENDER_DRAW_ABI_VERSION||!x->plan.backend_plan||x->plan.descriptor_count>MM_SHADER_MAX_BINDINGS){result=failure(e,MMVK_ERROR_SHADER,"Invalid canonical render draw ABI or descriptor count");goto done;}
     x->resources=*resources;
+    if(mmvk_trace_render_enabled()){x->trace_device=cache->device;x->trace_request=*request;}
     result=pipeline_variant(cache,&x->plan,state,pass,&x->variant,e);if(result)goto done;
     for(uint32_t n=0;n<x->plan.descriptor_count;n++){
         const MMShaderRenderDescriptor *d=x->plan.descriptors+n;
@@ -193,6 +302,7 @@ MMVKResult MMShaderVulkanRecordRender(MMVKCommands *commands,MMShaderVulkanRende
         r=mmvk_commands_push_constants(commands,MMVK_STAGE_VERTEX|MMVK_STAGE_FRAGMENT,p->offset,p->bytes,p->size,e);if(r)return r;
     }
     const uint32_t *a=x->plan.draw_arguments;
+    render_trace_register(commands,x);
     if(x->plan.draw_kind==0)return mmvk_commands_draw(commands,a[0],a[1],a[2],a[3],e);
     if(x->plan.draw_kind==1){r=mmvk_commands_bind_index_buffer(commands,indices,x->plan.index_offset,x->plan.index_type,e);
         if(r)return r;return mmvk_commands_draw_indexed(commands,a[0],a[1],a[2],(int32_t)a[3],a[4],e);}
