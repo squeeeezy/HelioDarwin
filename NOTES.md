@@ -326,6 +326,29 @@ non-cacheable, and rendered frames still reach IOSurface memory through a
 GPU-to-buffer copy plus a host copy. These fifteen samples identify where
 sampled time went, not a frame time; the effect of the change is unmeasured.
 
+A second 2026-11-18 run used kernel `44263552907` with patch 0212 and the reuse
+bundle (`27727ee`). It returned to Android through the 600-second reset and its
+262,132-byte console was retained. The console records `clock admitted domain
+virtual` with the GPU timestamp inside a 12-tick virtual counter bracket, and
+render traces record `gpu-timing-admission stage=clock-and-queue-valid`. Patch
+0212 therefore corrects the clock rejection on the phone.
+
+Device initialization then completed, and backboardd raised `Native MPS Common
+registration failed` at the combined target check and aborted. launchd restarted
+it 21 times with the same result; SpringBoard never created a device, and no
+frame was presented. The earlier run's unified log shows the same registration
+succeeding. The installed `SystemVersion.plist` still reads `20H392`, and the
+bundle builds of both runs link the same libraries. Which condition of the
+combined check failed is not known; neither measured timing nor transient
+object reuse was exercised by this run.
+
+The target check now names its first failing condition. A mismatch found there
+stops before any native object is constructed or any registry is written, so it
+is logged and the device continues without the experimental backend. Failures
+after that point remain fatal. An earlier capture showed SpringBoard aborting in
+MPS GaussianBlur initialization without this backend, so an unregistered
+backend can still end in that abort.
+
 ## Priorities
 
 1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,
