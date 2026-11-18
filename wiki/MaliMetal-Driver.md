@@ -313,6 +313,13 @@ sample opt-in (`sweetmali_pct=1`). Admission with real samples awaits a device
 run. backboardd averaged 77% CPU, mostly in kernel calls made through the ICD;
 the lag and artifact causes are not identified.
 
+The sampled backboardd stacks of that run sit in native BO allocation and
+release for a per-command 16,384-descriptor pool and for per-transfer image
+staging buffers, and in the host copy of each readback. The backend now reuses
+reset descriptor pools and retired staging buffers. Presentation still reads
+every rendered frame back through non-cacheable staging memory into IOSurface
+memory; that copy, and a zero-copy path that would remove it, remain open.
+
 Pinned source inputs:
 
 - [Mesa 5a07217f](https://gitlab.freedesktop.org/mesa/mesa/-/tree/5a07217f034b3e50d8c7c7794f97a2df1742613b)

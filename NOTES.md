@@ -309,6 +309,23 @@ mostly in kernel mode; its heaviest stack passes from the bundle through the
 ICD into IOKit calls. No backboardd crash report was produced. The causes of
 the lag and of the artifacts are not identified.
 
+Symbolized against the installed bundle and ICD, the fifteen backboardd
+microstackshot samples of that run all lie under `-[MaliMetalCommandBuffer
+execute]`. They fall in three places: native BO allocation and release reached
+from the per-command descriptor pool, from image upload staging and from
+readback staging; the host copy of a readback out of the staging mapping; and
+draw recording. Each command created a pool for 16,384 descriptors of six
+types, and each host image transfer created and destroyed its own staging
+buffer, about 10 MiB for a full frame. Both are kernel BO allocations.
+
+The backend now keeps up to four reset descriptor pools and one retired staging
+buffer per transfer direction for reuse. A buffer is either idle or owned by one
+transfer, and only a transfer whose fence retired without error returns its
+buffer. The readback copy itself is unchanged: staging memory is still
+non-cacheable, and rendered frames still reach IOSurface memory through a
+GPU-to-buffer copy plus a host copy. These fifteen samples identify where
+sampled time went, not a frame time; the effect of the change is unmeasured.
+
 ## Priorities
 
 1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,
