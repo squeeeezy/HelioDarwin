@@ -846,9 +846,15 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
     [super initFeatureQueries];
     if (MaliMetalMPSCommonBackendEnabled()) {
         MMVKError error = {0};
-        if (MaliMetalRegisterMPSCommonBackend(self, &error) != MMVK_OK)
-            [NSException raise:@"NSInternalInconsistencyException"
-                        format:@"Native MPS Common registration failed: %s", error.message];
+        if (MaliMetalRegisterMPSCommonBackend(self, &error) != MMVK_OK) {
+            /* A target mismatch stops at read-only identity checks: nothing was
+             * constructed or registered, so the device continues without the
+             * experimental backend. Any later failure remains fatal. */
+            if (!MaliMetalMPSCommonTargetMismatch(&error))
+                [NSException raise:@"NSInternalInconsistencyException"
+                            format:@"Native MPS Common registration failed: %s", error.message];
+            NSLog(@"[MaliMetal] Native MPS Common backend not registered: %s", error.message);
+        }
     }
 }
 - (MMVKDevice *)backendDevice {

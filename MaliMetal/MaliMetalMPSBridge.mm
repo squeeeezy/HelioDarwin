@@ -14,6 +14,11 @@
 #endif
 
 BOOL MaliMetalMPSCommonBackendEnabled(void) { return MM_ENABLE_MPS_COMMON_BACKEND ? YES : NO; }
+BOOL MaliMetalMPSCommonTargetMismatch(const MMVKError *error) {
+    static const char prefix[] = "MPS Common target mismatch at ";
+    return error && error->code == MMVK_ERROR_UNSUPPORTED &&
+           !strncmp(error->message, prefix, sizeof(prefix) - 1) ? YES : NO;
+}
 
 #if MM_ENABLE_MPS_COMMON_BACKEND
 /* Exact arm64 iOS 16.7.16/20H392 private ABI. No framework instructions or
@@ -46,6 +51,8 @@ struct Construction {
     void *object;
     id device;
 };
+/* A target mismatch is reported before anything is constructed or registered. */
+const char kTargetMismatchPrefix[] = "MPS Common target mismatch at ";
 pthread_mutex_t registrationLock = PTHREAD_MUTEX_INITIALIZER;
 thread_local bool registering = false;
 Construction *failedConstructions;
@@ -132,7 +139,9 @@ bool commonNode(const NativeAPI &api, void *node, id device) {
     memcpy(&heap, bytes+kHeapManager, sizeof(heap)); memcpy(&queue, bytes+kSerialQueue, sizeof(queue));
     return vtable == api.vtable && owner == device && heap && queue;
 }
-bool imageAPI(NativeAPI *api) {
+/* *stage names the first failed check. Nothing is modified before this returns. */
+bool imageAPI(NativeAPI *api, const char **stage) {
+    *stage = "symbol-lookup";
     auto construct = reinterpret_cast<Construct>(dlsym(RTLD_DEFAULT,
         "_ZN16MPSDevice_CommonC1EPU19objcproto9MTLDevice11objc_object"));
     auto common = dlsym(RTLD_DEFAULT, "_ZN16MPSDevice_CommonC2EPU19objcproto9MTLDevice11objc_object");
@@ -146,12 +155,14 @@ bool imageAPI(NativeAPI *api) {
     if (!construct || !common || !base || !destroy || !get || !table || !hash ||
         !dladdr(reinterpret_cast<const void *>(get), &information) || !information.dli_fbase)
         return false;
+    *stage = "image-header";
     auto header = static_cast<const mach_header_64 *>(information.dli_fbase);
     if (!mapped(reinterpret_cast<uintptr_t>(header), sizeof(*header), 1) ||
         header->magic != MH_MAGIC_64 || header->cputype != 0x100000c ||
         header->filetype != MH_DYLIB || header->ncmds > 128 || header->sizeofcmds > 65536 ||
         !mapped(reinterpret_cast<uintptr_t>(header), sizeof(*header) + header->sizeofcmds, 1))
         return false;
+    *stage = "export-addresses";
     uintptr_t slide = reinterpret_cast<uintptr_t>(header) - kImageBase;
     if (reinterpret_cast<uintptr_t>(construct) != slide + 0x1d40bea34 ||
         reinterpret_cast<uintptr_t>(common) != slide + 0x1d406fb44 ||
@@ -159,6 +170,7 @@ bool imageAPI(NativeAPI *api) {
         reinterpret_cast<uintptr_t>(destroy) != slide + 0x1d40be890 ||
         reinterpret_cast<uintptr_t>(get) != slide + 0x1d40702e8 ||
         reinterpret_cast<uintptr_t>(table) != slide + 0x1e2a38b60) return false;
+    *stage = "load-commands";
     const auto *commands = reinterpret_cast<const unsigned char *>(header + 1);
     size_t position = 0; bool uuid = false, writableHead = false;
     for (uint32_t i = 0; i < header->ncmds; ++i) {
@@ -180,21 +192,32 @@ bool imageAPI(NativeAPI *api) {
         }
         position += command->cmdsize;
     }
-    if (!uuid || !writableHead ||
-        !mapped(slide + kCacheHead, sizeof(uintptr_t), 3) ||
-        !mapped(reinterpret_cast<uintptr_t>(table), 17*sizeof(uintptr_t), 1) || table[0] || table[1])
-        return false;
+    *stage = !uuid ? "image-uuid" : "writable-head-section";
+    if (!uuid || !writableHead) return false;
+    *stage = "writable-head-mapping";
+    if (!mapped(slide + kCacheHead, sizeof(uintptr_t), 3)) return false;
+    *stage = "vtable-mapping";
+    if (!mapped(reinterpret_cast<uintptr_t>(table), 17*sizeof(uintptr_t), 1)) return false;
+    *stage = "vtable-prefix";
+    if (table[0] || table[1]) return false;
+    *stage = "vtable-entries";
     for (size_t i = 0; i < 15; ++i) if (table[i+2] != slide+kVtable[i]) return false;
+    *stage = "code-construct";
     if (!fingerprint(hash, reinterpret_cast<const void *>(construct), 4,
-            "4aaa7e88a5cad103f870fa1a5cb62e823ac344c61336d440fe390a5b11fae88d") ||
-        !fingerprint(hash, common, 324,
-            "d0a2890645099d3e175bb6298ca294a1542472d5fa948fb7b7bba53f16d3613c") ||
-        !fingerprint(hash, base, 112,
-            "82b11f5749272170da917c1f4a2bbe4c889462ee87b9f39bb1a48534e65f46c2") ||
-        !fingerprint(hash, destroy, 240,
-            "ee71939ec5c1e2b3e2c80b8c913836b76d7a7000f0d06aa9138f3456d74c8ab4") ||
-        !fingerprint(hash, reinterpret_cast<const void *>(get), 1604,
+            "4aaa7e88a5cad103f870fa1a5cb62e823ac344c61336d440fe390a5b11fae88d")) return false;
+    *stage = "code-common";
+    if (!fingerprint(hash, common, 324,
+            "d0a2890645099d3e175bb6298ca294a1542472d5fa948fb7b7bba53f16d3613c")) return false;
+    *stage = "code-base";
+    if (!fingerprint(hash, base, 112,
+            "82b11f5749272170da917c1f4a2bbe4c889462ee87b9f39bb1a48534e65f46c2")) return false;
+    *stage = "code-destroy";
+    if (!fingerprint(hash, destroy, 240,
+            "ee71939ec5c1e2b3e2c80b8c913836b76d7a7000f0d06aa9138f3456d74c8ab4")) return false;
+    *stage = "code-get";
+    if (!fingerprint(hash, reinterpret_cast<const void *>(get), 1604,
             "c95b5072622ede5403d06e5636398c0632336f914158b9c225ed53165185f3ca")) return false;
+    *stage = "verified";
     *api = {construct, get, table + 2, reinterpret_cast<uintptr_t *>(slide+kCacheHead), slide};
     return true;
 }
@@ -232,8 +255,11 @@ MMVKResult MaliMetalRegisterMPSCommonBackend(MaliMetalDevice *device, MMVKError 
     MMVKResult result = MMVK_OK; NativeAPI api = {}; Construction *owner = nullptr;
     @try {
         id version = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-        if (![[version objectForKey:@"ProductBuildVersion"] isEqualToString:@"20H392"] || !imageAPI(&api)) {
-            result = failure(error, MMVK_ERROR_UNSUPPORTED, "MPS Common target build/image/export/code/vtable/RW registry mismatch");
+        const char *stage = "system-build";
+        if (![[version objectForKey:@"ProductBuildVersion"] isEqualToString:@"20H392"] || !imageAPI(&api, &stage)) {
+            char message[96];
+            snprintf(message, sizeof(message), "%s%s", kTargetMismatchPrefix, stage);
+            result = failure(error, MMVK_ERROR_UNSUPPORTED, message);
         } else {
             const char *queries[] = {"supports32BitFloatFiltering", "supportsArrayOfTextures",
                 "supportsQuadShufflesAndBroadcast", "supportsSIMDShufflesAndBroadcast", "supportsSIMDReduction",
