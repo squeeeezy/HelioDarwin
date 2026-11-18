@@ -1,0 +1,60 @@
+diff --git a/iokit/Kernel/arm/SweetMaliUserClient.inc b/iokit/Kernel/arm/SweetMaliUserClient.inc
+--- a/iokit/Kernel/arm/SweetMaliUserClient.inc
++++ b/iokit/Kernel/arm/SweetMaliUserClient.inc
+@@ -83,8 +83,11 @@
+ 		clockSetup = "not-attempted";
+ 		timestampReadback = clockRejectLogs = clockAdmitLogs = 0;
+ 		timestampInputReady = timestampCounterOwned = false;
+-		/* sweetmali_pct=0 omits the read-only physical counter bracket. */
+-		uint32_t physicalSample = 1;
++		/* Run 44257457052 recorded GPU timestamps within five ticks of mach
++		 * uptime at 13 MHz, the virtual counter's domain. The physical counter
++		 * was never actually read there, so its bracket is opt-in:
++		 * sweetmali_pct=1 adds that read-only sample. */
++		uint32_t physicalSample = 0;
+ 		(void)PE_parse_boot_argn("sweetmali_pct", &physicalSample, sizeof(physicalSample));
+ 		clockPhysicalSample = physicalSample != 0;
+ 		active = NULL;
+@@ -161,6 +164,18 @@
+ 		}
+ 		timestampCounterOwned = false;
+ 	}
++	/* Darwin's arm64 assembler treats ';' as a comment. The earlier one-line
++	 * "isb; mrs ...; isb" sequence therefore emitted only the first isb and left
++	 * its output register unwritten, which rejected every sample of run
++	 * 44257457052 at the bracket test. Each instruction is now its own builtin. */
++	static inline uint64_t counterRead(bool physical)
++	{
++		__builtin_arm_isb(0xf);
++		uint64_t value = physical ? __builtin_arm_rsr64("CNTPCT_EL0")
++					  : __builtin_arm_rsr64("CNTVCT_EL0");
++		__builtin_arm_isb(0xf);
++		return value;
++	}
+ 	/* Returns NULL when out holds a validated sample, otherwise the rejecting
+ 	 * stage. The GPU timestamp input is the SoC system counter, so a stable
+ 	 * read must lie inside a CPU counter bracket taken around it. The virtual
+@@ -189,9 +204,9 @@
+ 			__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequency));
+ 			clock_get_uptime(&out->uptime_before_ns);
+ 			absolutetime_to_nanoseconds(out->uptime_before_ns, &out->uptime_before_ns);
+-			__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(virtualBefore) :: "memory");
++			virtualBefore = counterRead(false);
+ 			if (clockPhysicalSample) {
+-				__asm__ volatile("isb; mrs %0, cntpct_el0; isb" : "=r"(physicalBefore) :: "memory");
++				physicalBefore = counterRead(true);
+ 			}
+ 			for (unsigned i = 0; i < 16; ++i) {
+ 				uint32_t high = rd(MALI_REG_TIMESTAMP_LO + 4);
+@@ -203,9 +218,9 @@
+ 				}
+ 			}
+ 			if (clockPhysicalSample) {
+-				__asm__ volatile("isb; mrs %0, cntpct_el0; isb" : "=r"(physicalAfter) :: "memory");
++				physicalAfter = counterRead(true);
+ 			}
+-			__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(virtualAfter) :: "memory");
++			virtualAfter = counterRead(false);
+ 			clock_get_uptime(&out->uptime_after_ns);
+ 			absolutetime_to_nanoseconds(out->uptime_after_ns, &out->uptime_after_ns);
+ 			__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequencyAfter));
