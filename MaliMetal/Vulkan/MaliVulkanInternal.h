@@ -53,6 +53,13 @@ struct MMVKDevice {
     char *shader_profile;
     VkPhysicalDeviceMemoryProperties memory;
     pthread_mutex_t queue_lock;
+    /* Retired transient objects kept for reuse. Each native allocation of a
+     * staging buffer or descriptor pool is a kernel BO allocation, mapping and
+     * release; the 2026-11-18 run spent most sampled backboardd CPU there. */
+    pthread_mutex_t reuse_lock;
+    VkDescriptorPool idle_descriptor_pools[4]; uint32_t idle_descriptor_pool_count;
+    MMVKBuffer *idle_staging[2]; /* [0] upload source, [1] readback destination */
+    PFN_vkResetDescriptorPool ResetDescriptorPool; /* optional: absent disables pool reuse */
     PFN_vkGetInstanceProcAddr GetInstanceProcAddr;
     INSTANCE_FUNCS(DECLARE) DEVICE_FUNCS(DECLARE) TIMING_DEVICE_FUNCS(DECLARE)
 };

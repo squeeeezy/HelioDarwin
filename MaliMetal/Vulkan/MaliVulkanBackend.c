@@ -335,6 +335,7 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     MMVKDevice *d=calloc(1,sizeof(*d));
     if (!d) return mmvk_errorf(e,MMVK_ERROR_MEMORY,0,"device allocation failed");
     pthread_mutex_init(&d->queue_lock,NULL);
+    pthread_mutex_init(&d->reuse_lock,NULL);
     d->clock_connection=connection;
     d->icd=dlopen(path?path:"/System/Library/Extensions/MaliMetal.bundle/libpanvk_sweetmali.dylib",RTLD_NOW|RTLD_LOCAL);
     if (!d->icd) { mmvk_errorf(e,MMVK_ERROR_DRIVER_UNAVAILABLE,0,"PanVK ICD: %s",dlerror()); goto fail; }
@@ -479,6 +480,7 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
     }
 #endif
 #undef LOAD_DEVICE
+    d->ResetDescriptorPool=(PFN_vkResetDescriptorPool)d->GetDeviceProcAddr(d->device,"vkResetDescriptorPool");
     d->GetDeviceQueue(d->device,d->family,0,&d->queue);
     d->GetPhysicalDeviceMemoryProperties(d->physical,&d->memory);
     d->properties12.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
@@ -542,11 +544,16 @@ MMVKResult mmvk_device_destroy(MMVKDevice *d)
     if(mmvk_device_is_quarantined(d))return MMVK_ERROR_DEVICE_LOST;
     if (d->device && d->DestroyDevice) {
         if(d->DeviceWaitIdle){VkResult idle=d->DeviceWaitIdle(d->device);if(idle!=VK_SUCCESS){mmvk_device_mark_quarantined(d);return mmvk_vkresult(NULL,idle,"vkDeviceWaitIdle");}}
+        /* Idle reuse objects are retired and unreferenced; release them with the device. */
+        mmvk_resources_release_idle(d);
+        while(d->idle_descriptor_pool_count&&d->DestroyDescriptorPool)
+            d->DestroyDescriptorPool(d->device,d->idle_descriptor_pools[--d->idle_descriptor_pool_count],NULL);
         d->DestroyDevice(d->device,NULL);
     }
     if (d->instance && d->DestroyInstance)d->DestroyInstance(d->instance,NULL);
     if (d->icd)dlclose(d->icd);
     free(d->shader_profile);
+    pthread_mutex_destroy(&d->reuse_lock);
     pthread_mutex_destroy(&d->queue_lock);
     free(d);
     return MMVK_OK;
@@ -651,8 +658,21 @@ void mmvk_commands_destroy(MMVKCommands *c)
         d->DestroyRenderPass(d->device,c->render_passes[n],NULL);
     }
     mmvk_graphics_commands_cleanup(c);
-    if(c->descriptors)d->DestroyDescriptorPool(d->device,c->descriptors,NULL);
     if(c->pool)d->DestroyCommandPool(d->device,c->pool,NULL);
+    if(c->descriptors){
+        /* This command is unsubmitted or physically retired (a quarantined
+         * submitted command returned above), and its command buffer is gone, so
+         * nothing references these sets. A reset pool keeps its native storage. */
+        int kept=0;
+        if(d->ResetDescriptorPool&&d->ResetDescriptorPool(d->device,c->descriptors,0)==VK_SUCCESS){
+            pthread_mutex_lock(&d->reuse_lock);
+            if(d->idle_descriptor_pool_count<sizeof(d->idle_descriptor_pools)/sizeof(d->idle_descriptor_pools[0])){
+                d->idle_descriptor_pools[d->idle_descriptor_pool_count++]=c->descriptors;kept=1;
+            }
+            pthread_mutex_unlock(&d->reuse_lock);
+        }
+        if(!kept)d->DestroyDescriptorPool(d->device,c->descriptors,NULL);
+    }
     if(c->timing_pool)d->DestroyQueryPool(d->device,c->timing_pool,NULL);
     trace_observers_destroy(c->trace_observers);
     free(c->written_buffers);free(c->written_images);
@@ -1055,6 +1075,12 @@ MMVKResult mmvk_bind_snapshot(MMVKCommands *c,MMVKError *e)
     uint64_t required=p->binding_count==64?UINT64_MAX:((UINT64_C(1)<<p->binding_count)-1);
     if((c->bound_bindings&required)!=required)return mmvk_errorf(e,MMVK_ERROR_STATE,0,"draw/dispatch has unbound descriptors");
     if(c->descriptor_snapshots==256)return mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"command descriptor snapshot limit exceeded");
+    if(!c->descriptors){
+        pthread_mutex_lock(&c->dev->reuse_lock);
+        if(c->dev->idle_descriptor_pool_count)
+            c->descriptors=c->dev->idle_descriptor_pools[--c->dev->idle_descriptor_pool_count];
+        pthread_mutex_unlock(&c->dev->reuse_lock);
+    }
     if(!c->descriptors){
         VkDescriptorPoolSize sizes[]={{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,16384},{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,16384},{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,16384},
             {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,16384},{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,16384},{VK_DESCRIPTOR_TYPE_SAMPLER,16384}};

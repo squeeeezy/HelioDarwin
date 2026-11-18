@@ -848,6 +848,40 @@ MMVKResult mmvk_buffer_initialize_zero(MMVKBuffer *b,MMVKError *e){
     result=retirement_wait(&owner,UINT64_MAX,e);
 done:retirement_destroy(owner);return result;
 }
+/* Host image transfers previously created and destroyed one native staging
+ * buffer each: a full-frame readback allocated, zeroed, mapped and released
+ * about 10 MiB of kernel BO per frame. One retired buffer per direction is kept
+ * instead. A buffer is in the idle slot or owned by exactly one transfer, never
+ * both, so concurrent transfers simply allocate their own. */
+#define MMVK_IDLE_STAGING_MAX (64ull*1024*1024)
+static MMVKResult staging_take(MMVKDevice *d,uint64_t size,int download,MMVKBuffer **out,MMVKError *e){
+    MMVKBuffer *b=NULL;
+    pthread_mutex_lock(&d->reuse_lock);
+    if(d->idle_staging[download]&&d->idle_staging[download]->size>=size){b=d->idle_staging[download];d->idle_staging[download]=NULL;}
+    pthread_mutex_unlock(&d->reuse_lock);
+    if(b){*out=b;return MMVK_OK;}
+    return mmvk_buffer_create(d,size,download?MMVK_BUFFER_TRANSFER_DST:MMVK_BUFFER_TRANSFER_SRC,out,e);
+}
+/* Only for a buffer whose transfer physically retired without error. */
+static void staging_return(MMVKBuffer *b,int download){
+    MMVKDevice *d=b->dev;MMVKBuffer *drop=b;
+    if(!mmvk_device_is_quarantined(d)&&b->size<=MMVK_IDLE_STAGING_MAX){
+        pthread_mutex_lock(&d->reuse_lock);
+        MMVKBuffer *held=d->idle_staging[download];
+        if(!held||held->size<b->size){d->idle_staging[download]=b;drop=held;}
+        pthread_mutex_unlock(&d->reuse_lock);
+    }
+    mmvk_buffer_destroy(drop);
+}
+void mmvk_resources_release_idle(MMVKDevice *d){
+    if(!d)return;
+    for(int n=0;n<2;n++){
+        pthread_mutex_lock(&d->reuse_lock);
+        MMVKBuffer *b=d->idle_staging[n];d->idle_staging[n]=NULL;
+        pthread_mutex_unlock(&d->reuse_lock);
+        mmvk_buffer_destroy(b);
+    }
+}
 static MMVKResult image_host_copy_raw(MMVKImage *i,
                                       const MMVKImageRegion *r,
                                       void *p,
@@ -888,11 +922,7 @@ static MMVKResult image_host_copy_raw(MMVKImage *i,
         texture_trace_log("{\"event\":\"texture_host_transfer\",\"transfer\":%llu,\"resource\":%llu,\"root\":%llu,\"generation\":%llu,\"download\":%d,\"host\":\"%llx\",\"capacity\":%llu,\"row\":%llu,\"plane\":%llu,\"needed\":%llu,\"tight\":%llu}",(unsigned long long)owner->trace_transfer,(unsigned long long)mmvk_image_resource_id(i),(unsigned long long)texture_trace_root,(unsigned long long)mmvk_image_root(i)->generation,download,(unsigned long long)(uintptr_t)p,(unsigned long long)capacity,(unsigned long long)row,(unsigned long long)plane,(unsigned long long)needed,(unsigned long long)tight);
         if(!download&&!previous_transfer)texture_trace_snapshot(i,owner->trace_transfer,"host_upload",0,p,capacity,row,r->width,r->height);
     }
-    result = mmvk_buffer_create(i->dev,
-                                tight,
-                                download ? MMVK_BUFFER_TRANSFER_DST : MMVK_BUFFER_TRANSFER_SRC,
-                                &owner->buffer,
-                                e);
+    result = staging_take(i->dev, tight, download ? 1 : 0, &owner->buffer, e);
     if (result)
         goto done;
     MMVKBuffer *b = owner->buffer;
@@ -934,7 +964,17 @@ static MMVKResult image_host_copy_raw(MMVKImage *i,
     }
 done:
     if(trace){texture_trace_log("{\"event\":\"texture_transfer_end\",\"transfer\":%llu,\"result\":%d,\"quarantined\":%s}",(unsigned long long)texture_trace_transfer,result,mmvk_device_is_quarantined(i->dev)?"true":"false");texture_trace_transfer=previous_transfer;texture_trace_root=previous_root;}
+    /* On success the fence wait above proved physical retirement. Destroy the
+     * command first so that it drops its own references, then keep the buffer.
+     * Every failure leaves the buffer with its retirement owner as before. */
+    MMVKBuffer *retired = NULL;
+    if (result == MMVK_OK && owner && owner->buffer && !mmvk_device_is_quarantined(i->dev)) {
+        retired = owner->buffer;
+        owner->buffer = NULL;
+    }
     retirement_destroy(owner);
+    if (retired)
+        staging_return(retired, download ? 1 : 0);
     return result;
 }
 static MMVKResult image_host_copy(MMVKImage *i,const MMVKImageRegion *r,void *pixels,size_t capacity,size_t row,size_t plane,uint64_t timeout,int download,MMVKError *e){

@@ -26,5 +26,7 @@ struct MMVKImage {
     uint32_t aliasable; MMVKResourceIdentity *identity;
     void *host_readonly_backing; void (*release_host_backing)(void *);
 };
+/* Releases the device's idle staging buffers; called once at device destruction. */
+void mmvk_resources_release_idle(MMVKDevice *);
 struct MMVKSampler { MMVKDevice *dev; VkSampler sampler; MMVKSamplerDescriptor desc; uint32_t references; MMVKResourceIdentity *identity; MMVKMetalSamplerDescriptor metal; uint32_t has_metal_descriptor; };
 #endif
