@@ -280,6 +280,35 @@ behavior are still unobserved. Its power-key press and release edges are
 followed by display off and display on records, so key delivery toggled the
 display in that run; any remaining sleep/wake fault is not a lost key edge there.
 
+The 2026-11-18 run used kernel `44257457052` (`3931279`) with the best-effort
+timing bundle. Render traces record `device-init phase=complete` in backboardd
+and SpringBoard, and a new 123,855-byte native profile export exists where the
+previous run left none. The user saw the bootloader image and then the home
+screen, drawn with severe lag and artifacts. The pstore console was empty after
+the return to Android, so this run has no kernel console capture.
+
+Kernel message arguments retained in the unified log show AS lease `acquire`
+and `retired-detached` records with no `retired-reset` among them, records
+naming the volume up and down buttons, and ten clock rejections at stage
+`counter-bracket` with setup `started`, readback `0x3`, GPU status `0x141`, a
+13 MHz counter frequency and a stable timestamp read. In each record the GPU
+timestamp lies within five ticks of mach uptime at 13 MHz, while the logged CPU
+bracket values are not counter values.
+
+That bracket was never sampled. Patch 0208 wrote each counter read as one
+inline-assembly string, `isb; mrs ...; isb`. Darwin's arm64 assembler treats
+`;` as a comment, so only the first `isb` was emitted and the output register
+stayed unwritten. A Mach-O test object contains no `mrs` for that form and one
+for the builtin form. Patch 0212 emits the reads through builtins, and its
+object contains them. The physical-counter read was equally absent in this run
+and is now opt-in with `sweetmali_pct=1`. Admission with real samples, and the
+measured timing path behind it, still require a device run.
+
+A CPU resource report records backboardd at 77% average CPU over 116 seconds,
+mostly in kernel mode; its heaviest stack passes from the bundle through the
+ICD into IOKit calls. No backboardd crash report was produced. The causes of
+the lag and of the artifacts are not identified.
+
 ## Priorities
 
 1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,

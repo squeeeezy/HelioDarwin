@@ -102,7 +102,10 @@ Its bundle required the optional GPU clock, the kernel rejected that query, and
 the visible interface was software rendering. Timing is now best effort: a
 rejected clock disables measurements only. Patch 0210 reports the rejecting
 clock stage, and patch 0211 aligns touch report decoding with the vendor
-handlers. These changes build locally and await a device run; see the
+handlers. The 2026-11-18 run of kernel `44257457052` then created the native
+device in backboardd and SpringBoard and showed the home screen, with severe
+lag and artifacts. It also exposed why the clock was rejected: the counter
+reads were never emitted, which patch 0212 corrects. See the
 [engineering status](../NOTES.md).
 
 ## Boot layout

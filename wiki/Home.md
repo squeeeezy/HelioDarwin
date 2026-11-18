@@ -67,7 +67,13 @@ The November 6 device run of that kernel created no native GPU device: its
 bundle required the optional GPU clock and the kernel rejected the query, so the
 visible interface was software rendering. Timing is now best effort, patch 0210
 reports the rejecting clock stage, and patch 0211 aligns touch report decoding
-with the vendor handlers. These changes build locally and await a device run.
+with the vendor handlers.
+
+The 2026-11-18 run of kernel `44257457052` created the native device in
+backboardd and SpringBoard and showed the home screen, with severe lag and
+artifacts. Its logs show the GPU timestamp counter working and the kernel's
+CPU counter reads missing from the build; patch 0212 corrects that. Clock
+admission, the lag and the artifacts remain open.
 
 ## Documentation boundaries
 

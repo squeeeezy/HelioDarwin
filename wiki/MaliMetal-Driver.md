@@ -298,8 +298,20 @@ and the console holds no AS lease or JM terminal record. Timing is now best
 effort: a missing or rejected clock disables measurements only. Patch 0210
 logs the rejecting stage with its operands, follows the vendor's write-only
 MFG timestamp selection, and accepts a stable GPU timestamp inside either the
-virtual or the physical CPU counter bracket. The rejection cause is not yet
-identified and the new path awaits a device run.
+virtual or the physical CPU counter bracket.
+
+The 2026-11-18 run of kernel `44257457052` confirmed the best-effort path on
+the phone: backboardd and SpringBoard both completed device initialization and
+exported a native profile, and the home screen appeared, with severe lag and
+artifacts. The clock was still rejected, now at the logged stage
+`counter-bracket`. The cause is a build defect in the patch 0208 read: its
+one-line `isb; mrs ...; isb` inline assembly loses everything after the first
+`;`, which Darwin's arm64 assembler treats as a comment, so no counter was ever
+read. The logged GPU timestamps track mach uptime at 13 MHz within five ticks.
+Patch 0212 emits the reads through builtins and makes the physical-counter
+sample opt-in (`sweetmali_pct=1`). Admission with real samples awaits a device
+run. backboardd averaged 77% CPU, mostly in kernel calls made through the ICD;
+the lag and artifact causes are not identified.
 
 Pinned source inputs:
 

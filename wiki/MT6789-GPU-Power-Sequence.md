@@ -113,6 +113,13 @@ records the value read back from `0x130` without gating on it, and names the
 stage that rejects a clock query. The run of kernel `42175315331` rejected the
 query at a stage that was not logged.
 
+The run of kernel `44257457052` logged readback `0x3` from `0x130`, `GPU_STATUS`
+`0x141` with `CYCLE_COUNT_ACTIVE` set, a 13 MHz CPU counter frequency and a
+stable `TIMESTAMP` read that tracks mach uptime at 13 MHz within five ticks.
+The timestamp selection and counter start therefore work on this phone. The
+rejection came from the CPU side: the counter reads were never emitted (see the
+[driver notes](MaliMetal-Driver.md)); patch 0212 corrects that.
+
 ## GPU memory and JM transport
 
 The versioned IOKit ABI keeps MMIO programming in the kernel. Its source implements:
