@@ -320,6 +320,18 @@ reset descriptor pools and retired staging buffers. Presentation still reads
 every rendered frame back through non-cacheable staging memory into IOSurface
 memory; that copy, and a zero-copy path that would remove it, remain open.
 
+With patch 0212 the clock is admitted on the phone and measured timing works.
+In the third 2026-11-18 run the first 32 measured backboardd commands span
+91.6 seconds while their GPU intervals total 397 ms and their submit-to-retire
+intervals 601 ms; submissions are separated by up to 22 seconds. GPU execution
+is therefore not what filled that run's elapsed time, and the cause of the
+intervals between submissions is open. One boot of the same kernel failed MPS
+Common registration in backboardd 21 times at the combined target check; the
+next boot registered normally. The check now names its first failing condition,
+and a mismatch at that read-only stage no longer aborts the process. AegirPoster
+aborts in `-[CAMetalLayer setPixelFormat:]`; the requested format is not yet
+identified.
+
 Pinned source inputs:
 
 - [Mesa 5a07217f](https://gitlab.freedesktop.org/mesa/mesa/-/tree/5a07217f034b3e50d8c7c7794f97a2df1742613b)

@@ -349,6 +349,35 @@ after that point remain fatal. An earlier capture showed SpringBoard aborting in
 MPS GaussianBlur initialization without this backend, so an unregistered
 backend can still end in that abort.
 
+A third 2026-11-18 run used the same kernel `44263552907` and the bundle with
+the named target check (`e81df4d`). It returned through the 600-second reset
+with a 174,182-byte console. MPS Common registration succeeded in backboardd,
+with unchanged checks; the previous boot's failure was not reproduced and its
+cause remains unknown. backboardd and SpringBoard both created devices, the
+clock was admitted, and all 16 logged JM terminal results and 32 AS lease
+acquire and retire records are successful. No backboardd CPU resource report
+was produced.
+
+The first 32 measured backboardd commands span 91.6 seconds. Their GPU
+intervals total 397 ms and their submit-to-retire intervals 601 ms: most take
+0.3 to 3 ms, a recurring one about 14 ms, four between 38 and 66 ms and one
+103 ms. Consecutive submissions are separated by up to 22 seconds. In this run
+GPU execution and the wait for it are therefore a small part of elapsed time;
+what occupies the intervals between submissions is not identified.
+
+The panel showed the bootloader image for the whole window. PosterBoard and
+its providers created their surfaces only at about 597 seconds, and AegirPoster
+then aborted 18 times: its exception is thrown from `-[CAMetalLayer
+setPixelFormat:]` while ClockKitUI builds a `CLKUIMetalQuadView`. The requested
+format was not recovered; the unified-log file covering the end of the run
+could not be read with the current extent reader.
+
+The console's `CLK_CFG_3=0x01020000` decodes, with the shipped `clk-mt6789`
+mux table, to `mfg_ref_sel` (bits 17:16) = 2, parent `mainpll_d6`, with
+`mfg_pll_sel` (bit 18) = 0 selecting that reference instead of MFGPLL. The
+resulting frequency is not measured on the phone. Touch logged four
+reset-state frames and no contact frame in this run.
+
 ## Priorities
 
 1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,

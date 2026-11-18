@@ -95,6 +95,8 @@ For each domain, the source sets both power-on bits, polls both status registers
 
 The mfgcfg bg3d gate uses status `+0x0`, clear `+0x8`, set `+0x4`, bit 0. Writing bit 0 to clear ungates it. The retained external-clock sequence updates MFG_TOP offsets `0x20`, `0xb0`, `0xb4`, `0x24`, and `0xf60`.
 
+The shipped `clk-mt6789` mux table places `mfg_ref_sel` in bits 17:16 of that register with gate bit 23 and parents `tck_26m_mx9_ck`, `mainpll_d6_d2`, `mainpll_d6`, `mainpll_d5_d2`, and `mfg_pll_sel` in bit 18 with parents `mfg_ref_ck`, `mfgpll_ck`. The value `0x01020000` logged by XNU on 2026-11-18 therefore selects `mainpll_d6` as the reference and leaves MFGPLL unselected; the resulting frequency has not been measured on the phone.
+
 The MFG mux uses topckgen CLK_CFG at `+0x50`, set/clear `+0x54/+0x58`, and CLK_CFG_UPDATE at `+0x04`. The source ungates the existing selection and polls its status; it does not establish a validated operating frequency. Exact parent selection and a complete frequency-transition policy remain open work.
 
 MFGPLL control locations include apmixedsys `+0x268` and power control `+0x274`. A complete PLL enable/program/lock sequence and coordinated voltage/frequency transitions have not been validated for XNU. Android OPP tables are not evidence that XNU is running at those frequencies or voltages.
