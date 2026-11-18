@@ -38,7 +38,9 @@ The actual controller is **FocalTech FT5452J**, chip ID `0x5452`, using Android 
 
 The MT6789 I2C controller uses slave-address register `0x94` and a 16-byte FIFO. The driver reads each 32-byte touch report in one combined pointer-write/read APDMA transaction, with a contiguous bounce buffer, cache synchronization and bounded error recovery. FT5452J reports start at register `1`, with six-byte contact records; they do not use the earlier Topaz coordinate scaling. Controller selection requires the expected chip ID. No touch firmware upload is performed by XNU.
 
-The touch thread polls at 10 ms while contacts are active, uses GPIO9 as a report hint, and also reads periodically to recover a missed edge. This does not claim that the Android IRQ route has been installed as a native XNU interrupt handler.
+Patch 0211 reads a report every 10 ms period and no longer samples GPIO9 to decide whether to read: Android arms that line as a falling-edge interrupt, so a level sample can miss a short pulse and with it a brief tap. The transfer now sleeps between status polls instead of spinning. This does not claim that the Android IRQ route has been installed as a native XNU interrupt handler.
+
+Report decoding follows the shipped `fts_irq_handler` and `fts_input_report_b`: event flags 0 and 2 hold a slot down, 1 and 3 release it, a repeated id takes its later record, and out-of-range coordinates are clamped. A frame is still rejected for an unknown format, a count above five, an id from 5 to 9, or a down record with a zero count. `0xff` in bytes 1 to 4 is the controller's reset state: contacts are released and it is not counted as an error. The earlier decoder dropped the whole frame for flag 3, a repeated id or one out-of-range coordinate, which would freeze every other finger. No capture with two simultaneous contacts exists yet, so multi-touch remains unvalidated.
 
 ## Physical buttons
 

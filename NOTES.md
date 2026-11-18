@@ -247,6 +247,39 @@ configuration delivery to SpringBoard. Correct wallpaper and durable state
 remain unverified. No cache wipe or custom store is used; user data and original
 capability metadata are preserved.
 
+The November 6 run of kernel `42175315331` used a bundle built with experimental
+GPU timing. Its 164,700-byte console records optional selector 7 returning
+NotReady; backboardd then reported `GPU timing admission failed at
+native-clock-query` and no native device was created. The console contains no
+AS lease or JM terminal records, so the interface visible in that run was
+software rendering. The rejecting kernel stage was not logged.
+
+Measured timing is now best effort in the frontend and backend. A missing or
+rejected clock disables measurements only: device creation continues, and a
+command without a complete valid measurement reports no GPU interval. No
+substitute clock or estimated interval is published. Patch 0210 records the
+rejecting clock stage and its operands in a bounded log. It follows the shipped
+`__gpufreq_set_timestamp` sequence, which writes the MFG timestamp selection and
+never reads it back; the value read is recorded instead of gating admission. A
+stable GPU timestamp is accepted inside either the virtual or the physical CPU
+counter bracket. Android B runs at EL1 with GenieZone modules loaded, so an
+EL2-installed virtual offset is possible; none is assumed, and
+`sweetmali_pct=0` omits the physical sample. The kernel translation unit compiles
+and the complete bundle links locally against the existing ICD. Kernel CI, clock
+admission, AS reuse and rendered pixels still require a device run.
+
+Patch 0211 aligns FT5452J report decoding with the shipped vendor handlers:
+flags 0 and 2 are down, 1 and 3 release the slot, a repeated id takes its later
+record, coordinates are clamped, and the all-`0xff` reset state releases
+contacts without counting as an error. A report is read every period instead of
+depending on a sampled GPIO9 level, and the transfer sleeps between status
+polls. A stuck START or DMA-enable bit now reaches the controller reset. The
+translation unit compiles. The `42175315331` console contains no frame with two
+simultaneous contacts and no volume-key event, so multi-touch and volume
+behavior are still unobserved. Its power-key press and release edges are
+followed by display off and display on records, so key delivery toggled the
+display in that run; any remaining sleep/wake fault is not a lost key edge there.
+
 ## Priorities
 
 1. Qualify per-job AS reuse and optional measured GPU timing on the new kernel,

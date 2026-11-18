@@ -326,8 +326,10 @@ requirements, so compilation alone cannot check Metal selector completeness.
 Add `--gpu-timing` to the bundle build command only with an explicit matching
 `--vulkan-icd` artifact, a kernel containing patch 0208's validated clock
 interface, and the corresponding native timestamp-query implementation. Rebuild
-the ICD and bundle from matching sources. The option defaults off; an enabled
-candidate rejects missing or inconsistent native clock/query support.
+the ICD and bundle from matching sources. The option defaults off. An enabled
+candidate whose native clock or query support is missing or inconsistent
+continues without measurements: the device is created, commands render and no
+GPU interval is reported.
 
 ```powershell
 python MaliMetal/build.py --sysroot IOS_SYSROOT --vulkan-headers MESA_INCLUDE --air-provider AIR_BUILD --vulkan-icd PATH_TO_IOS_ICD --gpu-timing --wsl --linker /usr/bin/ld64.lld-18
@@ -337,6 +339,11 @@ The native ICD and enabled bundle build locally. Kernel CI
 [`42175315331`](https://github.com/squeeeezy/HelioDarwin/actions/runs/42175315331)
 passed; hardware qualification remains pending. Timestamp-counter frequency is separate from the
 MFG operating frequency and does not establish DVFS support.
+
+The November 6 device run of that kernel rejected the clock query. Admission
+was mandatory at the time, so no native device was created and the interface
+used software rendering. Patch 0210 logs the rejecting clock stage and its
+operands; the cause is not yet identified.
 
 ## Coverage limits
 
@@ -360,7 +367,8 @@ collects them only after confirmed physical retirement. It validates query
 availability, clock frequency and reset generation, then converts the measured
 GPU points into mach-uptime estimates with calibration uncertainty. Valid
 completed command buffers expose `GPUStartTime` and `GPUEndTime`; unavailable or
-invalid measurements report an error rather than using CPU scheduling times.
+invalid measurements leave both unreported (zero) rather than using CPU
+scheduling times, and never turn a rendered command into an error.
 Kernel scheduler timing remains unavailable. This path builds locally but is
 not yet hardware-qualified.
 

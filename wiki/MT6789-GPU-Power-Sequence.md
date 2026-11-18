@@ -104,6 +104,15 @@ MFG clock policy. It does not measure the MFG operating frequency or establish
 DVFS support. Patch 0208 provides the native clock interface used by that path;
 hardware calibration/query publication remains unqualified.
 
+The shipped `mtk_gpufreq_mt6789` `__gpufreq_set_timestamp` writes 3
+(`top_tsvalueb_en | timer_sel`) to MFG_TOP `0x13fbf130` and does not read it
+back. The shipped kbase `kbase_backend_get_gpu_time` issues `CYCLE_COUNT_START`,
+waits up to about 100 ms for `GPU_STATUS` bit 6 and then reads `TIMESTAMP` at
+`0x98`/`0x9c` with a high/low/high retry. Patch 0210 follows that sequence,
+records the value read back from `0x130` without gating on it, and names the
+stage that rejects a clock query. The run of kernel `42175315331` rejected the
+query at a stage that was not logged.
+
 ## GPU memory and JM transport
 
 The versioned IOKit ABI keeps MMIO programming in the kernel. Its source implements:

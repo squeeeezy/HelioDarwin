@@ -97,6 +97,14 @@ checks; hardware qualification of AS reuse and timing publication remains
 pending. The corrupt-geometry cause remains unknown,
 and bounded diagnostics are available.
 
+The November 6 device run of kernel `42175315331` created no native GPU device.
+Its bundle required the optional GPU clock, the kernel rejected that query, and
+the visible interface was software rendering. Timing is now best effort: a
+rejected clock disables measurements only. Patch 0210 reports the rejecting
+clock stage, and patch 0211 aligns touch report decoding with the vendor
+handlers. These changes build locally and await a device run; see the
+[engineering status](../NOTES.md).
+
 ## Boot layout
 
 LK loads a boot image v4 containing the shim and kernel payload. The host builder

@@ -63,6 +63,12 @@ The source now adds per-job hardware AS leasing and optional measured GPU timing
 qualification pending. The corrupt-frame cause remains unknown and further
 diagnostics are available.
 
+The November 6 device run of that kernel created no native GPU device: its
+bundle required the optional GPU clock and the kernel rejected the query, so the
+visible interface was software rendering. Timing is now best effort, patch 0210
+reports the rejecting clock stage, and patch 0211 aligns touch report decoding
+with the vendor handlers. These changes build locally and await a device run.
+
 ## Documentation boundaries
 
 Hardware observations, implemented source and offline checks are identified

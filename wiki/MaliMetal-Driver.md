@@ -223,7 +223,8 @@ collects them only after confirmed physical retirement. It validates query
 availability, clock frequency and reset generation, then converts the measured
 GPU points into mach-uptime estimates with calibration uncertainty. Valid
 completed command buffers expose `GPUStartTime` and `GPUEndTime`; unavailable or
-invalid measurements report an error rather than using CPU scheduling times.
+invalid measurements leave both unreported (zero) rather than using CPU
+scheduling times, and never turn a rendered command into an error.
 Kernel scheduler timing remains unavailable. This path builds locally but is
 not yet hardware-qualified.
 
@@ -289,6 +290,16 @@ patch 0208's validated kernel clock interface. Local native ICD and bundle build
 pass; kernel CI `42175315331` also passed. Hardware timing/AS qualification
 remains pending. See the
 build instructions above for the default-off option and matching dependencies.
+
+The November 6 device run of that kernel rejected the clock query (selector 7
+returned NotReady). Admission was mandatory then, so backboardd reported `GPU
+timing admission failed at native-clock-query`, no native device was created
+and the console holds no AS lease or JM terminal record. Timing is now best
+effort: a missing or rejected clock disables measurements only. Patch 0210
+logs the rejecting stage with its operands, follows the vendor's write-only
+MFG timestamp selection, and accepts a stable GPU timestamp inside either the
+virtual or the physical CPU counter bracket. The rejection cause is not yet
+identified and the new path awaits a device run.
 
 Pinned source inputs:
 
