@@ -1,0 +1,203 @@
+diff --git a/iokit/Kernel/arm/SweetMaliUserClient.inc b/iokit/Kernel/arm/SweetMaliUserClient.inc
+--- a/iokit/Kernel/arm/SweetMaliUserClient.inc
++++ b/iokit/Kernel/arm/SweetMaliUserClient.inc
+@@ -63,7 +63,9 @@
+ 	IOLock *gpuLock;
+ 	volatile uint32_t *regs, *timestampRegs;
+ 	uint64_t resetGeneration;
+-	bool timestampInputReady, timestampCounterOwned;
++	const char *clockSetup;
++	uint32_t timestampReadback, clockRejectLogs, clockAdmitLogs;
++	bool timestampInputReady, timestampCounterOwned, clockPhysicalSample;
+ 	SweetMaliUserClient *active;
+ 	IOWorkLoop *gpuWorkLoop;
+ 	IOTimerEventSource *gpuTimer;
+@@ -78,7 +80,13 @@
+ 		gpuLock = IOLockAlloc();
+ 		regs = timestampRegs = NULL;
+ 		resetGeneration = 0;
++		clockSetup = "not-attempted";
++		timestampReadback = clockRejectLogs = clockAdmitLogs = 0;
+ 		timestampInputReady = timestampCounterOwned = false;
++		/* sweetmali_pct=0 omits the read-only physical counter bracket. */
++		uint32_t physicalSample = 1;
++		(void)PE_parse_boot_argn("sweetmali_pct", &physicalSample, sizeof(physicalSample));
++		clockPhysicalSample = physicalSample != 0;
+ 		active = NULL;
+ 		gpuWorkLoop = NULL;
+ 		gpuTimer = NULL;
+@@ -153,45 +161,94 @@
+ 		}
+ 		timestampCounterOwned = false;
+ 	}
+-	bool readClock(MMKClockResult *out)
++	/* Returns NULL when out holds a validated sample, otherwise the rejecting
++	 * stage. The GPU timestamp input is the SoC system counter, so a stable
++	 * read must lie inside a CPU counter bracket taken around it. The virtual
++	 * counter is tried first, then the physical one, which differs only by a
++	 * CNTVOFF_EL2 that an EL2 owner may have installed. raw_cpu_before/after
++	 * report the bracket that matched. No offset is assumed and no value is
++	 * synthesized: a timestamp outside both brackets is rejected. */
++	const char *readClock(MMKClockResult *out)
+ 	{
+-		if (!ready || fatal || !timestampInputReady || !timestampCounterOwned ||
+-		    !resetGeneration || !(rd(MALI_REG_GPU_STATUS) & MALI_GPU_STATUS_CYCLE_COUNT_ACTIVE)) {
+-			return false;
+-		}
+-		uint64_t frequency;
+-		__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequency));
+-		if (!frequency) {
+-			return false;
+-		}
+-		clock_get_uptime(&out->uptime_before_ns);
+-		absolutetime_to_nanoseconds(out->uptime_before_ns, &out->uptime_before_ns);
+-		__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(out->raw_cpu_before) :: "memory");
++		uint64_t frequency = 0, frequencyAfter = 0, ticks = 0;
++		uint64_t virtualBefore = 0, virtualAfter = 0, physicalBefore = 0, physicalAfter = 0;
++		uint32_t status = 0;
+ 		bool stable = false;
+-		for (unsigned i = 0; i < 16; ++i) {
+-			uint32_t high = rd(MALI_REG_TIMESTAMP_LO + 4);
+-			uint32_t low = rd(MALI_REG_TIMESTAMP_LO);
+-			if (high == rd(MALI_REG_TIMESTAMP_LO + 4)) {
+-				out->gpu_ticks = low | ((uint64_t)high << 32);
+-				stable = true;
+-				break;
++		const char *reason = NULL, *domain = "none";
++		if (!ready || fatal) {
++			reason = "device-not-ready";
++		} else if (!timestampInputReady || !timestampCounterOwned || !resetGeneration) {
++			reason = clockSetup;
++		} else {
++			status = rd(MALI_REG_GPU_STATUS);
++			if (!(status & MALI_GPU_STATUS_CYCLE_COUNT_ACTIVE)) {
++				reason = "counter-inactive";
+ 			}
+ 		}
+-		__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(out->raw_cpu_after) :: "memory");
+-		clock_get_uptime(&out->uptime_after_ns);
+-		absolutetime_to_nanoseconds(out->uptime_after_ns, &out->uptime_after_ns);
+-		uint64_t frequencyAfter;
+-		__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequencyAfter));
+-		if (!stable || frequency != frequencyAfter ||
+-		    out->gpu_ticks < out->raw_cpu_before || out->gpu_ticks > out->raw_cpu_after ||
+-		    out->uptime_after_ns < out->uptime_before_ns) {
+-			return false;
++		if (!reason) {
++			__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequency));
++			clock_get_uptime(&out->uptime_before_ns);
++			absolutetime_to_nanoseconds(out->uptime_before_ns, &out->uptime_before_ns);
++			__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(virtualBefore) :: "memory");
++			if (clockPhysicalSample) {
++				__asm__ volatile("isb; mrs %0, cntpct_el0; isb" : "=r"(physicalBefore) :: "memory");
++			}
++			for (unsigned i = 0; i < 16; ++i) {
++				uint32_t high = rd(MALI_REG_TIMESTAMP_LO + 4);
++				uint32_t low = rd(MALI_REG_TIMESTAMP_LO);
++				if (high == rd(MALI_REG_TIMESTAMP_LO + 4)) {
++					ticks = low | ((uint64_t)high << 32);
++					stable = true;
++					break;
++				}
++			}
++			if (clockPhysicalSample) {
++				__asm__ volatile("isb; mrs %0, cntpct_el0; isb" : "=r"(physicalAfter) :: "memory");
++			}
++			__asm__ volatile("isb; mrs %0, cntvct_el0; isb" : "=r"(virtualAfter) :: "memory");
++			clock_get_uptime(&out->uptime_after_ns);
++			absolutetime_to_nanoseconds(out->uptime_after_ns, &out->uptime_after_ns);
++			__asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frequencyAfter));
++			if (!frequency || frequency != frequencyAfter) {
++				reason = "cpu-counter-frequency";
++			} else if (!stable) {
++				reason = "timestamp-unstable";
++			} else if (out->uptime_after_ns < out->uptime_before_ns) {
++				reason = "uptime-order";
++			} else if (ticks >= virtualBefore && ticks <= virtualAfter) {
++				domain = "virtual";
++				out->raw_cpu_before = virtualBefore;
++				out->raw_cpu_after = virtualAfter;
++			} else if (clockPhysicalSample && ticks >= physicalBefore &&
++			    ticks <= physicalAfter) {
++				domain = "physical";
++				out->raw_cpu_before = physicalBefore;
++				out->raw_cpu_after = physicalAfter;
++			} else {
++				reason = "counter-bracket";
++			}
++		}
++		/* Bounded: the first eight rejections and the first two admissions. */
++		uint32_t *logs = reason ? &clockRejectLogs : &clockAdmitLogs;
++		if (*logs < (reason ? 8u : 2u)) {
++			++*logs;
++			IOLog("SWEET GPU: clock %s domain %s setup %s generation %llu readback 0x%x "
++			      "status 0x%x cntfrq %llu/%llu stable %u gpu %llu virtual %llu..%llu "
++			      "physical %llu..%llu uptime_ns %llu..%llu\n",
++			      reason ? reason : "admitted", domain, clockSetup, resetGeneration,
++			      timestampReadback, status, frequency, frequencyAfter, (unsigned)stable,
++			      ticks, virtualBefore, virtualAfter, physicalBefore, physicalAfter,
++			      out->uptime_before_ns, out->uptime_after_ns);
++		}
++		if (reason) {
++			return reason;
+ 		}
+ 		out->clock_version = MMK_CLOCK_VERSION;
+ 		out->valid_bits = 64;
+ 		out->frequency_hz = frequency;
+ 		out->reset_generation = resetGeneration;
+-		return true;
++		out->gpu_ticks = ticks;
++		return NULL;
+ 	}
+ 	bool reset()
+ 	{
+@@ -253,6 +310,7 @@
+ 			IOLog("SWEET GPU: shader or tiler power-on timed out\n");
+ 			return false;
+ 		}
++		clockSetup = "timestamp-map";
+ 		if (!timestampRegs) {
+ 			vm_offset_t mapping = ml_io_map(0x13fbf000, 0x1000);
+ 			if (mapping) {
+@@ -260,12 +318,20 @@
+ 			}
+ 		}
+ 		if (timestampRegs) {
++			/* Shipped mtk_gpufreq_mt6789 __gpufreq_set_timestamp 0x71a8 writes 3
++			 * (top_tsvalueb_en | timer_sel) to MFG_TOP+0x130 and never reads it
++			 * back. The value read here is recorded only; readClock()'s counter
++			 * bracket is the proof that this input drives the GPU timestamp. */
+ 			__asm__ volatile("dmb oshst" ::: "memory");
+ 			*timestampRegs = 3;
+ 			__asm__ volatile("dsb sy" ::: "memory");
+-			timestampInputReady = *timestampRegs == 3;
++			timestampReadback = *timestampRegs;
++			timestampInputReady = true;
+ 		}
+ 		if (timestampInputReady) {
++			/* kbase_backend_get_gpu_time 0x4de10: CYCLE_COUNT_START, then wait
++			 * up to 100 ms for GPU_STATUS CYCLE_COUNT_ACTIVE. */
++			clockSetup = "counter-start-timeout";
+ 			wr(MALI_REG_GPU_COMMAND, MALI_GPU_CMD_CYCLE_COUNT_START);
+ 			timestampCounterOwned = true;
+ 			bool enabled = false;
+@@ -276,7 +342,9 @@
+ 				}
+ 				IODelay(10);
+ 			}
+-			if (!enabled) {
++			if (enabled) {
++				clockSetup = "started";
++			} else {
+ 				releaseClock();
+ 			}
+ 		}
+@@ -1080,7 +1148,7 @@
+ 				return kIOReturnNotReady;
+ 			}
+ 			MMKClockResult out = {};
+-			if (!gpu->readClock(&out)) {
++			if (gpu->readClock(&out)) {
+ 				return kIOReturnNotReady;
+ 			}
+ 			return sweet_mali_output(a, &out, sizeof(out));
