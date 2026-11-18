@@ -1,0 +1,143 @@
+diff --git a/bsd/dev/sweet_touch_mtk.inc b/bsd/dev/sweet_touch_mtk.inc
+--- a/bsd/dev/sweet_touch_mtk.inc
++++ b/bsd/dev/sweet_touch_mtk.inc
+@@ -141,7 +141,10 @@
+ 	}
+ 	mtki_write(MTKI_START, 1);
+ 	int error = ETIMEDOUT;
+-	for (unsigned i = 0; i < 10000; i++) {
++	/* A combined 32-byte transfer lasts about 3.5 ms at 98.5 kHz. Only this
++	 * thread uses the controller, so sleep between status polls. */
++	for (unsigned i = 0; i < 40; i++) {
++		touch_wait(1);
+ 		uint16_t status = mtki_read(MTKI_INTR_STAT);
+ 		st.irq_status = status;
+ 		if (status & MTKI_ERRORS) {
+@@ -164,7 +167,6 @@
+ 			mtki_write(MTKI_INTR_STAT, status);
+ 			return 0;
+ 		}
+-		delay(2);
+ 	}
+ 	/* Stop DMA before reusing the buffer, including an ACK error. */
+ 	(void)mtki_reset();
+@@ -176,7 +178,8 @@
+ {
+ 	uint8_t report[MTK_TOUCH_REPORT_LEN];
+ 	int x[TOUCH_MAX] = {0}, y[TOUCH_MAX] = {0};
+-	uint32_t mask = 0, seen = 0;
++	uint32_t mask = 0;
++	static unsigned reset_frames;
+ 	int error = mtki_read_register(1, report, sizeof(report));
+ 	if (error) {
+ 		return error;
+@@ -191,37 +194,52 @@
+ 		    report[0], report[1], report[2], report[3], report[4], report[5],
+ 		    report[6], report[7], report[8], report[9], report[10], report[11]);
+ 	}
++	/* Vendor fts_irq_handler 0x4300: 0xff in bytes 1..4 is the controller's
++	 * state after reset and before its first scan. It is not a transport
++	 * error: every finger is released and reading continues. */
++	if (report[1] == 0xff && report[2] == 0xff && report[3] == 0xff && report[4] == 0xff) {
++		if (reset_frames < 4) {
++			reset_frames++;
++			printf("SWEET TOUCH: controller reset-state frame %u; contacts released\n",
++			    reset_frames);
++		}
++		touch_report(0, st.x, st.y);
++		return 0;
++	}
+ 	if ((format != 0 && format != 2) || count > MTK_TOUCH_CONTACTS) {
+-		return EIO; /* includes all-FF reset/recovery frames */
++		return EIO;
+ 	}
+ 	unsigned records = format == 0 ? MTK_TOUCH_CONTACTS : count;
+-	unsigned active = 0;
++	bool down_record = false;
+ 	for (unsigned i = 0; i < records; i++) {
+ 		const uint8_t *p = report + 2 + i * 6;
+ 		unsigned id = p[2] >> 4, event = p[0] >> 6;
+ 		if (format == 0 && id >= 10) {
+ 			break; /* vendor's unused-record sentinel */
+ 		}
+-		if (id >= MTK_TOUCH_CONTACTS || (seen & (1u << id)) || event == 3) {
++		if (id >= MTK_TOUCH_CONTACTS) {
+ 			return EIO;
+ 		}
+-		seen |= 1u << id;
+-		if (event == 1) {
++		/* Vendor fts_input_report_b 0x5040: flags 0 and 2 hold the slot down,
++		 * 1 and 3 release it. Slots are updated in record order, so a
++		 * repeated id takes its later record. The vendor rejects neither a
++		 * repeated id nor a coordinate; dropping the whole frame for one
++		 * record would freeze every other finger. */
++		if ((event | 2u) != 2u) {
++			mask &= ~(1u << id);
+ 			continue;
+ 		}
++		down_record = true;
+ 		unsigned px = ((unsigned)(p[0] & 15u) << 8) | p[1];
+ 		unsigned py = ((unsigned)(p[2] & 15u) << 8) | p[3];
+-		if (px > 1079 || py > 2399) {
+-			return EIO;
+-		}
+ 		mask |= 1u << id;
+-		x[id] = (int)px;
+-		y[id] = (int)py;
+-		active++;
++		x[id] = (int)(px > 1079 ? 1079 : px);
++		y[id] = (int)(py > 2399 ? 2399 : py);
+ 	}
+-	if ((format == 0 && active && !count) || (format == 2 && !count)) {
++	if ((format == 0 && down_record && !count) || (format == 2 && !count)) {
+ 		return EIO;
+ 	}
++	unsigned active = (unsigned)__builtin_popcount(mask);
+ 	if (active > st.s_maxn) {
+ 		st.s_maxn = active;
+ 	}
+@@ -318,23 +336,29 @@
+ 	}
+ 	st.stage = "X676C polling";
+ 	printf("SWEET TOUCH: FT5452J, five contacts, 1080x2400, poll=10ms\n");
+-	unsigned errors = 0, ticks = 0;
++	unsigned errors = 0;
+ 	while (!st.dead) {
+-		/* GPIO hint plus a periodic read recovers a missed edge or release. */
+-		if (st.active || !sweet_input_pin_high(mt.gpio, 9) || (++ticks % 10u) == 0) {
+-			error = mtk_touch_report();
+-			if (error) {
+-				st.s_errs++;
+-				st.s_lasterr = error;
+-				if ((errors++ % 100u) == 0) {
+-					printf("SWEET TOUCH: X676C report error=%d status=%#x\n", error, st.irq_status);
+-				}
+-				if (errors == 10) {
+-					touch_report(0, st.x, st.y);
+-				}
+-			} else {
+-				errors = 0;
++		/* Read every period. Android arms GPIO9 as a falling-edge interrupt,
++		 * so sampling its level can miss a short pulse and with it the start
++		 * of a contact or a whole brief tap. The transfer sleeps, so an idle
++		 * read does not spin a core. */
++		error = mtk_touch_report();
++		if (error) {
++			st.s_errs++;
++			st.s_lasterr = error;
++			if ((errors++ % 100u) == 0) {
++				printf("SWEET TOUCH: X676C report error=%d status=%#x\n", error, st.irq_status);
++			}
++			if (errors == 10) {
++				touch_report(0, st.x, st.y);
++			}
++			/* Other failures reset the controller in the transfer path. A
++			 * START or DMA-enable bit that stays set needs it here. */
++			if (error == EBUSY && (errors % 10u) == 0) {
++				(void)mtki_reset();
+ 			}
++		} else {
++			errors = 0;
+ 		}
+ 		touch_wait(10);
+ 	}
