@@ -917,9 +917,10 @@ static MMVKResult MaliMetalMergeGPUMeasurement(MMVKGPUMeasuredTiming *aggregate,
     [device lockExecution];
     MMVKError error = {0};
 #ifdef MM_ENABLE_REAL_GPU_TIMING
+    /* Best effort only: a missing, rejected or inconsistent measurement leaves
+     * the GPU interval unreported. It never turns a rendered command into an error. */
     MMVKGPUMeasuredTiming measuredTiming={.size=sizeof(measuredTiming),.version=MMVK_GPU_TIMING_VERSION};
-    if(!_error&&!mmvk_gpu_timing_enabled([device backendDevice]))
-        [self recordUnsupported:"Experimental GPU timing requires admitted native query/calibration support"];
+    BOOL timingValid=mmvk_gpu_timing_enabled([device backendDevice])?YES:NO;
 #endif
     if (!_error)
         [self recordBackendResult:mmvk_commands_create([device backendDevice], &_commands, &error)
@@ -976,12 +977,13 @@ static MMVKResult MaliMetalMergeGPUMeasurement(MMVKGPUMeasuredTiming *aggregate,
         } while(result==MMVK_TIMEOUT||result==MMVK_NOT_READY);
         [self recordBackendResult:result error:&error];
 #ifdef MM_ENABLE_REAL_GPU_TIMING
-        if(!_error){
+        if(!_error&&timingValid){
             MMVKGPUMeasuredTiming sample={.size=sizeof(sample),.version=MMVK_GPU_TIMING_VERSION};
             MMVKError timingError={0};MMVKResult timingResult=mmvk_fence_gpu_timing(_fence,&sample,&timingError);
             if(timingResult==MMVK_OK)timingResult=MaliMetalMergeGPUMeasurement(&measuredTiming,&sample,&timingError);
-            /* A timing-data failure does not undo physical fence retirement. */
-            [self recordBackendResult:timingResult error:&timingError];
+            /* A timing-data failure does not undo physical fence retirement.
+             * Device loss found by the query is latched by the backend itself. */
+            if(timingResult!=MMVK_OK)timingValid=NO;
         }
 #endif
     }
@@ -1003,11 +1005,11 @@ static MMVKResult MaliMetalMergeGPUMeasurement(MMVKGPUMeasuredTiming *aggregate,
         while(pending==MMVK_TIMEOUT||pending==MMVK_NOT_READY);
         [self recordBackendResult:pending error:&error];
 #ifdef MM_ENABLE_REAL_GPU_TIMING
-        if(!_error&&mmvk_sync_stream_has_accepted_submissions(_syncStream)){
+        if(!_error&&timingValid&&mmvk_sync_stream_has_accepted_submissions(_syncStream)){
             MMVKGPUMeasuredTiming sample={.size=sizeof(sample),.version=MMVK_GPU_TIMING_VERSION};
             MMVKError timingError={0};MMVKResult timingResult=mmvk_sync_stream_gpu_timing(_syncStream,&sample,&timingError);
             if(timingResult==MMVK_OK)timingResult=MaliMetalMergeGPUMeasurement(&measuredTiming,&sample,&timingError);
-            [self recordBackendResult:timingResult error:&timingError];
+            if(timingResult!=MMVK_OK)timingValid=NO;
         }
 #endif
         if(pending<0)mmvk_device_mark_quarantined([device backendDevice]);
@@ -1029,13 +1031,10 @@ static MMVKResult MaliMetalMergeGPUMeasurement(MMVKGPUMeasuredTiming *aggregate,
             [self recordBackendResult:[_presentations[i] presentAfterGPUCompletion:&error] error:&error];
         }
     }
-#ifdef MM_ENABLE_REAL_GPU_TIMING
-    if(!_error&&!measuredTiming.segment_count)
-        [self recordUnsupported:"Successful command has no measured native GPU execution interval"];
-#endif
     pthread_mutex_lock(&_lock);
 #ifdef MM_ENABLE_REAL_GPU_TIMING
-    if(!_error)_gpuMeasuredTiming=measuredTiming;
+    /* Without a complete valid measurement the interval stays zero (unreported). */
+    if(!_error&&timingValid&&measuredTiming.segment_count)_gpuMeasuredTiming=measuredTiming;
 #endif
     _status = _error ? MTLCommandBufferStatusError : MTLCommandBufferStatusCompleted;
     _scheduledHandlersDone = YES;

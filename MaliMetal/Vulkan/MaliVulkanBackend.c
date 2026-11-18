@@ -379,20 +379,23 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
         if (family[d->family].queueCount && (family[d->family].queueFlags&(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT))==(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT)) break;
     if (d->family==families) {mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,0,"no graphics/compute queue");goto fail;}
 #if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
+    /* Measured timing is an optional diagnostic. A missing or rejected native
+     * clock disables measurements only: it must never decide whether the
+     * device renders. No substitute clock or estimated interval is published. */
     MMKClockResult clock={0};
-    kr=mmk_darwin_clock(connection,&clock);
-    const char *clock_stage=kr?"native-clock-query":family[d->family].timestampValidBits!=64?"query-valid-bits":
+    int32_t clock_kr=mmk_darwin_clock(connection,&clock);
+    const char *clock_stage=clock_kr?"native-clock-query":family[d->family].timestampValidBits!=64?"query-valid-bits":
         !d->properties.limits.timestampComputeAndGraphics?"query-stage-support":
         d->properties.limits.timestampPeriod!=(float)(1000000000.0/(double)clock.frequency_hz)?"query-period":NULL;
+    const int timing_admitted=!clock_stage;
     if(timing_trace_ticket(0))mmvk_trace_render_log("gpu-timing-admission stage=%s result=%d native=%#x sample_valid=%u"
-        " generation=%" PRIu64 " frequency_hz=%" PRIu64 " query_valid_bits=%u query_all_stages=%u period_ns=%.9g",
-        clock_stage?clock_stage:"clock-and-queue-valid",clock_stage?MMVK_ERROR_UNSUPPORTED:MMVK_OK,(uint32_t)kr,
-        (unsigned)(kr==0),clock.reset_generation,clock.frequency_hz,family[d->family].timestampValidBits,
-        d->properties.limits.timestampComputeAndGraphics,(double)d->properties.limits.timestampPeriod);
-    if(clock_stage){
-        mmvk_errorf(e,MMVK_ERROR_UNSUPPORTED,kr,"GPU timing admission failed at %s",clock_stage);goto fail;
-    }
-    d->timing_generation=clock.reset_generation;d->timing_frequency=clock.frequency_hz;
+        " generation=%" PRIu64 " frequency_hz=%" PRIu64 " query_valid_bits=%u query_all_stages=%u period_ns=%.9g"
+        " measurements=%u device_continues=1",
+        clock_stage?clock_stage:"clock-and-queue-valid",clock_stage?MMVK_ERROR_UNSUPPORTED:MMVK_OK,(uint32_t)clock_kr,
+        (unsigned)(clock_kr==0),clock.reset_generation,clock.frequency_hz,family[d->family].timestampValidBits,
+        d->properties.limits.timestampComputeAndGraphics,(double)d->properties.limits.timestampPeriod,
+        (unsigned)timing_admitted);
+    if(timing_admitted){d->timing_generation=clock.reset_generation;d->timing_frequency=clock.frequency_hz;}
 #endif
     float priority=1;
     VkDeviceQueueCreateInfo qi={.sType=VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,.queueFamilyIndex=d->family,.queueCount=1,.pQueuePriorities=&priority};
@@ -470,8 +473,10 @@ MMVKResult mmvk_device_create(uint32_t connection,const char *path,MMVKDevice **
 #define LOAD_DEVICE(name) d->name=(PFN_vk##name)d->GetDeviceProcAddr(d->device,"vk" #name); if (!d->name) {mmvk_errorf(e,MMVK_ERROR_DRIVER_UNAVAILABLE,0,"missing vk" #name);goto fail;}
     DEVICE_FUNCS(LOAD_DEVICE)
 #if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
-    TIMING_DEVICE_FUNCS(LOAD_DEVICE)
-    d->gpu_timing=1;
+    if(timing_admitted){
+        TIMING_DEVICE_FUNCS(LOAD_DEVICE)
+        d->gpu_timing=1;
+    }
 #endif
 #undef LOAD_DEVICE
     d->GetDeviceQueue(d->device,d->family,0,&d->queue);

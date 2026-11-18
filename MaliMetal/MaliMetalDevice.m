@@ -762,13 +762,13 @@ static void MaliMetalComputeSetError(MMVKError *error, MMVKResult code, const ch
         return nil;
     }
 #if defined(MM_ENABLE_REAL_GPU_TIMING) && MM_ENABLE_REAL_GPU_TIMING
+    /* Measurements are optional: the device renders without them and reports
+     * no GPU interval rather than an estimated one. */
     if (!mmvk_gpu_timing_enabled(_backend)) {
         if (trace)
-            mmvk_trace_render_log("device-init receiver=%p device=%p phase=required-gpu-timing unavailable=1 return=nil",
+            mmvk_trace_render_log("device-init receiver=%p device=%p phase=optional-gpu-timing unavailable=1 device_continues=1",
                                   receiver, (void *)self);
-        NSLog(@"[MaliMetal] Required native GPU timing was not admitted");
-        [self release];
-        return nil;
+        NSLog(@"[MaliMetal] Native GPU timing was not admitted; rendering continues without measurements");
     }
 #endif
     const MMVKCapabilities *caps = mmvk_device_capabilities(_backend);
